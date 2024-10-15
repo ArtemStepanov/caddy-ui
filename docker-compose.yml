@@ -1,0 +1,25 @@
+services:
+  backend:
+    image: ghcr.io/artemstepanov/caddy-web-ui-backend:latest
+    ports:
+      - "8080:8080"
+    environment:
+      - CADDY_API_URL=http://localhost:2019
+      - DB_PATH=/data/badgerdb
+    volumes:
+      - ./data:/data
+    networks:
+      - caddy-net
+
+  frontend:
+    image: ghcr.io/USERNAME/caddy-web-ui-frontend:latest
+    ports:
+      - "3000:3000"
+    environment:
+      - REACT_APP_API_URL=http://localhost:8080
+    networks:
+      - caddy-net
+
+networks:
+  caddy-net:
+    driver: bridge
