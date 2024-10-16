@@ -1,5 +1,13 @@
 # Caddy Web UI
 
+> [!IMPORTANT]
+> This repo is currently in a heavy WIP. Application still not working properly, but I am on my way to give it a proper life.
+>
+> Thank you for the attention.
+>
+> Best,
+> Artem 🫶
+
 A web-based UI to manage multiple [Caddy](https://caddyserver.com/) instances using a modern stack, including:
 
 - **Backend**: Go (Golang) with Gin, and BadgerDB as the NoSQL key-value store.
