@@ -165,8 +165,8 @@ POST /instances
 
 ```json
 {
-  "name": "contabo-main",
-  "url": "http://contabo-main:2019"
+  "name": "caddy instance 1",
+  "url": "http://localhost:2019"
 }
 ```
 
