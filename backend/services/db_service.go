@@ -16,7 +16,7 @@ import (
 
 var db *badger.DB
 
-// Initialize BadgerDB
+// InitDB Initialize BadgerDB
 func InitDB() error {
 	opts := badger.DefaultOptions("./badger")
 	var err error
@@ -24,22 +24,31 @@ func InitDB() error {
 	return err
 }
 
-// Close BadgerDB
+// CloseDB Close BadgerDB
 func CloseDB() {
 	db.Close()
 }
 
-// Add a new Caddy instance to the database
-func AddInstance(instance models.CaddyInstance) {
-	err := db.Update(func(txn *badger.Txn) error {
-		return txn.Set([]byte(instance.ID), []byte(instance.URL))
+// UpsertInstance Upsert a Caddy instance to the database
+func UpsertInstance(instance models.CaddyInstance) {
+	if instance.ID == "" {
+		instance.ID = uuid.New().String()
+	}
+	instanceBytes, err := json.Marshal(instance)
+	if err != nil {
+		log.Println("Error marshalling instance:", err)
+		return
+	}
+
+	err = db.Update(func(txn *badger.Txn) error {
+		return txn.Set([]byte(instance.ID), instanceBytes)
 	})
 	if err != nil {
-		log.Println("Error adding instance", err)
+		log.Println("Error adding instance:", err)
 	}
 }
 
-// Get all Caddy instances from the database
+// GetAllInstances Get all Caddy instances from the database
 func GetAllInstances() []models.CaddyInstance {
 	var instances []models.CaddyInstance
 	err := db.View(func(txn *badger.Txn) error {
@@ -50,11 +59,12 @@ func GetAllInstances() []models.CaddyInstance {
 		for it.Rewind(); it.Valid(); it.Next() {
 			item := it.Item()
 			err := item.Value(func(val []byte) error {
-				instances = append(instances, models.CaddyInstance{
-					ID:   string(item.Key()),
-					URL:  string(val),
-					Name: string(item.Key()), // Placeholder, you may store names separately
-				})
+				var instance models.CaddyInstance
+				err := json.Unmarshal(val, &instance)
+				if err != nil {
+					return err
+				}
+				instances = append(instances, instance)
 				return nil
 			})
 			if err != nil {
@@ -69,7 +79,7 @@ func GetAllInstances() []models.CaddyInstance {
 	return instances
 }
 
-// Delete a Caddy instance from the database
+// DeleteInstance Delete a Caddy instance from the database
 func DeleteInstance(id string) {
 	err := db.Update(func(txn *badger.Txn) error {
 		return txn.Delete([]byte(id))
@@ -77,12 +87,6 @@ func DeleteInstance(id string) {
 	if err != nil {
 		log.Println("Error deleting instance", err)
 	}
-}
-
-// Get the status of a Caddy instance by calling its API
-func GetInstanceStatus(id string) (string, error) {
-	// Placeholder: Implement actual API call to Caddy Admin API
-	return "online", nil
 }
 
 // SaveEditHistory saves an edit history entry to the database
@@ -147,7 +151,7 @@ func GetEditHistory(instanceID string) []models.EditHistory {
 	return histories
 }
 
-// Store the history of changes in BadgerDB
+// SaveConfigHistory Store the history of changes in BadgerDB
 func SaveConfigHistory(instanceID string, oldConfig, newConfig string) error {
 	historyID := fmt.Sprintf("%s-%d", instanceID, time.Now().Unix())
 	return db.Update(func(txn *badger.Txn) error {
@@ -156,7 +160,7 @@ func SaveConfigHistory(instanceID string, oldConfig, newConfig string) error {
 	})
 }
 
-// Apply Caddy config and save history
+// ApplyCaddyConfigWithHistory Apply Caddy config and save history
 func ApplyCaddyConfigWithHistory(caddyURL string, newConfig []byte, instanceID string) error {
 	// Fetch the old config before applying the new one
 	oldConfig, err := FetchCaddyConfig(caddyURL)
@@ -174,7 +178,7 @@ func ApplyCaddyConfigWithHistory(caddyURL string, newConfig []byte, instanceID s
 	return ApplyCaddyConfig(caddyURL, newConfig)
 }
 
-// GetCaddyInstance retrieves a Caddy instance by ID
+// GetInstance GetCaddyInstance retrieves a Caddy instance by ID
 func GetInstance(id string) models.CaddyInstance {
 	var instance models.CaddyInstance
 	err := db.View(func(txn *badger.Txn) error {

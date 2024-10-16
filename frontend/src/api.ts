@@ -1,5 +1,5 @@
 import axios from "axios";
-import Instance from "./models/instance";
+import Instance from "@/models/instance";
 
 const API_BASE_URL = "http://localhost:8080/api";
 
@@ -10,21 +10,53 @@ const apiClient = axios.create({
   },
 });
 
-export const getCaddyInstances = async (): Promise<Instance[]> => {
+const get = async <T>(url: string): Promise<T> => {
   try {
-    const response = await apiClient.get("/instances");
-    return response.data as Instance[];
+    const response = await apiClient.get<T>(url);
+    return response.data;
   } catch (error) {
-    console.error("Error fetching Caddy instances:", error);
-    throw error;
+    console.error("Error get:", error);
+    return {} as T;
   }
 };
 
-export const addCaddyInstance = async (
-  instance: Omit<Instance, "id">
+const post = async <T>(url: string, data: object): Promise<T> => {
+  try {
+    const response = await apiClient.post<T>(url, data);
+    return response.data;
+  } catch (error) {
+    console.error("Error post:", error);
+    return {} as T;
+  }
+};
+
+const put = async <T>(url: string, data: object): Promise<T> => {
+  try {
+    const response = await apiClient.put<T>(url, data);
+    return response.data;
+  } catch (error) {
+    console.error("Error put:", error);
+    return {} as T;
+  }
+};
+
+export const getCaddyInstances = async (): Promise<Instance[]> => {
+  const response = await get<Instance[]>("/instances");
+  return response;
+};
+
+export const updateCaddyInstance = async (
+  instance: Instance
 ): Promise<Instance> => {
-  const response = await apiClient.post("/instances", instance);
-  return response.data as Instance;
+  const response = await put<Instance>("/instances", instance);
+  return response;
+};
+
+export const addCaddyInstance = async (
+  instance: Omit<Instance, "id" | "status">
+): Promise<Instance> => {
+  const response = await post<Instance>("/instances", instance);
+  return response;
 };
 
 export const deleteCaddyInstance = async (id: string): Promise<void> => {
@@ -32,30 +64,25 @@ export const deleteCaddyInstance = async (id: string): Promise<void> => {
 };
 
 export const getInstanceStatus = async (id: string): Promise<string> => {
-  const response = await apiClient.get(`/instances/${id}/status`);
-  const data = response.data as { status: string };
-  return data.status;
+  const response = await get<{ status: string }>(`/instances/${id}/status`);
+  return response.status;
 };
 
 export const getCaddyConfig = async (id: string): Promise<string> => {
-  const response = await apiClient.get<{ config: string }>(
-    `/instances/${id}/config`
-  );
-  return response.data.config;
+  const response = await get<{ config: string }>(`/instances/${id}/config`);
+  return response.config;
 };
 
 export const applyCaddyConfig = async (
   id: string,
   config: string
 ): Promise<void> => {
-  await apiClient.post(`/instances/${id}/config`, { config });
+  await post(`/instances/${id}/config`, { config });
 };
 
 export const getCaddyLogs = async (id: string): Promise<string> => {
-  const response = await apiClient.get<{ logs: string }>(
-    `/instances/${id}/logs`
-  );
-  return response.data.logs;
+  const response = await get<{ logs: string }>(`/instances/${id}/logs`);
+  return response.logs;
 };
 
 export default apiClient;

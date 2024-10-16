@@ -14,4 +14,5 @@ func CaddyRoutes(router *gin.RouterGroup) {
 	router.GET("/instances/:id/config", controllers.GetCaddyConfig)
 	router.POST("/instances/:id/config", controllers.ApplyCaddyConfig)
 	router.GET("/instances/:id/logs", controllers.GetCaddyLogs)
+	router.PUT("/instances/", controllers.UpdateCaddyInstance)
 }

@@ -1,6 +1,6 @@
 export default interface Instance {
-  id: string;
+  id: string | null;
   name: string;
   url: string;
-  status: string | undefined;
+  status: string | null;
 }

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import InstanceCard from "@/components/instanceCard";
+import InstanceCard from "@/components/instance/instanceCard";
 import Instance from "@/models/instance";
 import { getCaddyInstances } from "@/api";
 

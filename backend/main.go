@@ -34,21 +34,24 @@ func main() {
 	// Initialize Gin router
 	router := gin.Default()
 
-	router.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"http://localhost:5173"},
-		AllowMethods:     []string{"GET", "POST", "OPTIONS"},
-		AllowHeaders:     []string{"Content-Type"},
-		ExposeHeaders:    []string{"Content-Length"},
-		AllowCredentials: true,
-		MaxAge:           12 * time.Hour,
-	}))
+	if gin.Mode() == gin.DebugMode {
+		log.Println("Running in development mode, not serving static files")
+		log.Println("CORS enabled for http://localhost:5173")
+		router.Use(cors.New(cors.Config{
+			AllowOrigins:     []string{"http://localhost:5173"},
+			AllowMethods:     []string{"GET", "POST", "OPTIONS"},
+			AllowHeaders:     []string{"Origin", "Content-Length", "Content-Type", "Authorization"},
+			ExposeHeaders:    []string{"Content-Length"},
+			AllowCredentials: true,
+			MaxAge:           12 * time.Hour,
+		}))
+	} else {
+		ServeStaticFiles(router)
+	}
 
 	// API routes
 	api := router.Group("/api")
 	routes.CaddyRoutes(api)
-
-	// Serve static files
-	// ServeStaticFiles(router)
 
 	err := services.InitDB()
 	if err != nil {
