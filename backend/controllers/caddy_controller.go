@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/artemstepanov/caddy-ui/models"
 	"github.com/artemstepanov/caddy-ui/services"
@@ -13,6 +14,7 @@ import (
 
 // GetCaddyInstances Get all Caddy instances
 func GetCaddyInstances(c *gin.Context) {
+	time.Sleep(5 * time.Second)
 	instances := services.GetAllInstances()
 	if len(instances) == 0 {
 		instances = []models.CaddyInstance{}
@@ -35,21 +37,19 @@ func AddCaddyInstance(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid data"})
 		return
 	}
-	services.UpsertInstance(newInstance)
+	services.UpsertInstance(&newInstance)
 	c.JSON(http.StatusOK, newInstance)
 }
 
 // UpdateCaddyInstance Update an existing Caddy instance
 func UpdateCaddyInstance(c *gin.Context) {
-	id := c.Param("id")
 	var updatedInstance models.CaddyInstance
 	if err := c.BindJSON(&updatedInstance); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid data"})
 		return
 	}
 
-	updatedInstance.ID = id
-	services.UpsertInstance(updatedInstance)
+	services.UpsertInstance(&updatedInstance)
 	c.JSON(http.StatusOK, updatedInstance)
 }
 

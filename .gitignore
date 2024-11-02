@@ -1,3 +1,4 @@
 .aider*
 backend/badger/*
 .idea/*
+.env

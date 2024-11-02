@@ -38,12 +38,13 @@ func main() {
 		log.Println("Running in development mode, not serving static files")
 		log.Println("CORS enabled for http://localhost:5173")
 		router.Use(cors.New(cors.Config{
-			AllowOrigins:     []string{"http://localhost:5173"},
-			AllowMethods:     []string{"GET", "POST", "OPTIONS"},
+			AllowOrigins:     []string{"http://localhost*"},
+			AllowMethods:     []string{"GET", "POST", "OPTIONS", "PUT", "DELETE"},
 			AllowHeaders:     []string{"Origin", "Content-Length", "Content-Type", "Authorization"},
 			ExposeHeaders:    []string{"Content-Length"},
 			AllowCredentials: true,
 			MaxAge:           12 * time.Hour,
+			AllowWildcard:    true,
 		}))
 	} else {
 		ServeStaticFiles(router)

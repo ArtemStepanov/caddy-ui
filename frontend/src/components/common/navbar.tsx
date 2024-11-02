@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { Button } from "../ui/button";
+import { AddInstanceDialog } from "../instance/dialogs/addInstanceDialog.tsx";
 
 function Navbar() {
   return (
@@ -14,11 +15,7 @@ function Navbar() {
             Dashboard
           </Button>
         </Link>
-        <Link to="/add-instance">
-          <Button className="bg-black text-white hover:bg-gray-800">
-            Add Instance
-          </Button>
-        </Link>
+        <AddInstanceDialog />
       </div>
     </nav>
   );

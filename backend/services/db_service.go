@@ -30,7 +30,7 @@ func CloseDB() {
 }
 
 // UpsertInstance Upsert a Caddy instance to the database
-func UpsertInstance(instance models.CaddyInstance) {
+func UpsertInstance(instance *models.CaddyInstance) {
 	if instance.ID == "" {
 		instance.ID = uuid.New().String()
 	}
