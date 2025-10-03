@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/ArtemStepanov/caddy-orchestrator/internal/caddy"
@@ -46,6 +47,46 @@ func (h *ConfigHandler) GetConfig(c *gin.Context) {
 	c.JSON(http.StatusOK, storage.APIResponse{
 		Success: true,
 		Data:    config,
+	})
+}
+
+// LoadConfig loads a new configuration (Caddy's /load endpoint)
+func (h *ConfigHandler) LoadConfig(c *gin.Context) {
+	instanceID := c.Param("id")
+
+	var config map[string]interface{}
+	if err := c.ShouldBindJSON(&config); err != nil {
+		c.JSON(http.StatusBadRequest, storage.APIResponse{
+			Success: false,
+			Error: &storage.APIError{
+				Code:    "INVALID_REQUEST",
+				Message: "Invalid configuration",
+				Details: err.Error(),
+			},
+		})
+		return
+	}
+
+	// Load config uses Caddy's /load endpoint (no ETag needed)
+	err := h.manager.LoadConfig(instanceID, config)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, storage.APIResponse{
+			Success: false,
+			Error: &storage.APIError{
+				Code:     "LOAD_CONFIG_FAILED",
+				Message:  "Failed to load configuration",
+				Details:  err.Error(),
+				Rollback: false,
+			},
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, storage.APIResponse{
+		Success: true,
+		Data: map[string]string{
+			"message": "Configuration loaded successfully",
+		},
 	})
 }
 
@@ -178,8 +219,15 @@ func (h *ConfigHandler) AdaptConfig(c *gin.Context) {
 		return
 	}
 
+	// Log the request for debugging
+	c.Writer.Header().Set("X-Debug-Caddyfile-Length", fmt.Sprintf("%d", len(request.Caddyfile)))
+
 	config, err := h.manager.AdaptConfig(instanceID, request.Caddyfile, request.Adapter)
 	if err != nil {
+		// Log detailed error
+		errorDetails := fmt.Sprintf("Instance: %s, Adapter: %s, Error: %v", instanceID, request.Adapter, err)
+		c.Writer.Header().Set("X-Debug-Error", errorDetails)
+
 		c.JSON(http.StatusInternalServerError, storage.APIResponse{
 			Success: false,
 			Error: &storage.APIError{

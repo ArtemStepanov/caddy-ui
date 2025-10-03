@@ -4,6 +4,7 @@ caddy-orchestrator
 *.dll
 *.so
 *.dylib
+server
 
 # Test binary
 *.test

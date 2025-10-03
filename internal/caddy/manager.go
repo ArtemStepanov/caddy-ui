@@ -230,6 +230,16 @@ func (m *Manager) GetConfig(instanceID string, path string) (map[string]interfac
 	return client.GetConfig(path)
 }
 
+// LoadConfig loads a new configuration using Caddy's /load endpoint
+func (m *Manager) LoadConfig(instanceID string, config interface{}) error {
+	client, err := m.GetClient(instanceID)
+	if err != nil {
+		return err
+	}
+
+	return client.LoadConfig(config)
+}
+
 // SetConfig sets configuration on a Caddy instance
 func (m *Manager) SetConfig(instanceID string, path string, config interface{}, etag string) error {
 	client, err := m.GetClient(instanceID)
