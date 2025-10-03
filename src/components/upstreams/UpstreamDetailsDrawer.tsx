@@ -6,20 +6,12 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
-import type { Upstream } from "@/types/api";
+import type { UpstreamDetailsDrawerProps } from "@/types";
 import { Activity, AlertCircle, CheckCircle, Code, Copy, Info, LineChart, XCircle } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
-
-interface UpstreamDetailsDrawerProps {
-  upstream: Upstream | null;
-  instanceId: string | null;
-  open: boolean;
-  onClose: () => void;
-  onTestHealth: (upstream: Upstream) => void;
-}
 
 export function UpstreamDetailsDrawer({ upstream, instanceId, open, onClose, onTestHealth }: UpstreamDetailsDrawerProps) {
   const navigate = useNavigate();

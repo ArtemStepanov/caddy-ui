@@ -1,12 +1,8 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import type { UpstreamsEmptyStateProps } from "@/types";
 import { CheckCircle, HelpCircle, Server } from "lucide-react";
 import { Link } from "react-router-dom";
-
-interface UpstreamsEmptyStateProps {
-  type: 'no-reverse-proxy' | 'all-healthy' | 'no-instance';
-  onRefresh?: () => void;
-}
 
 export function UpstreamsEmptyState({ type, onRefresh }: UpstreamsEmptyStateProps) {
   if (type === 'no-instance') {

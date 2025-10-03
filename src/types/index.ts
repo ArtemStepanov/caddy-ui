@@ -23,6 +23,27 @@ export type {
   HealthChecks,
 } from './api';
 
+// Caddy-specific types
+export type {
+  CaddyConfig,
+  CaddyHttpApp,
+  CaddyServer,
+  CaddyRoute,
+  CaddyMatcher,
+  CaddyHandler,
+  CaddyReverseProxyHandler,
+  CaddyUpstreamConfig,
+  CaddyLoadBalancing,
+  CaddyHealthChecks,
+  CaddyActiveHealthCheck,
+  CaddyPassiveHealthCheck,
+  CaddyHeaderOps,
+  CaddyTLSConfig,
+  CaddyUpstreamStatus,
+  ParsedUpstream,
+  ParsedUpstreamPool,
+} from './caddy';
+
 // Instance-specific types
 export type {
   InstanceStatus,
@@ -56,3 +77,30 @@ export type {
   ValidationErrorPanelProps,
   UnsavedChangesDialogProps,
 } from './config';
+
+// Upstreams component types
+export type {
+  UpstreamDetailsDrawerProps,
+  UpstreamCardProps,
+  HealthCheckModalProps,
+  TestResult,
+  UpstreamsEmptyStateProps,
+  PoolSectionProps,
+} from './upstreams';
+
+// Shared component types
+export type {
+  StatsCardProps,
+  InstanceCardProps,
+  InstanceSelectorProps,
+} from './components';
+
+// Hook types
+export type {
+  ToasterToast,
+  ToastState,
+  ToastActionType,
+  ToastAction,
+  ToastActionElement,
+} from './hooks';
+export { toastActionTypes } from './hooks';

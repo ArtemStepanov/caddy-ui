@@ -26,7 +26,8 @@ import {
   XCircle,
 } from "lucide-react";
 import { useState, useMemo, useEffect } from "react";
-import { HealthCheckModal, PoolSection, UpstreamCard, UpstreamDetailsDrawer, UpstreamsEmptyState } from "@/components/upstreams";
+import { HealthCheckModal, PoolSection, UpstreamDetailsDrawer, UpstreamsEmptyState } from "@/components/upstreams";
+import { InstanceSelector } from "@/components/instances";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Table,
@@ -255,45 +256,13 @@ const Upstreams = () => {
         </div>
 
         {/* Instance Selector */}
-        <Card className="bg-card/50 backdrop-blur border-border">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <label className="text-sm font-medium whitespace-nowrap">
-                Select Instance:
-              </label>
-              <Select 
-                value={selectedInstanceId || ''} 
-                onValueChange={setSelectedInstanceId}
-                disabled={instancesLoading || instances.length === 0}
-              >
-                <SelectTrigger className="flex-1 max-w-md">
-                  <SelectValue placeholder={
-                    instancesLoading ? "Loading instances..." : 
-                    instances.length === 0 ? "No instances available" :
-                    "Select a Caddy instance"
-                  } />
-                </SelectTrigger>
-                <SelectContent>
-                  {instances.map(instance => (
-                    <SelectItem key={instance.id} value={instance.id}>
-                      <div className="flex items-center gap-2">
-                        <div className={`w-2 h-2 rounded-full ${
-                          instance.status === 'online' ? 'bg-green-500' : 'bg-gray-500'
-                        }`} />
-                        {instance.name}
-                      </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {selectedInstance && (
-                <Badge variant={selectedInstance.status === 'online' ? 'default' : 'secondary'}>
-                  {selectedInstance.status}
-                </Badge>
-              )}
-            </div>
-          </CardContent>
-        </Card>
+        <InstanceSelector
+          instances={instances}
+          selectedInstanceId={selectedInstanceId}
+          onInstanceChange={setSelectedInstanceId}
+          loading={instancesLoading}
+          showStatusBadge={true}
+        />
 
         {/* No instance selected */}
         {!selectedInstanceId && !instancesLoading && instances.length === 0 && (

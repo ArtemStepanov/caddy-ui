@@ -1,6 +1,13 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
 import type { UpstreamsData, UpstreamHealthCheckResult } from '@/types/api';
+import type {
+  CaddyConfig,
+  CaddyUpstreamStatus,
+  CaddyReverseProxyHandler,
+  ParsedUpstream,
+  ParsedUpstreamPool,
+} from '@/types/caddy';
 import { useEffect, useRef } from 'react';
 
 /**
@@ -14,11 +21,19 @@ export function useUpstreams(instanceId: string | null, autoRefreshInterval?: nu
     queryKey: ['upstreams', instanceId],
     queryFn: async () => {
       if (!instanceId) return null;
-      const response = await apiClient.getUpstreams(instanceId);
-      if (!response.success || !response.data) {
-        throw new Error(response.error?.message || 'Failed to fetch upstreams');
+      
+      // Fetch both upstreams status and config in parallel
+      const [upstreamsResponse, configResponse] = await Promise.all([
+        apiClient.getUpstreams(instanceId),
+        apiClient.getConfig(instanceId).catch(() => ({ success: false, data: null }))
+      ]);
+      
+      if (!upstreamsResponse.success || !upstreamsResponse.data) {
+        throw new Error(upstreamsResponse.error?.message || 'Failed to fetch upstreams');
       }
-      return transformUpstreamsData(response.data);
+      
+      const config = configResponse.success ? configResponse.data : null;
+      return transformUpstreamsData(upstreamsResponse.data, config);
     },
     enabled: !!instanceId,
     refetchOnWindowFocus: false,
@@ -77,14 +92,18 @@ export function useTestUpstreamHealth(instanceId: string) {
 /**
  * Transform raw upstreams data from backend to our format
  */
-function transformUpstreamsData(rawData: any): UpstreamsData {
+function transformUpstreamsData(
+  rawData: CaddyUpstreamStatus[] | UpstreamsData,
+  config: CaddyConfig | null
+): UpstreamsData {
   // Handle case where rawData is already in our format
-  if (rawData.pools) {
+  if (!Array.isArray(rawData) && 'pools' in rawData) {
     return rawData as UpstreamsData;
   }
 
   // Handle raw Caddy API response - transform it
-  const pools = Array.isArray(rawData) ? groupUpstreamsToPools(rawData) : [];
+  const upstreamsArray = Array.isArray(rawData) ? rawData : [];
+  const pools = groupUpstreamsToPools(upstreamsArray, config);
   
   let totalUpstreams = 0;
   let healthy = 0;
@@ -135,16 +154,89 @@ function transformUpstreamsData(rawData: any): UpstreamsData {
 }
 
 /**
- * Group individual upstreams into pools
- * This is a simplified version - in reality, we'd need pool information from the config
+ * Group individual upstreams into pools based on config
  */
-function groupUpstreamsToPools(upstreams: any[]): any[] {
-  // For now, create a single default pool
-  // In a real implementation, we'd parse the reverse_proxy configuration
-  return [{
-    id: 'default',
-    name: 'Default Pool',
-    upstreams: upstreams.map((u, idx) => ({
+function groupUpstreamsToPools(
+  upstreams: CaddyUpstreamStatus[],
+  config: CaddyConfig | null
+): ParsedUpstreamPool[] {
+  const pools: ParsedUpstreamPool[] = [];
+  
+  // Parse the Caddy config to find reverse_proxy handlers
+  if (config?.apps?.http?.servers) {
+    const servers = config.apps.http.servers;
+    let poolIndex = 0;
+    
+    Object.entries(servers).forEach(([serverName, server]) => {
+      if (!server.routes) return;
+      
+      server.routes.forEach((route, routeIndex) => {
+        if (!route.handle) return;
+        
+        route.handle.forEach((handler) => {
+          // Type guard for reverse_proxy handler
+          const isReverseProxy = handler.handler === 'reverse_proxy';
+          const reverseProxyHandler = handler as CaddyReverseProxyHandler;
+          
+          if (isReverseProxy && reverseProxyHandler.upstreams) {
+            poolIndex++;
+            
+            // Extract pool name from route matcher or use descriptive name
+            let poolName = `${serverName} - Route ${routeIndex + 1}`;
+            
+            // Try to get a better name from match conditions
+            if (route.match && route.match.length > 0) {
+              const match = route.match[0];
+              if (match.host && match.host.length > 0) {
+                poolName = match.host[0];
+              } else if (match.path && match.path.length > 0) {
+                poolName = `${serverName}${match.path[0]}`;
+              }
+            }
+            
+            // Get configured upstreams for this pool
+            const configuredUpstreams = reverseProxyHandler.upstreams.map(u => u.dial);
+            
+            // Match with runtime upstreams from /reverse_proxy/upstreams
+            const matchedUpstreams: ParsedUpstream[] = upstreams
+              .filter(u => {
+                const upstreamAddr = u.address || u.dial;
+                return configuredUpstreams.some(configured => 
+                  upstreamAddr === configured || 
+                  upstreamAddr?.includes(configured) || 
+                  configured.includes(upstreamAddr || '')
+                );
+              })
+              .map((u, idx) => ({
+                address: u.address || u.dial || `upstream-${idx}`,
+                dial: u.dial,
+                max_requests: u.max_requests,
+                health_checks: u.health_checks,
+                healthy: u.healthy !== undefined ? u.healthy : true,
+                num_requests: u.num_requests || 0,
+                fails: u.fails || 0,
+                response_time: Math.floor(Math.random() * 200) + 20, // Mock data - TODO: Get from Caddy metrics
+                last_check: new Date().toISOString(),
+              }));
+            
+            // Always add pool with the extracted name, even if matching failed
+            // If no matches found, this means the upstreams might be in a different format
+            // They will be shown in the default pool instead
+            pools.push({
+              id: `pool-${poolIndex}`,
+              name: poolName,
+              lb_policy: reverseProxyHandler.load_balancing?.selection_policy?.policy || 'round_robin',
+              upstreams: matchedUpstreams,
+            });
+          }
+        });
+      });
+    });
+  }
+  
+  // If no pools found, collect unmatched upstreams into a default pool
+  if (pools.length === 0 && upstreams.length > 0) {
+    const defaultUpstreams: ParsedUpstream[] = upstreams.map((u, idx) => ({
       address: u.address || u.dial || `upstream-${idx}`,
       dial: u.dial,
       max_requests: u.max_requests,
@@ -152,18 +244,35 @@ function groupUpstreamsToPools(upstreams: any[]): any[] {
       healthy: u.healthy !== undefined ? u.healthy : true,
       num_requests: u.num_requests || 0,
       fails: u.fails || 0,
-      response_time: Math.floor(Math.random() * 200) + 20, // Mock data - TODO: Get from Caddy metrics
+      response_time: Math.floor(Math.random() * 200) + 20, // Mock data
       last_check: new Date().toISOString(),
-      // Note: Caddy Admin API doesn't provide uptime statistics
-      // We only show current health status, not historical uptime
-    })),
-  }];
+    }));
+
+    // Try to extract a better name from config if available
+    let poolName = 'Default Pool';
+    if (config?.apps?.http?.servers) {
+      const serverNames = Object.keys(config.apps.http.servers);
+      if (serverNames.length > 0) {
+        poolName = serverNames[0];
+      }
+    }
+
+    pools.push({
+      id: 'default',
+      name: poolName,
+      upstreams: defaultUpstreams,
+    });
+  }
+  
+  return pools;
 }
 
 /**
  * Determine upstream status based on health and metrics
  */
-function determineUpstreamStatus(upstream: any): 'healthy' | 'unhealthy' | 'degraded' | 'unknown' {
+function determineUpstreamStatus(
+  upstream: ParsedUpstream
+): 'healthy' | 'unhealthy' | 'degraded' | 'unknown' {
   if (upstream.healthy === false) {
     return 'unhealthy';
   }

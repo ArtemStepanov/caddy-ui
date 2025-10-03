@@ -2,17 +2,10 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import type { UpstreamPool, Upstream } from "@/types/api";
+import type { PoolSectionProps } from "@/types";
 import { AlertCircle, CheckCircle, ChevronDown, ChevronRight, Clock, MoreVertical } from "lucide-react";
 import { useState } from "react";
 import { UpstreamCard } from "./UpstreamCard";
-
-interface PoolSectionProps {
-  pool: UpstreamPool;
-  onViewDetails: (upstream: Upstream) => void;
-  onTestHealth: (upstream?: Upstream) => void;
-  defaultOpen?: boolean;
-}
 
 export function PoolSection({ pool, onViewDetails, onTestHealth, defaultOpen = true }: PoolSectionProps) {
   const [isOpen, setIsOpen] = useState(defaultOpen);
@@ -50,7 +43,7 @@ export function PoolSection({ pool, onViewDetails, onTestHealth, defaultOpen = t
       <div className="rounded-lg border bg-card p-4 hover:shadow-md transition-shadow">
         <div className="flex items-center justify-between gap-4">
           <CollapsibleTrigger asChild>
-            <Button variant="ghost" className="flex items-center gap-3 flex-1 justify-start p-0 h-auto hover:bg-transparent">
+            <Button variant="ghost" className="flex items-center gap-3 flex-1 justify-start p-0 h-auto hover:bg-transparent hover:text-foreground">
               {/* Expand/Collapse Icon */}
               {isOpen ? (
                 <ChevronDown className="w-5 h-5 text-muted-foreground" />
@@ -63,11 +56,11 @@ export function PoolSection({ pool, onViewDetails, onTestHealth, defaultOpen = t
 
               {/* Pool Name */}
               <div className="flex-1 min-w-0">
-                <h3 className="text-base font-semibold truncate">
+                <h3 className="text-base font-semibold truncate text-foreground">
                   {pool.name || `Pool #${pool.id}`}
                 </h3>
                 {pool.lb_policy && (
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-xs text-muted-foreground hover:text-muted-foreground">
                     Load Balancer: {pool.lb_policy}
                   </p>
                 )}

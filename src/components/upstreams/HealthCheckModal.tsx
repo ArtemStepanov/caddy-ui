@@ -9,23 +9,9 @@ import {
 } from "@/components/ui/dialog";
 import { Progress } from "@/components/ui/progress";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import type { Upstream } from "@/types/api";
+import type { HealthCheckModalProps, TestResult } from "@/types";
 import { AlertCircle, CheckCircle, Clock, Loader2, XCircle } from "lucide-react";
 import { useEffect, useState } from "react";
-
-interface HealthCheckModalProps {
-  open: boolean;
-  onClose: () => void;
-  upstreams: Upstream[];
-  onTestComplete?: () => void;
-}
-
-interface TestResult {
-  address: string;
-  status: 'pending' | 'testing' | 'success' | 'failed' | 'slow';
-  responseTime?: number;
-  error?: string;
-}
 
 export function HealthCheckModal({ open, onClose, upstreams, onTestComplete }: HealthCheckModalProps) {
   const [results, setResults] = useState<TestResult[]>([]);

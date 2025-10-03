@@ -3,30 +3,20 @@ import { useSearchParams } from 'react-router-dom';
 import {
   FileCode,
   Save,
-  RefreshCw,
-  Download,
   Upload,
   CheckCircle2,
   AlertCircle,
   Loader2,
   Package,
   Lock,
-  ArrowRight,
   Info,
+  RefreshCw,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useInstances } from '@/hooks/useInstances';
 import { useConfigEditor } from '@/hooks/useConfigEditor';
 import {
@@ -38,6 +28,7 @@ import {
   ValidationErrorPanel,
   UnsavedChangesDialog,
 } from '@/components/config';
+import { InstanceSelector } from '@/components/instances';
 import { formatDistanceToNow } from 'date-fns';
 
 const Config = () => {
@@ -289,52 +280,17 @@ const Config = () => {
         </div>
 
         {/* Instance Selector */}
-        <Card className="mb-6 bg-card/50 backdrop-blur border-border">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-4">
-              <label className="text-sm font-medium">Select Instance:</label>
-              <Select value={selectedInstanceId} onValueChange={handleInstanceChange}>
-                <SelectTrigger className="w-64 bg-background border-border">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {instances.map((instance) => (
-                    <SelectItem key={instance.id} value={instance.id}>
-                      <div className="flex items-center gap-2">
-                        <Badge
-                          variant={instance.status === 'online' ? 'default' : 'secondary'}
-                          className="w-2 h-2 p-0 rounded-full"
-                        />
-                        {instance.name}
-                      </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={handleRefresh}
-                      disabled={refreshing || loading}
-                    >
-                      <RefreshCw className={`w-4 h-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
-                      Refresh
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>
-                      Last synced:{' '}
-                      {lastUpdated ? formatDistanceToNow(lastUpdated, { addSuffix: true }) : 'Never'}
-                    </p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            </div>
-          </CardContent>
-        </Card>
+        <InstanceSelector
+          instances={instances}
+          selectedInstanceId={selectedInstanceId}
+          onInstanceChange={handleInstanceChange}
+          loading={instancesLoading}
+          showRefreshButton={true}
+          onRefresh={handleRefresh}
+          refreshing={refreshing}
+          lastUpdated={lastUpdated}
+          className="mb-6"
+        />
 
         {/* Configuration Editor */}
         <Card className="bg-card/50 backdrop-blur border-border">
