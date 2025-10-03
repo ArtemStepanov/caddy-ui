@@ -29,6 +29,34 @@ A modern, web-based management interface for multiple Caddy server instances. Bu
 - **Caddyfile Adapter**: Convert Caddyfile format to JSON configuration
 - **Config Validation**: Validate configurations before applying
 
+## Architecture
+
+### 🎯 Single Container Design
+
+The application is designed as a **unified service** that runs in a single Docker container:
+
+```
+┌─────────────────────────────────────┐
+│  Docker Container (~50MB)           │
+│  ┌───────────────────────────────┐  │
+│  │  Go Backend (Port 3000)       │  │
+│  │  • Serves API (/api/*)        │  │
+│  │  • Serves Frontend (/)        │  │
+│  │  • Manages Caddy instances    │  │
+│  └───────────────────────────────┘  │
+│  ┌───────────────────────────────┐  │
+│  │  SQLite Database              │  │
+│  └───────────────────────────────┘  │
+└─────────────────────────────────────┘
+```
+
+**Benefits:**
+- ✅ Simple deployment (one image, one container)
+- ✅ Small footprint (~50MB Alpine-based image)
+- ✅ No separate web server needed
+- ✅ Unified configuration and logging
+- ✅ Easy to scale vertically
+
 ## Tech Stack
 
 ### Backend
@@ -46,56 +74,87 @@ A modern, web-based management interface for multiple Caddy server instances. Bu
 
 ## Quick Start
 
-### Prerequisites
-- Go 1.21 or higher
-- Node.js 18 or higher
-- Docker and Docker Compose (optional)
+### 🐳 Single Container Deployment (Recommended)
 
-### Development Setup
+The entire application (frontend + backend) runs in one Docker container!
 
-#### 1. Clone the repository
 ```bash
+# 1. Clone the repository
 git clone https://github.com/ArtemStepanov/caddy-orchestrator.git
 cd caddy-orchestrator
+
+# 2. Deploy with one command
+./scripts/deploy.sh
+
+# Or manually with Docker
+docker build -t caddy-orchestrator .
+docker run -d -p 3000:3000 \
+  -v caddy-data:/root/data \
+  -e JWT_SECRET=$(openssl rand -base64 32) \
+  --name caddy-orchestrator \
+  caddy-orchestrator
+
+# 3. Access at http://localhost:3000
 ```
 
-#### 2. Install Go dependencies
-```bash
-go mod download
-```
+**That's it!** Both frontend and backend are running in a single ~50MB container. 🚀
 
-#### 3. Install frontend dependencies
-```bash
-npm install
-```
+See [Single Container Deployment Guide](docs/SINGLE_CONTAINER_DEPLOYMENT.md) for details.
 
-#### 4. Build frontend
-```bash
-npm run build
-```
+### 💻 Local Development Setup
 
-#### 5. Run the backend
+For development with hot reload:
+
+#### Prerequisites
+- Go 1.21 or higher
+- Node.js 18 or higher
+
+#### Setup
+
 ```bash
+# 1. Clone the repository
+git clone https://github.com/ArtemStepanov/caddy-orchestrator.git
+cd caddy-orchestrator
+
+# 2. Run setup script
+./scripts/setup.sh
+
+# 3. Start backend (Terminal 1)
 go run cmd/server/main.go
+
+# 4. Start frontend (Terminal 2)
+npm run dev
+
+# Frontend: http://localhost:8080 (with hot reload)
+# Backend: http://localhost:3000
 ```
 
-The application will be available at `http://localhost:3000`
+### 🧪 Testing Deployment
 
-### Docker Setup
-
-#### Build and run with Docker Compose
 ```bash
-docker-compose up -d
+# Run automated tests
+./scripts/test-deployment.sh
 ```
 
-This will start:
-- **caddy-orchestrator**: Main application on port 3000
-- **caddy-test**: Test Caddy instance with Admin API on port 2019
+### 🐋 Docker Compose (Development)
 
-#### Access the application
-- **Web Interface**: http://localhost:3000
-- **API**: http://localhost:3000/api
-- **Test Caddy Admin API**: http://localhost:2019
+```bash
+# Start with test Caddy instance
+docker-compose up -d
+
+# This starts:
+# - caddy-orchestrator: Main app on port 3000
+# - caddy-test: Test Caddy instance on port 2019
+```
+
+### 🚀 Production Deployment
+
+```bash
+# Use production compose file
+docker-compose -f docker-compose.prod.yml up -d
+
+# Access at http://localhost:3000
+```
 
 ### Configuration
 

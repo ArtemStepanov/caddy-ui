@@ -5,9 +5,21 @@ data
 *.log
 .git
 .gitignore
-README.md
 .env
 .env.local
+.env.development
 logs
 tmp
-*.md
+.vscode
+.idea
+coverage.out
+coverage.html
+*.test
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+
+# Don't ignore config directory - needed for build
+!config/
