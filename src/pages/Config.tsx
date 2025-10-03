@@ -113,13 +113,7 @@ const Config = () => {
 
   const handleApplyChanges = async () => {
     try {
-      // Validate first
-      const isValid = await validateConfig(config);
-      if (!isValid) {
-        return;
-      }
-
-      // Apply changes
+      // Apply changes (validation happens on backend automatically)
       await updateConfig(config, undefined, true, false);
     } catch (error: unknown) {
       // Handle ETag conflict
@@ -159,12 +153,19 @@ const Config = () => {
 
   const handleTabChange = async (value: string) => {
     if (value === 'caddyfile' && activeTab === 'json') {
-      // When switching to Caddyfile, we'd need reverse conversion (not available)
-      // For now, keep empty or show placeholder
-      setCaddyfileContent('# Caddyfile view\n# Convert JSON to Caddyfile manually or use Caddy tools');
+      // When switching to Caddyfile, keep existing content or show placeholder
+      if (!caddyfileContent) {
+        const placeholder = '# Caddyfile view\n# Convert JSON to Caddyfile manually or use Caddy tools';
+        setCaddyfileContent(placeholder);
+      }
     } else if (value === 'json' && activeTab === 'caddyfile') {
-      // Adapt Caddyfile to JSON
-      if (caddyfileContent && caddyfileContent !== config) {
+      // Adapt Caddyfile to JSON only if it's not a placeholder and was actually edited
+      const placeholder = '# Caddyfile view\n# Convert JSON to Caddyfile manually or use Caddy tools';
+      const isPlaceholder = caddyfileContent.trim() === placeholder.trim() || 
+                           caddyfileContent.trim() === '' ||
+                           caddyfileContent.startsWith('# Caddyfile view');
+      
+      if (caddyfileContent && !isPlaceholder) {
         const adapted = await adaptCaddyfile(caddyfileContent);
         if (adapted) {
           handleConfigChange(adapted);
@@ -387,14 +388,25 @@ const Config = () => {
               </TabsContent>
 
               <TabsContent value="caddyfile" className="mt-0">
-                <ConfigEditor
-                  value={caddyfileContent}
-                  onChange={setCaddyfileContent}
-                  language="caddyfile"
-                />
-                <p className="text-sm text-muted-foreground mt-4">
-                  Caddyfile will be adapted to JSON when you switch back to the JSON tab or apply changes.
-                </p>
+                <div className="space-y-4">
+                  <div className="bg-muted/50 border border-border rounded-lg p-4">
+                    <div className="flex items-start gap-3">
+                      <AlertCircle className="w-5 h-5 text-warning mt-0.5" />
+                      <div className="flex-1">
+                        <h4 className="font-medium mb-1">Caddyfile Editor</h4>
+                        <p className="text-sm text-muted-foreground">
+                          Paste your Caddyfile here. When you switch back to JSON tab, it will be automatically 
+                          adapted to JSON format using Caddy's adapter.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                  <ConfigEditor
+                    value={caddyfileContent}
+                    onChange={setCaddyfileContent}
+                    language="caddyfile"
+                  />
+                </div>
               </TabsContent>
             </Tabs>
 

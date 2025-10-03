@@ -1,13 +1,14 @@
-import { useRef, useEffect } from 'react';
-import Editor from '@monaco-editor/react';
+import { useRef, useEffect, useState } from 'react';
+import Editor, { OnMount } from '@monaco-editor/react';
 import { Loader2 } from 'lucide-react';
+import type * as Monaco from 'monaco-editor';
 
 interface ConfigEditorProps {
   value: string;
   onChange: (value: string | undefined) => void;
   language: 'json' | 'caddyfile';
   readOnly?: boolean;
-  onValidate?: (markers: unknown[]) => void;
+  onValidate?: (markers: Monaco.editor.IMarker[]) => void;
 }
 
 export function ConfigEditor({
@@ -17,10 +18,12 @@ export function ConfigEditor({
   readOnly = false,
   onValidate,
 }: ConfigEditorProps) {
-  const editorRef = useRef<unknown>(null);
+  const editorRef = useRef<Monaco.editor.IStandaloneCodeEditor | null>(null);
+  const [isEditorReady, setIsEditorReady] = useState(false);
 
-  function handleEditorDidMount(editor: unknown, monaco: unknown) {
+  const handleEditorDidMount: OnMount = (editor, monaco) => {
     editorRef.current = editor;
+    setIsEditorReady(true);
 
     // Configure JSON language features
     if (language === 'json') {
@@ -31,32 +34,6 @@ export function ConfigEditor({
         enableSchemaRequest: true,
       });
     }
-
-    // Configure editor options
-    editor.updateOptions({
-      fontSize: 14,
-      fontFamily: "'JetBrains Mono', 'Fira Code', 'Cascadia Code', Consolas, monospace",
-      lineNumbers: 'on',
-      minimap: { enabled: true },
-      scrollBeyondLastLine: false,
-      automaticLayout: true,
-      tabSize: 2,
-      insertSpaces: true,
-      wordWrap: 'on',
-      folding: true,
-      bracketPairColorization: { enabled: true },
-      guides: {
-        bracketPairs: true,
-        indentation: true,
-      },
-      readOnly,
-      cursorBlinking: 'smooth',
-      smoothScrolling: true,
-      suggest: {
-        showWords: true,
-        showKeywords: true,
-      },
-    });
 
     // Add validation listener
     if (onValidate) {
@@ -89,23 +66,45 @@ export function ConfigEditor({
   }, [language]);
 
   return (
-    <div className="relative h-full min-h-[600px] border border-border rounded-lg overflow-hidden">
+    <div className="relative w-full h-full min-h-[600px] border border-border rounded-lg overflow-hidden bg-[#1e1e1e]">
       <Editor
-        height="100%"
+        height="600px"
+        defaultLanguage={language === 'caddyfile' ? 'plaintext' : language}
         language={language === 'caddyfile' ? 'plaintext' : language}
         value={value}
         theme="vs-dark"
         onChange={handleEditorChange}
         onMount={handleEditorDidMount}
         loading={
-          <div className="flex items-center justify-center h-full">
-            <Loader2 className="w-8 h-8 animate-spin text-primary" />
+          <div className="flex items-center justify-center h-[600px] w-full">
+            <div className="text-center">
+              <Loader2 className="w-8 h-8 animate-spin text-primary mx-auto mb-2" />
+              <p className="text-sm text-muted-foreground">Loading editor...</p>
+            </div>
           </div>
         }
         options={{
           readOnly,
+          fontSize: 14,
+          fontFamily: "'JetBrains Mono', 'Fira Code', 'Cascadia Code', Consolas, monospace",
+          lineNumbers: 'on',
+          minimap: { enabled: true },
+          scrollBeyondLastLine: false,
+          automaticLayout: true,
+          tabSize: 2,
+          insertSpaces: true,
+          wordWrap: 'on',
+          folding: true,
+          bracketPairColorization: { enabled: true },
+          cursorBlinking: 'smooth',
+          smoothScrolling: true,
         }}
       />
+      {!isEditorReady && (
+        <div className="absolute inset-0 flex items-center justify-center bg-[#1e1e1e]">
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        </div>
+      )}
     </div>
   );
 }

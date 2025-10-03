@@ -48,6 +48,7 @@ func SetupRoutes(
 			// Configuration management
 			instances.GET("/:id/config", configHandler.GetConfig)
 			instances.GET("/:id/config/*path", configHandler.GetConfig)
+			instances.POST("/:id/load", configHandler.LoadConfig) // Caddy's recommended endpoint
 			instances.POST("/:id/config", configHandler.SetConfig)
 			instances.POST("/:id/config/*path", configHandler.SetConfig)
 			instances.PATCH("/:id/config", configHandler.PatchConfig)

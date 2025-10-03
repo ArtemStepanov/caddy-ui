@@ -165,6 +165,12 @@ func (c *Client) GetConfig(path string) (map[string]interface{}, string, error) 
 	return config, etag, nil
 }
 
+// GetConfigRaw retrieves the raw configuration without path or etag
+func (c *Client) GetConfigRaw() (map[string]interface{}, error) {
+	config, _, err := c.GetConfig("")
+	return config, err
+}
+
 // SetConfig sets the configuration in Caddy
 func (c *Client) SetConfig(path string, config interface{}, etag string) error {
 	endpoint := "/config"
@@ -177,17 +183,32 @@ func (c *Client) SetConfig(path string, config interface{}, etag string) error {
 		headers["If-Match"] = etag
 	}
 
+	configJSON, _ := json.Marshal(config)
+	fmt.Printf("SetConfig: endpoint=%s, configSize=%d bytes, etag=%s\n", endpoint, len(configJSON), etag)
+
 	resp, err := c.doRequest("POST", endpoint, config, headers)
 	if err != nil {
+		fmt.Printf("SetConfig error: %v\n", err)
 		return err
 	}
 	defer resp.Body.Close()
 
+	body, _ := io.ReadAll(resp.Body)
+
 	if resp.StatusCode != http.StatusOK {
-		body, _ := io.ReadAll(resp.Body)
+		fmt.Printf("SetConfig failed: status=%d, body=%s\n", resp.StatusCode, string(body))
 		return fmt.Errorf("failed to set config: status %d, body: %s", resp.StatusCode, string(body))
 	}
 
+	// Check response body - Caddy returns the current config on success
+	bodyPreview := string(body)
+	if len(bodyPreview) > 200 {
+		bodyPreview = bodyPreview[:200] + "..."
+	}
+	fmt.Printf("SetConfig success: status=%d, bodyPreview=%s\n", resp.StatusCode, bodyPreview)
+
+	// The fact that we got 200 OK means config was applied successfully
+	// Caddy returns the current (newly applied) config in the body
 	return nil
 }
 
@@ -236,26 +257,57 @@ func (c *Client) AdaptConfig(caddyfile string, adapter string) (map[string]inter
 		adapter = "caddyfile"
 	}
 
-	endpoint := fmt.Sprintf("/adapt?adapter=%s", adapter)
+	// Use /adapt endpoint which only converts without applying
+	url := c.baseURL + fmt.Sprintf("/adapt?adapter=%s", adapter)
 
-	resp, err := c.doRequest("POST", endpoint, caddyfile, map[string]string{
-		"Content-Type": "text/caddyfile",
-	})
+	// Log for debugging
+	fmt.Printf("AdaptConfig: URL=%s, Caddyfile length=%d bytes\n", url, len(caddyfile))
+
+	// Create request with text body (not JSON)
+	req, err := http.NewRequest("POST", url, bytes.NewBufferString(caddyfile))
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to create request: %w", err)
+	}
+
+	// Set headers - Content-Type for adapt should be text/caddyfile
+	req.Header.Set("Content-Type", "text/caddyfile")
+
+	// Add authentication
+	if c.authType == "bearer" {
+		if token, ok := c.credentials["token"]; ok {
+			req.Header.Set("Authorization", "Bearer "+token)
+		}
+	}
+
+	resp, err := c.httpClient.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("request failed: %w", err)
 	}
 	defer resp.Body.Close()
 
+	body, _ := io.ReadAll(resp.Body)
+
 	if resp.StatusCode != http.StatusOK {
-		body, _ := io.ReadAll(resp.Body)
+		// Try to parse error message
+		var errResponse map[string]interface{}
+		if json.Unmarshal(body, &errResponse) == nil {
+			if errMsg, ok := errResponse["error"].(string); ok {
+				fmt.Printf("AdaptConfig failed: %s\n", errMsg)
+				return nil, fmt.Errorf("Caddyfile syntax error: %s", errMsg)
+			}
+		}
+		fmt.Printf("AdaptConfig failed: status=%d, body=%s\n", resp.StatusCode, string(body))
 		return nil, fmt.Errorf("failed to adapt config: status %d, body: %s", resp.StatusCode, string(body))
 	}
 
+	// Parse the adapted config
 	var config map[string]interface{}
-	if err := json.NewDecoder(resp.Body).Decode(&config); err != nil {
+	if err := json.Unmarshal(body, &config); err != nil {
+		fmt.Printf("AdaptConfig decode error: %v, body=%s\n", err, string(body))
 		return nil, fmt.Errorf("failed to decode adapted config: %w", err)
 	}
 
+	fmt.Printf("AdaptConfig success: adapted %d bytes Caddyfile to JSON\n", len(caddyfile))
 	return config, nil
 }
 
@@ -327,16 +379,28 @@ func (c *Client) HealthCheck() (bool, error) {
 
 // LoadConfig loads a complete configuration (replaces entire config)
 func (c *Client) LoadConfig(config interface{}) error {
+	configJSON, _ := json.Marshal(config)
+	fmt.Printf("LoadConfig: configSize=%d bytes\n", len(configJSON))
+
 	resp, err := c.doRequest("POST", "/load", config, nil)
 	if err != nil {
+		fmt.Printf("LoadConfig error: %v\n", err)
 		return err
 	}
 	defer resp.Body.Close()
 
+	body, _ := io.ReadAll(resp.Body)
+
 	if resp.StatusCode != http.StatusOK {
-		body, _ := io.ReadAll(resp.Body)
+		fmt.Printf("LoadConfig failed: status=%d, body=%s\n", resp.StatusCode, string(body))
 		return fmt.Errorf("failed to load config: status %d, body: %s", resp.StatusCode, string(body))
 	}
+
+	bodyPreview := string(body)
+	if len(bodyPreview) > 200 {
+		bodyPreview = bodyPreview[:200] + "..."
+	}
+	fmt.Printf("LoadConfig success: status=%d, bodyPreview=%s\n", resp.StatusCode, bodyPreview)
 
 	return nil
 }

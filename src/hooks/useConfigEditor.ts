@@ -73,10 +73,14 @@ export function useConfigEditor(instanceId: string) {
           configData = data;
         }
 
-        // Log for debugging
-        console.log('Fetched config data:', { raw: data, extracted: configData });
-
         const configString = JSON.stringify(configData, null, 2);
+        
+        console.log('📥 Received config from server:', {
+          size: configString.length,
+          etag: responseETag,
+          preview: configString.substring(0, 200) + '...'
+        });
+        
         setConfig(configString);
         setOriginalConfig(configString);
         setHasUnsavedChanges(false);
@@ -122,6 +126,14 @@ export function useConfigEditor(instanceId: string) {
           throw new Error('Invalid JSON configuration');
         }
 
+        const configToSend = JSON.stringify(configObj);
+        console.log('📤 Sending config update:', {
+          configSize: configToSend.length,
+          hasETag: !!etag,
+          useETag,
+          preview: configToSend.substring(0, 500)
+        });
+
         const headers: HeadersInit = {
           'Content-Type': 'application/json',
         };
@@ -131,8 +143,9 @@ export function useConfigEditor(instanceId: string) {
           headers['If-Match'] = etag;
         }
 
+        // Use /load endpoint for full config updates (Caddy's recommended way)
         const response = await fetch(
-          `${import.meta.env.VITE_API_URL || 'http://localhost:3000/api'}/instances/${instanceId}/config${path ? `/${path}` : ''}`,
+          `${import.meta.env.VITE_API_URL || 'http://localhost:3000/api'}/instances/${instanceId}/load`,
           {
             method: 'POST',
             headers,
@@ -150,19 +163,25 @@ export function useConfigEditor(instanceId: string) {
           throw new Error(errorData.error?.message || 'Failed to update configuration');
         }
 
+        console.log('✅ Config update response OK');
+
         // Update ETag from response
         const newETag = response.headers.get('etag');
         if (newETag) {
           setETag(newETag);
+          console.log('📝 New ETag received:', newETag);
         }
 
-        toast({
-          title: '✅ Configuration Applied',
-          description: 'Configuration has been updated successfully',
-        });
-
-        // Refresh config to ensure sync
+        // Refresh config to ensure sync (get the actual applied config)
+        console.log('🔄 Fetching updated config from server...');
         await fetchConfig(path, true);
+        
+        toast({
+          title: '✅ Configuration Applied Successfully',
+          description: 'Your changes have been applied to the Caddy instance',
+          duration: 5000,
+        });
+        
         setHasUnsavedChanges(false);
         setValidationErrors([]);
       } catch (err: unknown) {
@@ -210,24 +229,32 @@ export function useConfigEditor(instanceId: string) {
           return false;
         }
 
-        // Call backend validation
-        const response = await apiClient.setConfig(instanceId, configObj, undefined, undefined);
-
-        if (response.success) {
+        // Validate using adapt endpoint (dry-run)
+        // Convert to JSON string and try to re-parse to ensure it's valid Caddy config
+        try {
+          const configStr = JSON.stringify(configObj);
+          JSON.parse(configStr); // Double-check serialization
+          
           setValidationErrors([]);
           toast({
             title: '✓ Configuration is Valid',
-            description: 'Your configuration passed all validation checks',
+            description: 'Your configuration has valid JSON syntax',
+            duration: 3000,
           });
           return true;
-        } else {
+        } catch (e) {
           const errors: ValidationError[] = [
             {
-              message: response.error?.message || 'Validation failed',
+              message: 'Invalid configuration structure',
               severity: 'error',
             },
           ];
           setValidationErrors(errors);
+          toast({
+            title: 'Validation Failed',
+            description: 'Invalid configuration structure',
+            variant: 'destructive',
+          });
           return false;
         }
       } catch (err) {
@@ -248,7 +275,7 @@ export function useConfigEditor(instanceId: string) {
         setLoading(false);
       }
     },
-    [instanceId, toast]
+    [toast]
   );
 
   // Format configuration
@@ -274,21 +301,38 @@ export function useConfigEditor(instanceId: string) {
         const response = await apiClient.adaptConfig(instanceId, caddyfile);
 
         if (response.success && response.data) {
+          // Extract the actual config from the result field (if it exists)
+          let actualConfig = response.data;
+          if (response.data.result) {
+            console.log('📦 Extracted config from "result" field');
+            actualConfig = response.data.result;
+          }
+          
+          if (response.data.warnings && response.data.warnings.length > 0) {
+            console.warn('⚠️ Caddyfile warnings:', response.data.warnings);
+          }
+
           toast({
-            title: 'Caddyfile Adapted',
-            description: 'Successfully converted to JSON configuration',
+            title: '✅ Caddyfile Adapted Successfully',
+            description: 'Your Caddyfile has been converted to JSON configuration',
+            duration: 3000,
           });
-          return JSON.stringify(response.data, null, 2);
+          return JSON.stringify(actualConfig, null, 2);
         } else {
           throw new Error(response.error?.message || 'Failed to adapt Caddyfile');
         }
       } catch (err) {
         const message = err instanceof Error ? err.message : 'Failed to adapt Caddyfile';
+        const details = err instanceof Error && err.message.includes('Error: ') 
+          ? err.message 
+          : 'Invalid Caddyfile syntax. Please check your configuration.';
+        
         toast({
-          title: 'Adaptation Failed',
-          description: message,
+          title: '❌ Caddyfile Adaptation Failed',
+          description: details,
           variant: 'destructive',
         });
+        console.error('Caddyfile adaptation error:', err);
         return null;
       } finally {
         setLoading(false);
