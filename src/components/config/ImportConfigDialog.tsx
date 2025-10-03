@@ -14,12 +14,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Textarea } from '@/components/ui/textarea';
-
-interface ImportConfigDialogProps {
-  open: boolean;
-  onClose: () => void;
-  onImport: (content: string, validate: boolean) => Promise<void>;
-}
+import type { ImportConfigDialogProps } from '@/types';
 
 export function ImportConfigDialog({ open, onClose, onImport }: ImportConfigDialogProps) {
   const [fileContent, setFileContent] = useState('');

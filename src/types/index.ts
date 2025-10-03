@@ -34,3 +34,15 @@ export type {
   StatusConfig,
   InstanceStats,
 } from './instances';
+
+// Configuration-specific types
+export type {
+  ValidationError,
+  ConfigEditorProps,
+  ConfigConflictDialogProps,
+  ConfigDiffViewerProps,
+  ImportConfigDialogProps,
+  ExportConfigMenuProps,
+  ValidationErrorPanelProps,
+  UnsavedChangesDialogProps,
+} from './config';

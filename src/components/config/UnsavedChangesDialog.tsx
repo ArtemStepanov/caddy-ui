@@ -9,15 +9,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-
-interface UnsavedChangesDialogProps {
-  open: boolean;
-  onClose: () => void;
-  onDiscard: () => void;
-  onSave?: () => void;
-  title?: string;
-  description?: string;
-}
+import type { UnsavedChangesDialogProps } from '@/types';
 
 export function UnsavedChangesDialog({
   open,

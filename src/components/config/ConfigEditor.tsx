@@ -2,14 +2,7 @@ import { useRef, useEffect, useState } from 'react';
 import Editor, { OnMount } from '@monaco-editor/react';
 import { Loader2 } from 'lucide-react';
 import type * as Monaco from 'monaco-editor';
-
-interface ConfigEditorProps {
-  value: string;
-  onChange: (value: string | undefined) => void;
-  language: 'json' | 'caddyfile';
-  readOnly?: boolean;
-  onValidate?: (markers: Monaco.editor.IMarker[]) => void;
-}
+import type { ConfigEditorProps } from '@/types';
 
 export function ConfigEditor({
   value,

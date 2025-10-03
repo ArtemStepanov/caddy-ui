@@ -3,18 +3,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { useState } from 'react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-
-interface ValidationError {
-  line?: number;
-  column?: number;
-  message: string;
-  severity: 'error' | 'warning';
-}
-
-interface ValidationErrorPanelProps {
-  errors: ValidationError[];
-  onGoToError?: (line: number, column: number) => void;
-}
+import type { ValidationError, ValidationErrorPanelProps } from '@/types';
 
 export function ValidationErrorPanel({ errors, onGoToError }: ValidationErrorPanelProps) {
   const [isOpen, setIsOpen] = useState(true);

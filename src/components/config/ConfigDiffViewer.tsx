@@ -11,17 +11,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { useState, useRef } from 'react';
 import type * as Monaco from 'monaco-editor';
-
-interface ConfigDiffViewerProps {
-  open: boolean;
-  onClose: () => void;
-  originalValue: string;
-  modifiedValue: string;
-  onAcceptServer: () => void;
-  onAcceptLocal: () => void;
-  title?: string;
-  description?: string;
-}
+import type { ConfigDiffViewerProps } from '@/types';
 
 export function ConfigDiffViewer({
   open,

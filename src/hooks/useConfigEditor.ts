@@ -1,13 +1,7 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { apiClient } from '@/lib/api-client';
 import { useToast } from '@/hooks/use-toast';
-
-interface ValidationError {
-  line?: number;
-  column?: number;
-  message: string;
-  severity: 'error' | 'warning';
-}
+import type { ValidationError } from '@/types';
 
 export function useConfigEditor(instanceId: string) {
   const [config, setConfig] = useState<string>('');

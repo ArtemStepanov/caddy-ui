@@ -9,14 +9,7 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-
-interface ConfigConflictDialogProps {
-  open: boolean;
-  onClose: () => void;
-  onReload: () => void;
-  onOverwrite: () => void;
-  onShowDiff: () => void;
-}
+import type { ConfigConflictDialogProps } from '@/types';
 
 export function ConfigConflictDialog({
   open,

@@ -7,12 +7,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-
-interface ExportConfigMenuProps {
-  jsonConfig: string;
-  caddyfileConfig?: string;
-  instanceName: string;
-}
+import type { ExportConfigMenuProps } from '@/types';
 
 export function ExportConfigMenu({
   jsonConfig,
