@@ -119,6 +119,7 @@ jobs:
         continue-on-error: true
 
   codeql:
+    if: github.event_name == 'schedule'
     name: CodeQL Analysis
     runs-on: ubuntu-latest
     permissions:
