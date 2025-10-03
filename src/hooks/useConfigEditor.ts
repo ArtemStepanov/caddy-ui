@@ -24,6 +24,11 @@ export function useConfigEditor(instanceId: string) {
   // Fetch configuration
   const fetchConfig = useCallback(
     async (path?: string, silent = false) => {
+      // Don't fetch if no instance selected
+      if (!instanceId) {
+        return;
+      }
+
       // Cancel any ongoing fetch
       if (fetchControllerRef.current) {
         fetchControllerRef.current.abort();
@@ -49,11 +54,29 @@ export function useConfigEditor(instanceId: string) {
         }
 
         if (!response.ok) {
-          throw new Error('Failed to fetch configuration');
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.error?.message || `Failed to fetch configuration (${response.status})`);
         }
 
         const data = await response.json();
-        const configString = JSON.stringify(data.data || data, null, 2);
+        
+        // Handle different response formats
+        let configData;
+        if (data.success && data.data) {
+          // API response wrapper format
+          configData = data.data;
+        } else if (data.data) {
+          // Just data property
+          configData = data.data;
+        } else {
+          // Raw config object
+          configData = data;
+        }
+
+        // Log for debugging
+        console.log('Fetched config data:', { raw: data, extracted: configData });
+
+        const configString = JSON.stringify(configData, null, 2);
         setConfig(configString);
         setOriginalConfig(configString);
         setHasUnsavedChanges(false);

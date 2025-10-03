@@ -76,7 +76,9 @@ const Config = () => {
   // Fetch config when instance changes
   useEffect(() => {
     if (selectedInstanceId) {
-      fetchConfig(undefined, false);
+      // Silent load on first mount, with toast on subsequent changes
+      const isInitialLoad = !config && !loading;
+      fetchConfig(undefined, isInitialLoad);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedInstanceId]);
@@ -351,14 +353,36 @@ const Config = () => {
 
               <TabsContent value="json" className="mt-0">
                 {loading && !config ? (
-                  <Skeleton className="h-[600px] w-full" />
-                ) : (
+                  <div className="space-y-4">
+                    <Skeleton className="h-[600px] w-full" />
+                    <p className="text-sm text-muted-foreground text-center">
+                      Loading configuration...
+                    </p>
+                  </div>
+                ) : config ? (
                   <ConfigEditor
                     value={config}
                     onChange={(value) => handleConfigChange(value || '')}
                     language="json"
                     readOnly={loading}
                   />
+                ) : (
+                  <div className="h-[600px] border border-dashed border-border rounded-lg flex items-center justify-center">
+                    <div className="text-center space-y-2">
+                      <FileCode className="w-12 h-12 mx-auto text-muted-foreground" />
+                      <p className="text-muted-foreground">
+                        No configuration loaded
+                      </p>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => fetchConfig(undefined, false)}
+                      >
+                        <RefreshCw className="w-4 h-4 mr-2" />
+                        Load Configuration
+                      </Button>
+                    </div>
+                  </div>
                 )}
               </TabsContent>
 
