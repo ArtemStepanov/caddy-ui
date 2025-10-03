@@ -30,19 +30,19 @@ export function InstanceCard({
   return (
     <Card className="bg-card/50 backdrop-blur border-border hover:border-primary/50 transition-all hover:shadow-glow">
       <CardHeader>
-        <div className="flex items-start justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-gradient-primary flex items-center justify-center">
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex items-center gap-3 min-w-0 flex-1">
+            <div className="w-10 h-10 rounded-lg bg-gradient-primary flex items-center justify-center flex-shrink-0">
               <Server className="w-5 h-5 text-primary-foreground" />
             </div>
-            <div>
-              <CardTitle className="text-lg">{name}</CardTitle>
-              <p className="text-sm text-muted-foreground">{url}</p>
+            <div className="min-w-0">
+              <CardTitle className="text-lg truncate">{name}</CardTitle>
+              <p className="text-sm text-muted-foreground truncate">{url}</p>
             </div>
           </div>
           <Badge
             variant="outline"
-            className={`${config.color} border-0 text-foreground`}
+            className={`${config.color} border-0 text-foreground whitespace-nowrap flex-shrink-0`}
           >
             <StatusIcon className="w-3 h-3 mr-1" />
             {config.text}
