@@ -80,7 +80,7 @@ export function UpstreamCard({ upstream, poolName, onViewDetails, onTestHealth }
     <Card className={`relative overflow-hidden transition-all hover:shadow-lg ${statusConfig.borderColor} border-2`}>
       {/* Animated pulse for healthy upstreams */}
       {statusConfig.animate && (
-        <div className="absolute inset-0 bg-gradient-to-r from-green-500/5 to-transparent animate-pulse" />
+        <div className="absolute inset-0 bg-gradient-to-r from-green-500/5 to-transparent animate-pulse pointer-events-none" />
       )}
 
       <CardHeader className="pb-3">

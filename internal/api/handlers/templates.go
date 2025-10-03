@@ -103,7 +103,7 @@ func (h *TemplateHandler) GenerateConfig(c *gin.Context) {
 	id := c.Param("id")
 
 	var request struct {
-		Variables map[string]interface{} `json:"variables" binding:"required"`
+		Variables map[string]any `json:"variables" binding:"required"`
 	}
 
 	if err := c.ShouldBindJSON(&request); err != nil {

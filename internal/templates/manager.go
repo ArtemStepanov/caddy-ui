@@ -61,7 +61,7 @@ func (m *Manager) CreateTemplate(tmpl *storage.ConfigTemplate) error {
 }
 
 // GenerateConfig generates a configuration from a template with provided variables
-func (m *Manager) GenerateConfig(templateID string, variables map[string]interface{}) (map[string]interface{}, error) {
+func (m *Manager) GenerateConfig(templateID string, variables map[string]any) (map[string]any, error) {
 	tmpl, err := m.storage.GetTemplate(templateID)
 	if err != nil {
 		return nil, fmt.Errorf("template not found: %w", err)
@@ -104,7 +104,7 @@ func (m *Manager) GenerateConfig(templateID string, variables map[string]interfa
 	}
 
 	// Parse back to map
-	var config map[string]interface{}
+	var config map[string]any
 	if err := json.Unmarshal(buf.Bytes(), &config); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal generated config: %w", err)
 	}
@@ -113,7 +113,7 @@ func (m *Manager) GenerateConfig(templateID string, variables map[string]interfa
 }
 
 // ValidateVariables validates that provided variables match template requirements
-func (m *Manager) ValidateVariables(templateID string, variables map[string]interface{}) error {
+func (m *Manager) ValidateVariables(templateID string, variables map[string]any) error {
 	tmpl, err := m.storage.GetTemplate(templateID)
 	if err != nil {
 		return fmt.Errorf("template not found: %w", err)
@@ -147,7 +147,7 @@ func (m *Manager) ValidateVariables(templateID string, variables map[string]inte
 				return fmt.Errorf("variable '%s' must be a boolean", v.Name)
 			}
 		case "array":
-			if _, ok := value.([]interface{}); !ok {
+			if _, ok := value.([]any); !ok {
 				return fmt.Errorf("variable '%s' must be an array", v.Name)
 			}
 		}

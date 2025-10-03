@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import {
   FileCode,
   Save,
@@ -40,6 +41,7 @@ import {
 import { formatDistanceToNow } from 'date-fns';
 
 const Config = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
   const { instances, loading: instancesLoading } = useInstances();
   const [selectedInstanceId, setSelectedInstanceId] = useState<string>('');
   const [activeTab, setActiveTab] = useState<'json' | 'caddyfile'>('json');
@@ -68,12 +70,23 @@ const Config = () => {
     handleConfigChange,
   } = useConfigEditor(selectedInstanceId);
 
-  // Auto-select first instance
+  // Auto-select instance from query parameter or first instance
   useEffect(() => {
     if (instances.length > 0 && !selectedInstanceId) {
-      setSelectedInstanceId(instances[0].id);
+      const instanceFromQuery = searchParams.get('instance');
+      
+      // Check if the instance from query parameter exists
+      if (instanceFromQuery && instances.some(i => i.id === instanceFromQuery)) {
+        setSelectedInstanceId(instanceFromQuery);
+        // Clear the query parameter after using it
+        searchParams.delete('instance');
+        setSearchParams(searchParams, { replace: true });
+      } else {
+        // Fallback to first instance
+        setSelectedInstanceId(instances[0].id);
+      }
     }
-  }, [instances, selectedInstanceId]);
+  }, [instances, selectedInstanceId, searchParams, setSearchParams]);
 
   // Fetch config when instance changes
   useEffect(() => {

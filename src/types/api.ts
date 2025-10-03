@@ -60,7 +60,7 @@ export interface ConfigTemplate {
   name: string;
   description: string;
   category: string;
-  template: Record<string, any>;
+  template: Record<string, unknown>;
   variables: TemplateVariable[];
   created_at: string;
   updated_at: string;
@@ -73,7 +73,7 @@ export interface TemplateVariable {
   name: string;
   type: 'string' | 'number' | 'boolean' | 'array';
   required: boolean;
-  default_value?: any;
+  default_value?: string | number | boolean | unknown[];
   description: string;
 }
 

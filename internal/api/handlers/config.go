@@ -54,7 +54,7 @@ func (h *ConfigHandler) GetConfig(c *gin.Context) {
 func (h *ConfigHandler) LoadConfig(c *gin.Context) {
 	instanceID := c.Param("id")
 
-	var config map[string]interface{}
+	var config map[string]any
 	if err := c.ShouldBindJSON(&config); err != nil {
 		c.JSON(http.StatusBadRequest, storage.APIResponse{
 			Success: false,
@@ -95,7 +95,7 @@ func (h *ConfigHandler) SetConfig(c *gin.Context) {
 	instanceID := c.Param("id")
 	path := c.Param("path")
 
-	var config map[string]interface{}
+	var config map[string]any
 	if err := c.ShouldBindJSON(&config); err != nil {
 		c.JSON(http.StatusBadRequest, storage.APIResponse{
 			Success: false,
@@ -138,7 +138,7 @@ func (h *ConfigHandler) PatchConfig(c *gin.Context) {
 	instanceID := c.Param("id")
 	path := c.Param("path")
 
-	var config map[string]interface{}
+	var config map[string]any
 	if err := c.ShouldBindJSON(&config); err != nil {
 		c.JSON(http.StatusBadRequest, storage.APIResponse{
 			Success: false,

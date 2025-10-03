@@ -491,6 +491,7 @@ const Upstreams = () => {
       {/* Details Drawer */}
       <UpstreamDetailsDrawer
         upstream={selectedUpstream}
+        instanceId={selectedInstanceId}
         open={detailsDrawerOpen}
         onClose={() => setDetailsDrawerOpen(false)}
         onTestHealth={handleTestHealth}

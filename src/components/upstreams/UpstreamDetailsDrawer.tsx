@@ -6,21 +6,61 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { Upstream } from "@/types/api";
-import { Activity, AlertCircle, CheckCircle, Clock, Code, LineChart, TrendingUp, XCircle } from "lucide-react";
+import { Activity, AlertCircle, CheckCircle, Code, Copy, LineChart, XCircle } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
+import { useNavigate } from "react-router-dom";
+import { useToast } from "@/hooks/use-toast";
 
 interface UpstreamDetailsDrawerProps {
   upstream: Upstream | null;
+  instanceId: string | null;
   open: boolean;
   onClose: () => void;
   onTestHealth: (upstream: Upstream) => void;
 }
 
-export function UpstreamDetailsDrawer({ upstream, open, onClose, onTestHealth }: UpstreamDetailsDrawerProps) {
+export function UpstreamDetailsDrawer({ upstream, instanceId, open, onClose, onTestHealth }: UpstreamDetailsDrawerProps) {
+  const navigate = useNavigate();
+  const { toast } = useToast();
+  
   if (!upstream) return null;
 
   const status = upstream.status || 'unknown';
   const maxFails = upstream.health_checks?.passive?.max_fails || 100;
+
+  const handleCopyUrl = async () => {
+    const url = upstream.address || upstream.dial;
+    if (!url) {
+      toast({
+        title: 'Error',
+        description: 'No URL available to copy',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    try {
+      await navigator.clipboard.writeText(url);
+      toast({
+        title: 'Copied to Clipboard',
+        description: `URL copied: ${url}`,
+      });
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to copy to clipboard',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleViewInConfig = () => {
+    if (instanceId) {
+      navigate(`/config?instance=${instanceId}`);
+    } else {
+      navigate('/config');
+    }
+  };
 
   const getStatusConfig = () => {
     switch (status) {
@@ -87,10 +127,11 @@ export function UpstreamDetailsDrawer({ upstream, open, onClose, onTestHealth }:
                 >
                   Test Health
                 </Button>
-                <Button size="sm" variant="outline" className="flex-1">
+                <Button size="sm" variant="outline" className="flex-1" onClick={handleCopyUrl}>
+                  <Copy className="w-4 h-4 mr-1" />
                   Copy URL
                 </Button>
-                <Button size="sm" variant="outline" className="flex-1">
+                <Button size="sm" variant="outline" className="flex-1" onClick={handleViewInConfig}>
                   View in Config
                 </Button>
               </div>
@@ -315,7 +356,7 @@ export function UpstreamDetailsDrawer({ upstream, open, onClose, onTestHealth }:
                   </CardContent>
                 </Card>
 
-                <Button variant="outline" className="w-full">
+                <Button variant="outline" className="w-full" onClick={handleViewInConfig}>
                   Edit in Configuration
                 </Button>
               </TabsContent>

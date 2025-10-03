@@ -45,7 +45,7 @@ type ContainerInfo struct {
 }
 
 // GenerateConfigFromContainer generates Caddy configuration from container labels
-func (i *Integration) GenerateConfigFromContainer(container *ContainerInfo) (map[string]interface{}, error) {
+func (i *Integration) GenerateConfigFromContainer(container *ContainerInfo) (map[string]any, error) {
 	if !i.enabled {
 		return nil, fmt.Errorf("Docker integration is not enabled")
 	}
@@ -56,7 +56,7 @@ func (i *Integration) GenerateConfigFromContainer(container *ContainerInfo) (map
 	// - caddy.reverse_proxy: {{upstreams}}
 	// - caddy.tls: internal
 
-	config := make(map[string]interface{})
+	config := make(map[string]any)
 
 	// TODO: Implement label parsing and config generation
 
@@ -125,8 +125,8 @@ func ValidateLabels(labels map[string]string) error {
 }
 
 // ParseLabels parses Caddy labels into a structured format
-func ParseLabels(labels map[string]string) map[string]interface{} {
-	result := make(map[string]interface{})
+func ParseLabels(labels map[string]string) map[string]any {
+	result := make(map[string]any)
 
 	for key, value := range labels {
 		if len(key) > 6 && key[:6] == "caddy." {
@@ -134,7 +134,7 @@ func ParseLabels(labels map[string]string) map[string]interface{} {
 			configKey := key[6:]
 
 			// Try to parse as JSON for complex values
-			var jsonValue interface{}
+			var jsonValue any
 			if err := json.Unmarshal([]byte(value), &jsonValue); err == nil {
 				result[configKey] = jsonValue
 			} else {

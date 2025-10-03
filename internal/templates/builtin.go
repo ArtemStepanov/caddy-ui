@@ -12,23 +12,23 @@ func GetBuiltinTemplates() []*storage.ConfigTemplate {
 			Name:        "Basic Reverse Proxy",
 			Description: "Simple reverse proxy configuration for internal services",
 			Category:    "reverse-proxy",
-			Template: map[string]interface{}{
-				"apps": map[string]interface{}{
-					"http": map[string]interface{}{
-						"servers": map[string]interface{}{
-							"{{.server_name}}": map[string]interface{}{
+			Template: map[string]any{
+				"apps": map[string]any{
+					"http": map[string]any{
+						"servers": map[string]any{
+							"{{.server_name}}": map[string]any{
 								"listen": []string{":{{.port}}"},
-								"routes": []interface{}{
-									map[string]interface{}{
-										"match": []map[string]interface{}{
+								"routes": []any{
+									map[string]any{
+										"match": []map[string]any{
 											{
 												"host": []string{"{{.domain}}"},
 											},
 										},
-										"handle": []map[string]interface{}{
+										"handle": []map[string]any{
 											{
 												"handler": "reverse_proxy",
-												"upstreams": []map[string]interface{}{
+												"upstreams": []map[string]any{
 													{
 														"dial": "{{.upstream}}",
 													},
@@ -76,20 +76,20 @@ func GetBuiltinTemplates() []*storage.ConfigTemplate {
 			Name:        "Static File Server",
 			Description: "Serve static files with automatic HTTPS",
 			Category:    "file-server",
-			Template: map[string]interface{}{
-				"apps": map[string]interface{}{
-					"http": map[string]interface{}{
-						"servers": map[string]interface{}{
-							"{{.server_name}}": map[string]interface{}{
+			Template: map[string]any{
+				"apps": map[string]any{
+					"http": map[string]any{
+						"servers": map[string]any{
+							"{{.server_name}}": map[string]any{
 								"listen": []string{":{{.port}}"},
-								"routes": []interface{}{
-									map[string]interface{}{
-										"match": []map[string]interface{}{
+								"routes": []any{
+									map[string]any{
+										"match": []map[string]any{
 											{
 												"host": []string{"{{.domain}}"},
 											},
 										},
-										"handle": []map[string]interface{}{
+										"handle": []map[string]any{
 											{
 												"handler": "file_server",
 												"root":    "{{.root_path}}",
@@ -144,29 +144,29 @@ func GetBuiltinTemplates() []*storage.ConfigTemplate {
 			Name:        "WebSocket Proxy",
 			Description: "Reverse proxy with WebSocket support",
 			Category:    "reverse-proxy",
-			Template: map[string]interface{}{
-				"apps": map[string]interface{}{
-					"http": map[string]interface{}{
-						"servers": map[string]interface{}{
-							"{{.server_name}}": map[string]interface{}{
+			Template: map[string]any{
+				"apps": map[string]any{
+					"http": map[string]any{
+						"servers": map[string]any{
+							"{{.server_name}}": map[string]any{
 								"listen": []string{":{{.port}}"},
-								"routes": []interface{}{
-									map[string]interface{}{
-										"match": []map[string]interface{}{
+								"routes": []any{
+									map[string]any{
+										"match": []map[string]any{
 											{
 												"host": []string{"{{.domain}}"},
 											},
 										},
-										"handle": []map[string]interface{}{
+										"handle": []map[string]any{
 											{
 												"handler": "reverse_proxy",
-												"upstreams": []map[string]interface{}{
+												"upstreams": []map[string]any{
 													{
 														"dial": "{{.upstream}}",
 													},
 												},
-												"headers": map[string]interface{}{
-													"request": map[string]interface{}{
+												"headers": map[string]any{
+													"request": map[string]any{
 														"set": map[string][]string{
 															"Connection": {"Upgrade"},
 															"Upgrade":    {"websocket"},
@@ -216,29 +216,29 @@ func GetBuiltinTemplates() []*storage.ConfigTemplate {
 			Name:        "Load Balancer",
 			Description: "Load balancer with health checks",
 			Category:    "load-balancer",
-			Template: map[string]interface{}{
-				"apps": map[string]interface{}{
-					"http": map[string]interface{}{
-						"servers": map[string]interface{}{
-							"{{.server_name}}": map[string]interface{}{
+			Template: map[string]any{
+				"apps": map[string]any{
+					"http": map[string]any{
+						"servers": map[string]any{
+							"{{.server_name}}": map[string]any{
 								"listen": []string{":{{.port}}"},
-								"routes": []interface{}{
-									map[string]interface{}{
-										"match": []map[string]interface{}{
+								"routes": []any{
+									map[string]any{
+										"match": []map[string]any{
 											{
 												"host": []string{"{{.domain}}"},
 											},
 										},
-										"handle": []map[string]interface{}{
+										"handle": []map[string]any{
 											{
 												"handler": "reverse_proxy",
-												"load_balancing": map[string]interface{}{
-													"selection_policy": map[string]interface{}{
+												"load_balancing": map[string]any{
+													"selection_policy": map[string]any{
 														"policy": "{{.lb_policy}}",
 													},
 												},
-												"health_checks": map[string]interface{}{
-													"active": map[string]interface{}{
+												"health_checks": map[string]any{
+													"active": map[string]any{
 														"path":     "{{.health_path}}",
 														"interval": "{{.health_interval}}",
 														"timeout":  "{{.health_timeout}}",
