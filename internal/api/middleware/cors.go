@@ -8,7 +8,7 @@ import (
 func CORSMiddleware(allowedOrigins []string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		origin := c.Request.Header.Get("Origin")
-		
+
 		// Check if origin is allowed
 		allowed := false
 		for _, allowedOrigin := range allowedOrigins {

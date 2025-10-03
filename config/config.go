@@ -11,12 +11,12 @@ import (
 
 // Config represents the application configuration
 type Config struct {
-	Server   ServerConfig   `yaml:"server"`
-	Storage  StorageConfig  `yaml:"storage"`
-	Security SecurityConfig `yaml:"security"`
-	Caddy    CaddyConfig    `yaml:"caddy"`
+	Server    ServerConfig    `yaml:"server"`
+	Storage   StorageConfig   `yaml:"storage"`
+	Security  SecurityConfig  `yaml:"security"`
+	Caddy     CaddyConfig     `yaml:"caddy"`
 	Templates TemplatesConfig `yaml:"templates"`
-	Logging  LoggingConfig  `yaml:"logging"`
+	Logging   LoggingConfig   `yaml:"logging"`
 }
 
 // ServerConfig represents server configuration

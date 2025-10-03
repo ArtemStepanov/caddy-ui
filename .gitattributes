@@ -1,0 +1,53 @@
+# Auto detect text files and perform LF normalization
+* text=auto
+
+# Source code
+*.go text diff=golang
+*.js text diff=javascript
+*.jsx text diff=javascript
+*.ts text diff=typescript
+*.tsx text diff=typescript
+*.json text
+*.yaml text
+*.yml text
+*.md text
+*.txt text
+
+# Scripts
+*.sh text eol=lf
+*.bash text eol=lf
+
+# Config files
+.gitignore text
+.gitattributes text
+.editorconfig text
+Makefile text
+
+# Lock files (binary)
+package-lock.json binary
+go.sum binary
+bun.lockb binary
+
+# Images
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.svg text
+
+# Fonts
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.eot binary
+
+# Documentation
+*.md text diff=markdown
+
+# Archives
+*.zip binary
+*.tar binary
+*.gz binary
+*.tgz binary
+*.rar binary

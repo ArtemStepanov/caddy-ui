@@ -342,9 +342,9 @@ func (m *Manager) BulkConfigUpdate(instanceIDs []string, path string, config int
 		wg.Add(1)
 		go func(id string) {
 			defer wg.Done()
-			
+
 			err := m.SetConfig(id, path, config, "")
-			
+
 			mu.Lock()
 			results[id] = err
 			mu.Unlock()

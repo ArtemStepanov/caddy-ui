@@ -2,8 +2,10 @@
 
 A modern, web-based management interface for multiple Caddy server instances. Built with Go backend and React frontend, this orchestrator provides centralized control over multiple Caddy servers through their Admin API.
 
+[![CI Pipeline](https://github.com/ArtemStepanov/caddy-orchestrator/actions/workflows/ci.yml/badge.svg)](https://github.com/ArtemStepanov/caddy-orchestrator/actions/workflows/ci.yml)
+[![Security Scanning](https://github.com/ArtemStepanov/caddy-orchestrator/actions/workflows/security.yml/badge.svg)](https://github.com/ArtemStepanov/caddy-orchestrator/actions/workflows/security.yml)
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
-![Go Version](https://img.shields.io/badge/go-1.21+-00ADD8.svg)
+![Go Version](https://img.shields.io/badge/go-1.24+-00ADD8.svg)
 ![React](https://img.shields.io/badge/react-18.0+-61DAFB.svg)
 
 ## Features
@@ -384,6 +386,16 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
 4. Push to the branch (`git push origin feature/AmazingFeature`)
 5. Open a Pull Request
+
+### Development Guidelines
+
+- **Code Quality**: All PRs must pass CI checks (linting, tests, builds)
+- **Testing**: Add tests for new features and bug fixes
+- **Documentation**: Update documentation for API or feature changes
+- **Commit Messages**: Use [Conventional Commits](https://www.conventionalcommits.org/) format
+- **PR Size**: Keep PRs focused and reasonably sized
+
+See our [PR template](.github/pull_request_template.md) for more details.
 
 ## License
 

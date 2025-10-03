@@ -14,9 +14,9 @@ import (
 
 // Client represents a Caddy Admin API client
 type Client struct {
-	baseURL    string
-	httpClient *http.Client
-	authType   string
+	baseURL     string
+	httpClient  *http.Client
+	authType    string
 	credentials map[string]string
 }
 
@@ -306,7 +306,7 @@ func (c *Client) GetPKICA(caID string) (map[string]interface{}, error) {
 // HealthCheck performs a health check on the Caddy instance
 func (c *Client) HealthCheck() (bool, error) {
 	start := time.Now()
-	
+
 	resp, err := c.doRequest("GET", "/config/", nil, nil)
 	if err != nil {
 		return false, err
