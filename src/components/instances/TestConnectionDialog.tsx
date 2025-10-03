@@ -11,7 +11,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import type { TestConnectionDialogProps, TestStatus, HealthCheckResult } from "@/types";
-import { cn } from "@/lib/utils";
 
 export function TestConnectionDialog({ 
   open, 

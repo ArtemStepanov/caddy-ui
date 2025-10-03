@@ -149,11 +149,12 @@ export function sortInstances(
       case 'status':
         comparison = a.status.localeCompare(b.status);
         break;
-      case 'last_seen':
+      case 'last_seen': {
         const aTime = a.last_seen ? new Date(a.last_seen).getTime() : 0;
         const bTime = b.last_seen ? new Date(b.last_seen).getTime() : 0;
         comparison = aTime - bTime;
         break;
+      }
     }
 
     return sortOrder === 'asc' ? comparison : -comparison;

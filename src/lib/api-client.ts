@@ -10,6 +10,7 @@ import type {
   HealthCheckResult,
   ConfigTemplate,
   TemplateVariable,
+  CaddyConfigValue,
 } from '@/types';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
@@ -100,16 +101,16 @@ class APIClient {
   }
 
   // Configuration Management
-  async getConfig(instanceId: string, path?: string): Promise<APIResponse<Record<string, any>>> {
+  async getConfig(instanceId: string, path?: string): Promise<APIResponse<CaddyConfigValue>> {
     const endpoint = path 
       ? `/instances/${instanceId}/config/${path}`
       : `/instances/${instanceId}/config`;
-    return this.request<Record<string, any>>(endpoint);
+    return this.request<CaddyConfigValue>(endpoint);
   }
 
   async setConfig(
     instanceId: string,
-    config: Record<string, any>,
+    config: CaddyConfigValue,
     path?: string,
     etag?: string
   ): Promise<APIResponse<{ message: string }>> {
@@ -131,7 +132,7 @@ class APIClient {
 
   async patchConfig(
     instanceId: string,
-    config: Record<string, any>,
+    config: CaddyConfigValue,
     path?: string
   ): Promise<APIResponse<{ message: string }>> {
     const endpoint = path
@@ -154,19 +155,19 @@ class APIClient {
     instanceId: string,
     caddyfile: string,
     adapter?: string
-  ): Promise<APIResponse<Record<string, any>>> {
-    return this.request<Record<string, any>>(`/instances/${instanceId}/adapt`, {
+  ): Promise<APIResponse<CaddyConfigValue>> {
+    return this.request<CaddyConfigValue>(`/instances/${instanceId}/adapt`, {
       method: 'POST',
       body: JSON.stringify({ caddyfile, adapter }),
     });
   }
 
-  async getUpstreams(instanceId: string): Promise<APIResponse<any[]>> {
-    return this.request<any[]>(`/instances/${instanceId}/upstreams`);
+  async getUpstreams(instanceId: string): Promise<APIResponse<unknown[]>> {
+    return this.request<unknown[]>(`/instances/${instanceId}/upstreams`);
   }
 
-  async getPKICA(instanceId: string, caId: string): Promise<APIResponse<Record<string, any>>> {
-    return this.request<Record<string, any>>(`/instances/${instanceId}/pki/ca/${caId}`);
+  async getPKICA(instanceId: string, caId: string): Promise<APIResponse<Record<string, unknown>>> {
+    return this.request<Record<string, unknown>>(`/instances/${instanceId}/pki/ca/${caId}`);
   }
 
   // Template Management
@@ -187,9 +188,9 @@ class APIClient {
 
   async generateConfig(
     templateId: string,
-    variables: Record<string, any>
-  ): Promise<APIResponse<Record<string, any>>> {
-    return this.request<Record<string, any>>(`/templates/${templateId}/generate`, {
+    variables: Record<string, unknown>
+  ): Promise<APIResponse<CaddyConfigValue>> {
+    return this.request<CaddyConfigValue>(`/templates/${templateId}/generate`, {
       method: 'POST',
       body: JSON.stringify({ variables }),
     });
@@ -199,9 +200,9 @@ class APIClient {
   async bulkConfigUpdate(
     instanceIds: string[],
     path: string,
-    config: Record<string, any>
-  ): Promise<APIResponse<Record<string, any>>> {
-    return this.request<Record<string, any>>('/bulk/config-update', {
+    config: CaddyConfigValue
+  ): Promise<APIResponse<Record<string, unknown>>> {
+    return this.request<Record<string, unknown>>('/bulk/config-update', {
       method: 'POST',
       body: JSON.stringify({ instance_ids: instanceIds, path, config }),
     });

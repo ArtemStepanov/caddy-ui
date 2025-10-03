@@ -116,7 +116,7 @@ export function useConfigEditor(instanceId: string) {
         let configObj;
         try {
           configObj = JSON.parse(newConfig);
-        } catch (e) {
+        } catch {
           throw new Error('Invalid JSON configuration');
         }
 
@@ -208,7 +208,7 @@ export function useConfigEditor(instanceId: string) {
         let configObj;
         try {
           configObj = JSON.parse(configToValidate);
-        } catch (e) {
+        } catch {
           setValidationErrors([
             {
               message: 'Invalid JSON syntax',
@@ -236,7 +236,7 @@ export function useConfigEditor(instanceId: string) {
             duration: 3000,
           });
           return true;
-        } catch (e) {
+        } catch {
           const errors: ValidationError[] = [
             {
               message: 'Invalid configuration structure',
@@ -277,7 +277,7 @@ export function useConfigEditor(instanceId: string) {
     try {
       const parsed = JSON.parse(configToFormat);
       return JSON.stringify(parsed, null, 2);
-    } catch (e) {
+    } catch {
       toast({
         title: 'Format Failed',
         description: 'Invalid JSON - cannot format',
@@ -296,14 +296,15 @@ export function useConfigEditor(instanceId: string) {
 
         if (response.success && response.data) {
           // Extract the actual config from the result field (if it exists)
-          let actualConfig = response.data;
-          if (response.data.result) {
+          const responseData = response.data as Record<string, unknown>;
+          let actualConfig: unknown = response.data;
+          if (responseData.result) {
             console.log('📦 Extracted config from "result" field');
-            actualConfig = response.data.result;
+            actualConfig = responseData.result;
           }
           
-          if (response.data.warnings && response.data.warnings.length > 0) {
-            console.warn('⚠️ Caddyfile warnings:', response.data.warnings);
+          if (responseData.warnings && Array.isArray(responseData.warnings) && responseData.warnings.length > 0) {
+            console.warn('⚠️ Caddyfile warnings:', responseData.warnings);
           }
 
           toast({
@@ -316,7 +317,6 @@ export function useConfigEditor(instanceId: string) {
           throw new Error(response.error?.message || 'Failed to adapt Caddyfile');
         }
       } catch (err) {
-        const message = err instanceof Error ? err.message : 'Failed to adapt Caddyfile';
         const details = err instanceof Error && err.message.includes('Error: ') 
           ? err.message 
           : 'Invalid Caddyfile syntax. Please check your configuration.';

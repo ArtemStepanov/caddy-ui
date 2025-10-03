@@ -40,7 +40,7 @@ export function ExportConfigMenu({
         title: 'Copied to Clipboard',
         description: 'Configuration has been copied',
       });
-    } catch (error) {
+    } catch (_) {
       toast({
         title: 'Error',
         description: 'Failed to copy to clipboard',

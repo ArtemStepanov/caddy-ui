@@ -3,7 +3,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { useState } from 'react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import type { ValidationError, ValidationErrorPanelProps } from '@/types';
+import type { ValidationErrorPanelProps } from '@/types';
 
 export function ValidationErrorPanel({ errors, onGoToError }: ValidationErrorPanelProps) {
   const [isOpen, setIsOpen] = useState(true);

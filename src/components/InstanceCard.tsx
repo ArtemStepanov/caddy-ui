@@ -13,14 +13,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-
-interface InstanceCardProps {
-  name: string;
-  url: string;
-  status: "online" | "offline" | "error";
-  version?: string;
-  upstreams?: number;
-}
+import type { InstanceCardProps } from "@/types";
 
 export function InstanceCard({
   name,

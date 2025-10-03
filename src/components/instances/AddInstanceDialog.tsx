@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Check, X, Eye, EyeOff, Loader2, AlertCircle } from "lucide-react";
+import { Check, Eye, EyeOff, Loader2, AlertCircle } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -43,7 +43,6 @@ export function AddInstanceDialog({ open, onOpenChange, onSubmit, existingInstan
   const [touched, setTouched] = useState<Record<string, boolean>>({});
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [testingConnection, setTestingConnection] = useState(false);
 
   const handleBlur = (field: string) => {
     setTouched({ ...touched, [field]: true });

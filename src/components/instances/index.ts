@@ -10,3 +10,4 @@ export { TestConnectionDialog } from './TestConnectionDialog';
 export { InstanceGridCard } from './InstanceGridCard';
 export { InstanceTableView } from './InstanceTableView';
 export { EmptyState } from './EmptyState';
+export { InstanceSelector } from './InstanceSelector';

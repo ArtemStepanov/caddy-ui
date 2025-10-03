@@ -29,7 +29,6 @@ export function InstanceTableView({
   onDelete,
   onTest,
   sortBy,
-  sortOrder,
   onSort,
 }: InstanceTableViewProps) {
   const allSelected = instances.length > 0 && selectedIds.length === instances.length;

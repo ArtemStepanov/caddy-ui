@@ -23,9 +23,9 @@ func NewBulkHandler(manager *caddy.Manager) *BulkHandler {
 // BulkConfigUpdate applies configuration to multiple instances
 func (h *BulkHandler) BulkConfigUpdate(c *gin.Context) {
 	var request struct {
-		InstanceIDs []string               `json:"instance_ids" binding:"required"`
-		Path        string                 `json:"path"`
-		Config      map[string]interface{} `json:"config" binding:"required"`
+		InstanceIDs []string       `json:"instance_ids" binding:"required"`
+		Path        string         `json:"path"`
+		Config      map[string]any `json:"config" binding:"required"`
 	}
 
 	if err := c.ShouldBindJSON(&request); err != nil {
@@ -52,15 +52,15 @@ func (h *BulkHandler) BulkConfigUpdate(c *gin.Context) {
 	}
 
 	// Format results
-	formattedResults := make(map[string]interface{})
+	formattedResults := make(map[string]any)
 	for instanceID, err := range results {
 		if err != nil {
-			formattedResults[instanceID] = map[string]interface{}{
+			formattedResults[instanceID] = map[string]any{
 				"success": false,
 				"error":   err.Error(),
 			}
 		} else {
-			formattedResults[instanceID] = map[string]interface{}{
+			formattedResults[instanceID] = map[string]any{
 				"success": true,
 			}
 		}
@@ -80,10 +80,10 @@ func (h *BulkHandler) BulkConfigUpdate(c *gin.Context) {
 // BulkTemplateApply applies a template to multiple instances
 func (h *BulkHandler) BulkTemplateApply(c *gin.Context) {
 	var request struct {
-		InstanceIDs []string               `json:"instance_ids" binding:"required"`
-		TemplateID  string                 `json:"template_id" binding:"required"`
-		Variables   map[string]interface{} `json:"variables" binding:"required"`
-		Path        string                 `json:"path"`
+		InstanceIDs []string       `json:"instance_ids" binding:"required"`
+		TemplateID  string         `json:"template_id" binding:"required"`
+		Variables   map[string]any `json:"variables" binding:"required"`
+		Path        string         `json:"path"`
 	}
 
 	if err := c.ShouldBindJSON(&request); err != nil {

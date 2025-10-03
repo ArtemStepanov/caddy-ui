@@ -98,7 +98,7 @@ func configureMTLS(credentials map[string]string) (*tls.Config, error) {
 }
 
 // doRequest performs an HTTP request with authentication
-func (c *Client) doRequest(method, path string, body interface{}, headers map[string]string) (*http.Response, error) {
+func (c *Client) doRequest(method, path string, body any, headers map[string]string) (*http.Response, error) {
 	url := c.baseURL + path
 
 	var reqBody io.Reader
@@ -137,7 +137,7 @@ func (c *Client) doRequest(method, path string, body interface{}, headers map[st
 }
 
 // GetConfig retrieves the configuration from Caddy
-func (c *Client) GetConfig(path string) (map[string]interface{}, string, error) {
+func (c *Client) GetConfig(path string) (map[string]any, string, error) {
 	endpoint := "/config"
 	if path != "" {
 		endpoint = "/config/" + path
@@ -157,7 +157,7 @@ func (c *Client) GetConfig(path string) (map[string]interface{}, string, error) 
 	// Get ETag from response
 	etag := resp.Header.Get("ETag")
 
-	var config map[string]interface{}
+	var config map[string]any
 	if err := json.NewDecoder(resp.Body).Decode(&config); err != nil {
 		return nil, "", fmt.Errorf("failed to decode config: %w", err)
 	}
@@ -166,13 +166,13 @@ func (c *Client) GetConfig(path string) (map[string]interface{}, string, error) 
 }
 
 // GetConfigRaw retrieves the raw configuration without path or etag
-func (c *Client) GetConfigRaw() (map[string]interface{}, error) {
+func (c *Client) GetConfigRaw() (map[string]any, error) {
 	config, _, err := c.GetConfig("")
 	return config, err
 }
 
 // SetConfig sets the configuration in Caddy
-func (c *Client) SetConfig(path string, config interface{}, etag string) error {
+func (c *Client) SetConfig(path string, config any, etag string) error {
 	endpoint := "/config"
 	if path != "" {
 		endpoint = "/config/" + path
@@ -213,7 +213,7 @@ func (c *Client) SetConfig(path string, config interface{}, etag string) error {
 }
 
 // PatchConfig patches the configuration in Caddy
-func (c *Client) PatchConfig(path string, config interface{}) error {
+func (c *Client) PatchConfig(path string, config any) error {
 	endpoint := "/config"
 	if path != "" {
 		endpoint = "/config/" + path
@@ -252,7 +252,7 @@ func (c *Client) DeleteConfig(path string) error {
 }
 
 // AdaptConfig adapts a Caddyfile to JSON format
-func (c *Client) AdaptConfig(caddyfile string, adapter string) (map[string]interface{}, error) {
+func (c *Client) AdaptConfig(caddyfile string, adapter string) (map[string]any, error) {
 	if adapter == "" {
 		adapter = "caddyfile"
 	}
@@ -289,19 +289,19 @@ func (c *Client) AdaptConfig(caddyfile string, adapter string) (map[string]inter
 
 	if resp.StatusCode != http.StatusOK {
 		// Try to parse error message
-		var errResponse map[string]interface{}
+		var errResponse map[string]any
 		if json.Unmarshal(body, &errResponse) == nil {
 			if errMsg, ok := errResponse["error"].(string); ok {
-				fmt.Printf("AdaptConfig failed: %s\n", errMsg)
-				return nil, fmt.Errorf("Caddyfile syntax error: %s", errMsg)
+				fmt.Printf("adapt config failed: %s\n", errMsg)
+				return nil, fmt.Errorf("failed to parse caddyfile: %s", errMsg)
 			}
 		}
-		fmt.Printf("AdaptConfig failed: status=%d, body=%s\n", resp.StatusCode, string(body))
+		fmt.Printf("adapt config failed: status=%d, body=%s\n", resp.StatusCode, string(body))
 		return nil, fmt.Errorf("failed to adapt config: status %d, body: %s", resp.StatusCode, string(body))
 	}
 
 	// Parse the adapted config
-	var config map[string]interface{}
+	var config map[string]any
 	if err := json.Unmarshal(body, &config); err != nil {
 		fmt.Printf("AdaptConfig decode error: %v, body=%s\n", err, string(body))
 		return nil, fmt.Errorf("failed to decode adapted config: %w", err)
@@ -312,7 +312,7 @@ func (c *Client) AdaptConfig(caddyfile string, adapter string) (map[string]inter
 }
 
 // GetUpstreams retrieves reverse proxy upstream information
-func (c *Client) GetUpstreams() ([]interface{}, error) {
+func (c *Client) GetUpstreams() ([]any, error) {
 	resp, err := c.doRequest("GET", "/reverse_proxy/upstreams", nil, nil)
 	if err != nil {
 		return nil, err
@@ -324,7 +324,7 @@ func (c *Client) GetUpstreams() ([]interface{}, error) {
 		return nil, fmt.Errorf("failed to get upstreams: status %d, body: %s", resp.StatusCode, string(body))
 	}
 
-	var upstreams []interface{}
+	var upstreams []any
 	if err := json.NewDecoder(resp.Body).Decode(&upstreams); err != nil {
 		return nil, fmt.Errorf("failed to decode upstreams: %w", err)
 	}
@@ -333,7 +333,7 @@ func (c *Client) GetUpstreams() ([]interface{}, error) {
 }
 
 // GetPKICA retrieves PKI CA information
-func (c *Client) GetPKICA(caID string) (map[string]interface{}, error) {
+func (c *Client) GetPKICA(caID string) (map[string]any, error) {
 	endpoint := "/pki/ca/" + caID
 
 	resp, err := c.doRequest("GET", endpoint, nil, nil)
@@ -347,7 +347,7 @@ func (c *Client) GetPKICA(caID string) (map[string]interface{}, error) {
 		return nil, fmt.Errorf("failed to get PKI CA: status %d, body: %s", resp.StatusCode, string(body))
 	}
 
-	var ca map[string]interface{}
+	var ca map[string]any
 	if err := json.NewDecoder(resp.Body).Decode(&ca); err != nil {
 		return nil, fmt.Errorf("failed to decode PKI CA: %w", err)
 	}
@@ -378,7 +378,7 @@ func (c *Client) HealthCheck() (bool, error) {
 }
 
 // LoadConfig loads a complete configuration (replaces entire config)
-func (c *Client) LoadConfig(config interface{}) error {
+func (c *Client) LoadConfig(config any) error {
 	configJSON, _ := json.Marshal(config)
 	fmt.Printf("LoadConfig: configSize=%d bytes\n", len(configJSON))
 

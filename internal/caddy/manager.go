@@ -221,7 +221,7 @@ func (m *Manager) StartHealthChecks(interval time.Duration) {
 }
 
 // GetConfig retrieves configuration from a Caddy instance
-func (m *Manager) GetConfig(instanceID string, path string) (map[string]interface{}, string, error) {
+func (m *Manager) GetConfig(instanceID string, path string) (map[string]any, string, error) {
 	client, err := m.GetClient(instanceID)
 	if err != nil {
 		return nil, "", err
@@ -231,7 +231,7 @@ func (m *Manager) GetConfig(instanceID string, path string) (map[string]interfac
 }
 
 // LoadConfig loads a new configuration using Caddy's /load endpoint
-func (m *Manager) LoadConfig(instanceID string, config interface{}) error {
+func (m *Manager) LoadConfig(instanceID string, config any) error {
 	client, err := m.GetClient(instanceID)
 	if err != nil {
 		return err
@@ -241,7 +241,7 @@ func (m *Manager) LoadConfig(instanceID string, config interface{}) error {
 }
 
 // SetConfig sets configuration on a Caddy instance
-func (m *Manager) SetConfig(instanceID string, path string, config interface{}, etag string) error {
+func (m *Manager) SetConfig(instanceID string, path string, config any, etag string) error {
 	client, err := m.GetClient(instanceID)
 	if err != nil {
 		return err
@@ -266,7 +266,7 @@ func (m *Manager) SetConfig(instanceID string, path string, config interface{}, 
 }
 
 // PatchConfig patches configuration on a Caddy instance
-func (m *Manager) PatchConfig(instanceID string, path string, config interface{}) error {
+func (m *Manager) PatchConfig(instanceID string, path string, config any) error {
 	client, err := m.GetClient(instanceID)
 	if err != nil {
 		return err
@@ -286,7 +286,7 @@ func (m *Manager) DeleteConfig(instanceID string, path string) error {
 }
 
 // AdaptConfig adapts a Caddyfile to JSON
-func (m *Manager) AdaptConfig(instanceID string, caddyfile string, adapter string) (map[string]interface{}, error) {
+func (m *Manager) AdaptConfig(instanceID string, caddyfile string, adapter string) (map[string]any, error) {
 	client, err := m.GetClient(instanceID)
 	if err != nil {
 		return nil, err
@@ -296,7 +296,7 @@ func (m *Manager) AdaptConfig(instanceID string, caddyfile string, adapter strin
 }
 
 // GetUpstreams retrieves upstream information
-func (m *Manager) GetUpstreams(instanceID string) ([]interface{}, error) {
+func (m *Manager) GetUpstreams(instanceID string) ([]any, error) {
 	client, err := m.GetClient(instanceID)
 	if err != nil {
 		return nil, err
@@ -306,7 +306,7 @@ func (m *Manager) GetUpstreams(instanceID string) ([]interface{}, error) {
 }
 
 // GetPKICA retrieves PKI CA information
-func (m *Manager) GetPKICA(instanceID string, caID string) (map[string]interface{}, error) {
+func (m *Manager) GetPKICA(instanceID string, caID string) (map[string]any, error) {
 	client, err := m.GetClient(instanceID)
 	if err != nil {
 		return nil, err
@@ -343,7 +343,7 @@ func (m *Manager) RollbackConfig(instanceID string, backupID string) error {
 }
 
 // BulkConfigUpdate applies configuration to multiple instances
-func (m *Manager) BulkConfigUpdate(instanceIDs []string, path string, config interface{}) map[string]error {
+func (m *Manager) BulkConfigUpdate(instanceIDs []string, path string, config any) map[string]error {
 	results := make(map[string]error)
 	var mu sync.Mutex
 	var wg sync.WaitGroup
