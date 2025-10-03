@@ -1,0 +1,33 @@
+# CODEOWNERS file
+# These owners will be the default owners for everything in the repo.
+# Unless a later match takes precedence, they will be requested for
+# review when someone opens a pull request.
+
+# Global owners
+* @ArtemStepanov
+
+# Backend code
+*.go @ArtemStepanov
+/cmd/ @ArtemStepanov
+/internal/ @ArtemStepanov
+/config/ @ArtemStepanov
+go.mod @ArtemStepanov
+go.sum @ArtemStepanov
+
+# Frontend code
+/src/ @ArtemStepanov
+*.ts @ArtemStepanov
+*.tsx @ArtemStepanov
+*.css @ArtemStepanov
+package.json @ArtemStepanov
+package-lock.json @ArtemStepanov
+
+# CI/CD and DevOps
+/.github/ @ArtemStepanov
+Dockerfile @ArtemStepanov
+docker-compose*.yml @ArtemStepanov
+Makefile @ArtemStepanov
+
+# Documentation
+*.md @ArtemStepanov
+/docs/ @ArtemStepanov

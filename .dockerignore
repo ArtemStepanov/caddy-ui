@@ -1,25 +1,50 @@
+# Build artifacts
 node_modules
 dist
-data
-*.db
 *.log
-.git
-.gitignore
-.env
-.env.local
-.env.development
-logs
-tmp
-.vscode
-.idea
 coverage.out
 coverage.html
 *.test
+caddy-orchestrator
+
+# Data and runtime files
+data
+*.db
+*.db-shm
+*.db-wal
+logs
+tmp
+
+# Development files
+.vscode
+.idea
 .DS_Store
 Thumbs.db
 *.swp
 *.swo
 *~
+
+# Git
+.git
+.gitignore
+.gitattributes
+
+# Environment
+.env
+.env.local
+.env.development
+.env.production
+
+# CI/CD
+.github
+
+# Documentation (not needed in image)
+docs
+*.md
+!README.md
+
+# Scripts (not needed in image)
+scripts
 
 # Don't ignore config directory - needed for build
 !config/
