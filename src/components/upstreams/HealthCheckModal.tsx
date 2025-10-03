@@ -28,6 +28,8 @@ interface TestResult {
 }
 
 export function HealthCheckModal({ open, onClose, upstreams, onTestComplete }: HealthCheckModalProps) {
+  console.log('HealthCheckModal render - open:', open, 'upstreams count:', upstreams.length);
+  
   const [results, setResults] = useState<TestResult[]>([]);
   const [testing, setTesting] = useState(false);
   const [progress, setProgress] = useState(0);

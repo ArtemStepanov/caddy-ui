@@ -17,6 +17,8 @@ interface UpstreamDetailsDrawerProps {
 }
 
 export function UpstreamDetailsDrawer({ upstream, open, onClose, onTestHealth }: UpstreamDetailsDrawerProps) {
+  console.log('UpstreamDetailsDrawer render - open:', open, 'upstream:', upstream?.address);
+  
   if (!upstream) return null;
 
   const status = upstream.status || 'unknown';

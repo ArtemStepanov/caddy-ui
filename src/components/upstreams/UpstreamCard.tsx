@@ -195,7 +195,11 @@ export function UpstreamCard({ upstream, poolName, onViewDetails, onTestHealth }
           variant="outline"
           size="sm"
           className="flex-1"
-          onClick={() => onTestHealth(upstream)}
+          onClick={(e) => {
+            e.stopPropagation();
+            console.log('Test Now button clicked for:', upstream.address);
+            onTestHealth(upstream);
+          }}
         >
           Test Now
         </Button>
@@ -203,7 +207,11 @@ export function UpstreamCard({ upstream, poolName, onViewDetails, onTestHealth }
           variant="default"
           size="sm"
           className="flex-1"
-          onClick={() => onViewDetails(upstream)}
+          onClick={(e) => {
+            e.stopPropagation();
+            console.log('View Details button clicked for:', upstream.address);
+            onViewDetails(upstream);
+          }}
         >
           View Details
         </Button>

@@ -130,11 +130,13 @@ const Upstreams = () => {
 
   // Handlers
   const handleViewDetails = (upstream: Upstream) => {
+    console.log('handleViewDetails called with:', upstream);
     setSelectedUpstream(upstream);
     setDetailsDrawerOpen(true);
   };
 
   const handleTestHealth = (upstream?: Upstream) => {
+    console.log('handleTestHealth called with:', upstream);
     if (upstream) {
       setUpstreamsToTest([upstream]);
     } else if (upstreamsData) {
