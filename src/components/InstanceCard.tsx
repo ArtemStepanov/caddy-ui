@@ -1,7 +1,18 @@
-import { Server, Activity, AlertCircle } from "lucide-react";
+import { Server, Activity, AlertCircle, Settings as SettingsIcon } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 interface InstanceCardProps {
   name: string;
@@ -18,6 +29,8 @@ export function InstanceCard({
   version = "2.7.6",
   upstreams = 0,
 }: InstanceCardProps) {
+  const navigate = useNavigate();
+  
   const statusConfig = {
     online: { color: "bg-success", text: "Online", icon: Activity },
     offline: { color: "bg-muted-foreground", text: "Offline", icon: Server },
@@ -61,12 +74,64 @@ export function InstanceCard({
           </div>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" size="sm" className="flex-1">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="flex-1"
+            onClick={() => navigate("/config")}
+          >
             Manage
           </Button>
-          <Button variant="ghost" size="sm">
-            Settings
-          </Button>
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button variant="ghost" size="sm">
+                <SettingsIcon className="w-4 h-4" />
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="bg-card border-border">
+              <DialogHeader>
+                <DialogTitle>Instance Settings</DialogTitle>
+                <DialogDescription>
+                  Configure settings for {name}
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4 py-4">
+                <div className="space-y-2">
+                  <Label htmlFor="edit-name">Instance Name</Label>
+                  <Input
+                    id="edit-name"
+                    defaultValue={name}
+                    className="bg-background border-border"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-url">Admin API URL</Label>
+                  <Input
+                    id="edit-url"
+                    defaultValue={url}
+                    className="bg-background border-border"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-auth">Authentication</Label>
+                  <Input
+                    id="edit-auth"
+                    type="password"
+                    placeholder="API Key or Bearer Token"
+                    className="bg-background border-border"
+                  />
+                </div>
+                <div className="flex gap-2">
+                  <Button className="flex-1 bg-gradient-primary">
+                    Save Changes
+                  </Button>
+                  <Button variant="destructive" className="flex-1">
+                    Delete Instance
+                  </Button>
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
         </div>
       </CardContent>
     </Card>

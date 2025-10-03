@@ -1,4 +1,5 @@
 import { Server, Activity, Shield, TrendingUp } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { StatsCard } from "@/components/StatsCard";
 import { InstanceCard } from "@/components/InstanceCard";
 import { Button } from "@/components/ui/button";
@@ -14,6 +15,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 const Dashboard = () => {
+  const navigate = useNavigate();
+  
   // Mock data - в реальном приложении будет из API
   const stats = [
     { title: "Total Instances", value: 3, icon: Server, trend: { value: 12, positive: true } },
@@ -107,19 +110,31 @@ const Dashboard = () => {
         <div className="bg-card/50 backdrop-blur border border-border rounded-lg p-6">
           <h3 className="text-xl font-bold mb-4">Quick Actions</h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <Button variant="outline" className="h-auto py-4 flex flex-col items-start">
+            <Button 
+              variant="outline" 
+              className="h-auto py-4 flex flex-col items-start"
+              onClick={() => navigate("/config")}
+            >
               <span className="font-semibold mb-1">View Configurations</span>
               <span className="text-xs text-muted-foreground">
                 Manage Caddy configs across instances
               </span>
             </Button>
-            <Button variant="outline" className="h-auto py-4 flex flex-col items-start">
+            <Button 
+              variant="outline" 
+              className="h-auto py-4 flex flex-col items-start"
+              onClick={() => navigate("/upstreams")}
+            >
               <span className="font-semibold mb-1">Monitor Upstreams</span>
               <span className="text-xs text-muted-foreground">
                 Check health and status of backends
               </span>
             </Button>
-            <Button variant="outline" className="h-auto py-4 flex flex-col items-start">
+            <Button 
+              variant="outline" 
+              className="h-auto py-4 flex flex-col items-start"
+              onClick={() => navigate("/certificates")}
+            >
               <span className="font-semibold mb-1">Manage Certificates</span>
               <span className="text-xs text-muted-foreground">
                 View and renew SSL/TLS certificates
