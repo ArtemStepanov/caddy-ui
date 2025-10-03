@@ -5,11 +5,13 @@ import { Progress } from "@/components/ui/progress";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import type { Upstream } from "@/types/api";
-import { Activity, AlertCircle, CheckCircle, Code, Copy, LineChart, XCircle } from "lucide-react";
+import { Activity, AlertCircle, CheckCircle, Code, Copy, Info, LineChart, XCircle } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
+import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
 
 interface UpstreamDetailsDrawerProps {
   upstream: Upstream | null;
@@ -291,47 +293,208 @@ export function UpstreamDetailsDrawer({ upstream, instanceId, open, onClose, onT
 
               {/* Performance Tab */}
               <TabsContent value="performance" className="space-y-4">
+                {/* Info Banner */}
+                <div className="rounded-lg border border-blue-500/20 bg-blue-500/5 p-4">
+                  <div className="flex items-start gap-3">
+                    <Info className="w-5 h-5 text-blue-500 mt-0.5 flex-shrink-0" />
+                    <div className="text-sm">
+                      <p className="font-medium text-blue-500 mb-1">Current Metrics Only</p>
+                      <p className="text-muted-foreground">
+                        Caddy Admin API provides current metrics only. For historical performance data and trending, 
+                        consider integrating with Prometheus metrics at <code className="text-xs bg-muted px-1 py-0.5 rounded">:2019/metrics</code>
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Current Performance Metrics */}
                 <Card>
                   <CardHeader>
-                    <CardTitle className="text-base flex items-center gap-2">
-                      <LineChart className="w-4 h-4" />
-                      Response Time Overview
-                    </CardTitle>
+                    <CardTitle className="text-base">Current Performance</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="h-48 flex items-center justify-center border rounded-lg bg-muted/20">
-                      <p className="text-sm text-muted-foreground">
-                        Chart visualization would go here
-                      </p>
+                    <div className="grid grid-cols-2 gap-6">
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm text-muted-foreground">Response Time</span>
+                          <span className={`text-2xl font-bold ${
+                            (upstream.response_time || 0) < 100 ? 'text-green-500' :
+                            (upstream.response_time || 0) < 500 ? 'text-yellow-500' : 'text-red-500'
+                          }`}>
+                            {upstream.response_time || 0}ms
+                          </span>
+                        </div>
+                        <Progress 
+                          value={Math.min(((upstream.response_time || 0) / 1000) * 100, 100)} 
+                          className="h-2"
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm text-muted-foreground">Total Requests</span>
+                          <span className="text-2xl font-bold">
+                            {(upstream.num_requests || 0).toLocaleString()}
+                          </span>
+                        </div>
+                        <div className="text-xs text-muted-foreground">
+                          Since upstream started
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm text-muted-foreground">Failed Requests</span>
+                          <span className={`text-2xl font-bold ${
+                            (upstream.fails || 0) > 0 ? 'text-red-500' : 'text-green-500'
+                          }`}>
+                            {upstream.fails || 0}
+                          </span>
+                        </div>
+                        <div className="text-xs text-muted-foreground">
+                          Max: {upstream.health_checks?.passive?.max_fails || 100}
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm text-muted-foreground">Success Rate</span>
+                          <span className="text-2xl font-bold text-green-500">
+                            {upstream.num_requests && upstream.num_requests > 0
+                              ? ((upstream.num_requests - (upstream.fails || 0)) / upstream.num_requests * 100).toFixed(1)
+                              : '100'}%
+                          </span>
+                        </div>
+                        <div className="text-xs text-muted-foreground">
+                          Based on request/fail ratio
+                        </div>
+                      </div>
                     </div>
                   </CardContent>
                 </Card>
 
+                {/* Latency Percentiles Visualization */}
                 <Card>
                   <CardHeader>
-                    <CardTitle className="text-base">Latency Percentiles</CardTitle>
+                    <CardTitle className="text-base">Estimated Latency Distribution</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="space-y-2 text-sm">
-                      <div className="flex justify-between py-2 border-b">
-                        <span className="text-muted-foreground">P50</span>
-                        <span className="font-mono font-medium">{upstream.response_time || 0}ms</span>
+                    <ChartContainer
+                      config={{
+                        latency: {
+                          label: "Response Time",
+                          color: "hsl(var(--chart-1))",
+                        },
+                      }}
+                      className="h-48"
+                    >
+                      <BarChart
+                        data={[
+                          { percentile: "P50", value: upstream.response_time || 0 },
+                          { percentile: "P75", value: Math.round((upstream.response_time || 0) * 1.5) },
+                          { percentile: "P90", value: Math.round((upstream.response_time || 0) * 2.5) },
+                          { percentile: "P95", value: Math.round((upstream.response_time || 0) * 3.5) },
+                          { percentile: "P99", value: Math.round((upstream.response_time || 0) * 4.5) },
+                        ]}
+                      >
+                        <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                        <XAxis 
+                          dataKey="percentile" 
+                          className="text-xs"
+                        />
+                        <YAxis 
+                          className="text-xs"
+                          label={{ value: 'ms', angle: -90, position: 'insideLeft' }}
+                        />
+                        <ChartTooltip content={<ChartTooltipContent />} />
+                        <Bar dataKey="value" fill="hsl(var(--chart-1))" radius={4} />
+                      </BarChart>
+                    </ChartContainer>
+                    <p className="text-xs text-muted-foreground text-center mt-2">
+                      Estimated distribution based on current response time of {upstream.response_time || 0}ms
+                    </p>
+                  </CardContent>
+                </Card>
+
+                {/* Request Distribution */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-base">Request Status Distribution</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <div className="w-3 h-3 rounded-full bg-green-500" />
+                          <span className="text-sm">Successful</span>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <Progress 
+                            value={upstream.num_requests && upstream.num_requests > 0
+                              ? ((upstream.num_requests - (upstream.fails || 0)) / upstream.num_requests * 100)
+                              : 100
+                            }
+                            className="w-32 h-2"
+                          />
+                          <span className="text-sm font-mono font-medium w-20 text-right">
+                            {((upstream.num_requests || 0) - (upstream.fails || 0)).toLocaleString()}
+                          </span>
+                        </div>
                       </div>
-                      <div className="flex justify-between py-2 border-b">
-                        <span className="text-muted-foreground">P75</span>
-                        <span className="font-mono font-medium">{Math.round((upstream.response_time || 0) * 1.5)}ms</span>
-                      </div>
-                      <div className="flex justify-between py-2 border-b">
-                        <span className="text-muted-foreground">P90</span>
-                        <span className="font-mono font-medium">{Math.round((upstream.response_time || 0) * 2.5)}ms</span>
-                      </div>
-                      <div className="flex justify-between py-2">
-                        <span className="text-muted-foreground">P99</span>
-                        <span className="font-mono font-medium">{Math.round((upstream.response_time || 0) * 4)}ms</span>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <div className="w-3 h-3 rounded-full bg-red-500" />
+                          <span className="text-sm">Failed</span>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <Progress 
+                            value={upstream.num_requests && upstream.num_requests > 0
+                              ? ((upstream.fails || 0) / upstream.num_requests * 100)
+                              : 0
+                            }
+                            className="w-32 h-2 [&>div]:bg-red-500"
+                          />
+                          <span className="text-sm font-mono font-medium w-20 text-right">
+                            {(upstream.fails || 0).toLocaleString()}
+                          </span>
+                        </div>
                       </div>
                     </div>
                   </CardContent>
                 </Card>
+
+                {/* Performance Thresholds */}
+                {upstream.health_checks?.passive?.unhealthy_latency && (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-base">Performance Thresholds</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-2 text-sm">
+                      <div className="flex justify-between py-2 border-b">
+                        <span className="text-muted-foreground">Unhealthy Latency Threshold</span>
+                        <span className="font-mono font-medium">{upstream.health_checks.passive.unhealthy_latency}</span>
+                      </div>
+                      <div className="flex justify-between py-2 border-b">
+                        <span className="text-muted-foreground">Current Response Time</span>
+                        <span className={`font-mono font-medium ${
+                          (upstream.response_time || 0) < parseInt(upstream.health_checks.passive.unhealthy_latency) 
+                            ? 'text-green-500' 
+                            : 'text-red-500'
+                        }`}>
+                          {upstream.response_time || 0}ms
+                        </span>
+                      </div>
+                      <div className="flex justify-between py-2">
+                        <span className="text-muted-foreground">Status</span>
+                        <Badge variant={(upstream.response_time || 0) < parseInt(upstream.health_checks.passive.unhealthy_latency) ? 'default' : 'destructive'}>
+                          {(upstream.response_time || 0) < parseInt(upstream.health_checks.passive.unhealthy_latency) 
+                            ? 'Within Threshold' 
+                            : 'Exceeds Threshold'}
+                        </Badge>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
               </TabsContent>
 
               {/* Configuration Tab */}
