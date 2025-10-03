@@ -1,0 +1,3436 @@
+
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+		<title>server: Go Coverage Report</title>
+		<style>
+			body {
+				background: black;
+				color: rgb(80, 80, 80);
+			}
+			body, pre, #legend span {
+				font-family: Menlo, monospace;
+				font-weight: bold;
+			}
+			#topbar {
+				background: black;
+				position: fixed;
+				top: 0; left: 0; right: 0;
+				height: 42px;
+				border-bottom: 1px solid rgb(80, 80, 80);
+			}
+			#content {
+				margin-top: 50px;
+			}
+			#nav, #legend {
+				float: left;
+				margin-left: 10px;
+			}
+			#legend {
+				margin-top: 12px;
+			}
+			#nav {
+				margin-top: 10px;
+			}
+			#legend span {
+				margin: 0 5px;
+			}
+			.cov0 { color: rgb(192, 0, 0) }
+.cov1 { color: rgb(128, 128, 128) }
+.cov2 { color: rgb(116, 140, 131) }
+.cov3 { color: rgb(104, 152, 134) }
+.cov4 { color: rgb(92, 164, 137) }
+.cov5 { color: rgb(80, 176, 140) }
+.cov6 { color: rgb(68, 188, 143) }
+.cov7 { color: rgb(56, 200, 146) }
+.cov8 { color: rgb(44, 212, 149) }
+.cov9 { color: rgb(32, 224, 152) }
+.cov10 { color: rgb(20, 236, 155) }
+
+		</style>
+	</head>
+	<body>
+		<div id="topbar">
+			<div id="nav">
+				<select id="files">
+				
+				<option value="file0">github.com/ArtemStepanov/caddy-orchestrator/cmd/server/main.go (0.0%)</option>
+				
+				<option value="file1">github.com/ArtemStepanov/caddy-orchestrator/config/config.go (94.4%)</option>
+				
+				<option value="file2">github.com/ArtemStepanov/caddy-orchestrator/internal/api/handlers/bulk.go (92.0%)</option>
+				
+				<option value="file3">github.com/ArtemStepanov/caddy-orchestrator/internal/api/handlers/config.go (84.2%)</option>
+				
+				<option value="file4">github.com/ArtemStepanov/caddy-orchestrator/internal/api/handlers/instances.go (90.2%)</option>
+				
+				<option value="file5">github.com/ArtemStepanov/caddy-orchestrator/internal/api/handlers/templates.go (81.8%)</option>
+				
+				<option value="file6">github.com/ArtemStepanov/caddy-orchestrator/internal/api/middleware/cors.go (100.0%)</option>
+				
+				<option value="file7">github.com/ArtemStepanov/caddy-orchestrator/internal/api/middleware/logging.go (92.3%)</option>
+				
+				<option value="file8">github.com/ArtemStepanov/caddy-orchestrator/internal/api/middleware/ratelimit.go (72.0%)</option>
+				
+				<option value="file9">github.com/ArtemStepanov/caddy-orchestrator/internal/api/middleware/recovery.go (100.0%)</option>
+				
+				<option value="file10">github.com/ArtemStepanov/caddy-orchestrator/internal/api/routes.go (100.0%)</option>
+				
+				<option value="file11">github.com/ArtemStepanov/caddy-orchestrator/internal/caddy/client.go (70.1%)</option>
+				
+				<option value="file12">github.com/ArtemStepanov/caddy-orchestrator/internal/caddy/manager.go (75.0%)</option>
+				
+				<option value="file13">github.com/ArtemStepanov/caddy-orchestrator/internal/docker/integration.go (0.0%)</option>
+				
+				<option value="file14">github.com/ArtemStepanov/caddy-orchestrator/internal/storage/sqlite.go (82.1%)</option>
+				
+				<option value="file15">github.com/ArtemStepanov/caddy-orchestrator/internal/templates/builtin.go (100.0%)</option>
+				
+				<option value="file16">github.com/ArtemStepanov/caddy-orchestrator/internal/templates/manager.go (79.3%)</option>
+				
+				</select>
+			</div>
+			<div id="legend">
+				<span>not tracked</span>
+			
+				<span class="cov0">not covered</span>
+				<span class="cov8">covered</span>
+			
+			</div>
+		</div>
+		<div id="content">
+		
+		<pre class="file" id="file0" style="display: none">package main
+
+import (
+        "context"
+        "fmt"
+        "log"
+        "net/http"
+        "os"
+        "os/signal"
+        "syscall"
+        "time"
+
+        "github.com/ArtemStepanov/caddy-orchestrator/config"
+        "github.com/ArtemStepanov/caddy-orchestrator/internal/api"
+        "github.com/ArtemStepanov/caddy-orchestrator/internal/caddy"
+        "github.com/ArtemStepanov/caddy-orchestrator/internal/storage"
+        "github.com/ArtemStepanov/caddy-orchestrator/internal/templates"
+        "github.com/gin-gonic/gin"
+)
+
+func main() <span class="cov0" title="0">{
+        // Load configuration
+        cfg, err := config.LoadConfig("./config/config.yaml")
+        if err != nil </span><span class="cov0" title="0">{
+                log.Printf("Warning: Failed to load config file, using defaults: %v", err)
+                cfg, _ = config.LoadConfig("") // Use defaults
+        }</span>
+
+        // Set logging level
+        <span class="cov0" title="0">if cfg.Logging.Level == "debug" </span><span class="cov0" title="0">{
+                gin.SetMode(gin.DebugMode)
+        }</span> else<span class="cov0" title="0"> {
+                gin.SetMode(gin.ReleaseMode)
+        }</span>
+
+        <span class="cov0" title="0">log.Printf("Starting Caddy Orchestrator...")
+        log.Printf("Server: %s:%d", cfg.Server.Host, cfg.Server.Port)
+        log.Printf("Database: %s", cfg.Storage.Path)
+
+        // Ensure data directory exists
+        if err := os.MkdirAll("./data", 0755); err != nil </span><span class="cov0" title="0">{
+                log.Fatalf("Failed to create data directory: %v", err)
+        }</span>
+
+        // Initialize storage
+        <span class="cov0" title="0">db, err := storage.NewSQLiteStorage(cfg.Storage.Path)
+        if err != nil </span><span class="cov0" title="0">{
+                log.Fatalf("Failed to initialize storage: %v", err)
+        }</span>
+        <span class="cov0" title="0">defer db.Close()
+
+        log.Println("Database initialized successfully")
+
+        // Initialize Caddy manager
+        caddyManager := caddy.NewManager(db)
+
+        // Start health checks
+        caddyManager.StartHealthChecks(cfg.Caddy.HealthCheckInterval)
+        log.Printf("Health checks started (interval: %v)", cfg.Caddy.HealthCheckInterval)
+
+        // Initialize template manager
+        templateManager := templates.NewManager(db)
+
+        // Load built-in templates
+        if cfg.Templates.BuiltinEnabled </span><span class="cov0" title="0">{
+                if err := templateManager.InitializeBuiltinTemplates(); err != nil </span><span class="cov0" title="0">{
+                        log.Printf("Warning: Failed to initialize built-in templates: %v", err)
+                }</span> else<span class="cov0" title="0"> {
+                        log.Println("Built-in templates loaded successfully")
+                }</span>
+        }
+
+        // Create Gin router
+        <span class="cov0" title="0">router := gin.New()
+
+        // Setup routes
+        api.SetupRoutes(router, caddyManager, templateManager, cfg.Security.CORSOrigins)
+
+        // Serve static files from web directory
+        if _, err := os.Stat("./web"); err == nil </span><span class="cov0" title="0">{
+                router.Static("/assets", "./web/assets")
+                router.StaticFile("/", "./web/index.html")
+                router.NoRoute(func(c *gin.Context) </span><span class="cov0" title="0">{
+                        c.File("./web/index.html")
+                }</span>)
+                <span class="cov0" title="0">log.Println("Serving static files from ./web")</span>
+        }
+
+        // Create HTTP server
+        <span class="cov0" title="0">server := &amp;http.Server{
+                Addr:         fmt.Sprintf("%s:%d", cfg.Server.Host, cfg.Server.Port),
+                Handler:      router,
+                ReadTimeout:  cfg.Server.ReadTimeout,
+                WriteTimeout: cfg.Server.WriteTimeout,
+        }
+
+        // Start server in a goroutine
+        go func() </span><span class="cov0" title="0">{
+                log.Printf("Server listening on %s:%d", cfg.Server.Host, cfg.Server.Port)
+                if err := server.ListenAndServe(); err != nil &amp;&amp; err != http.ErrServerClosed </span><span class="cov0" title="0">{
+                        log.Fatalf("Failed to start server: %v", err)
+                }</span>
+        }()
+
+        // Wait for interrupt signal
+        <span class="cov0" title="0">quit := make(chan os.Signal, 1)
+        signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+        &lt;-quit
+
+        log.Println("Shutting down server...")
+
+        // Graceful shutdown with timeout
+        ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+        defer cancel()
+
+        if err := server.Shutdown(ctx); err != nil </span><span class="cov0" title="0">{
+                log.Printf("Server forced to shutdown: %v", err)
+        }</span>
+
+        <span class="cov0" title="0">log.Println("Server exited")</span>
+}
+</pre>
+		
+		<pre class="file" id="file1" style="display: none">package config
+
+import (
+        "fmt"
+        "log"
+        "os"
+        "time"
+
+        "gopkg.in/yaml.v3"
+)
+
+// Config represents the application configuration
+type Config struct {
+        Server    ServerConfig    `yaml:"server"`
+        Storage   StorageConfig   `yaml:"storage"`
+        Security  SecurityConfig  `yaml:"security"`
+        Caddy     CaddyConfig     `yaml:"caddy"`
+        Templates TemplatesConfig `yaml:"templates"`
+        Logging   LoggingConfig   `yaml:"logging"`
+}
+
+// ServerConfig represents server configuration
+type ServerConfig struct {
+        Host         string        `yaml:"host"`
+        Port         int           `yaml:"port"`
+        ReadTimeout  time.Duration `yaml:"read_timeout"`
+        WriteTimeout time.Duration `yaml:"write_timeout"`
+}
+
+// StorageConfig represents storage configuration
+type StorageConfig struct {
+        Type string `yaml:"type"`
+        Path string `yaml:"path"`
+}
+
+// SecurityConfig represents security configuration
+type SecurityConfig struct {
+        JWTSecret   string   `yaml:"jwt_secret"`
+        CORSOrigins []string `yaml:"cors_origins"`
+}
+
+// CaddyConfig represents Caddy-specific configuration
+type CaddyConfig struct {
+        DefaultTimeout      time.Duration `yaml:"default_timeout"`
+        HealthCheckInterval time.Duration `yaml:"health_check_interval"`
+        ConfigBackupCount   int           `yaml:"config_backup_count"`
+}
+
+// TemplatesConfig represents templates configuration
+type TemplatesConfig struct {
+        BuiltinEnabled bool   `yaml:"builtin_enabled"`
+        CustomPath     string `yaml:"custom_path"`
+}
+
+// LoggingConfig represents logging configuration
+type LoggingConfig struct {
+        Level        string `yaml:"level"`
+        Format       string `yaml:"format"`
+        AuditEnabled bool   `yaml:"audit_enabled"`
+}
+
+// LoadConfig loads configuration from a YAML file
+func LoadConfig(path string) (*Config, error) <span class="cov8" title="1">{
+        // Set defaults
+        config := &amp;Config{
+                Server: ServerConfig{
+                        Host:         "0.0.0.0",
+                        Port:         3000,
+                        ReadTimeout:  30 * time.Second,
+                        WriteTimeout: 30 * time.Second,
+                },
+                Storage: StorageConfig{
+                        Type: "sqlite",
+                        Path: "./data/orchestrator.db",
+                },
+                Security: SecurityConfig{
+                        JWTSecret:   "", // Must be set via JWT_SECRET environment variable
+                        CORSOrigins: []string{"*"},
+                },
+                Caddy: CaddyConfig{
+                        DefaultTimeout:      10 * time.Second,
+                        HealthCheckInterval: 30 * time.Second,
+                        ConfigBackupCount:   5,
+                },
+                Templates: TemplatesConfig{
+                        BuiltinEnabled: true,
+                        CustomPath:     "./templates",
+                },
+                Logging: LoggingConfig{
+                        Level:        "info",
+                        Format:       "json",
+                        AuditEnabled: true,
+                },
+        }
+
+        // Read config file if it exists
+        if _, err := os.Stat(path); err == nil </span><span class="cov8" title="1">{
+                data, err := os.ReadFile(path)
+                if err != nil </span><span class="cov0" title="0">{
+                        return nil, fmt.Errorf("failed to read config file: %w", err)
+                }</span>
+
+                <span class="cov8" title="1">if err := yaml.Unmarshal(data, config); err != nil </span><span class="cov8" title="1">{
+                        return nil, fmt.Errorf("failed to parse config file: %w", err)
+                }</span>
+        }
+
+        // Override with environment variables
+        <span class="cov8" title="1">if jwtSecret := os.Getenv("JWT_SECRET"); jwtSecret != "" </span><span class="cov8" title="1">{
+                config.Security.JWTSecret = jwtSecret
+        }</span> else<span class="cov8" title="1"> if config.Security.JWTSecret == "" </span><span class="cov8" title="1">{
+                // Generate a warning if JWT_SECRET is not set
+                log.Println("WARNING: JWT_SECRET not set. Using insecure default for development only.")
+                log.Println("Set JWT_SECRET environment variable for production use.")
+                config.Security.JWTSecret = "insecure-dev-secret-change-immediately"
+        }</span>
+
+        <span class="cov8" title="1">if logLevel := os.Getenv("LOG_LEVEL"); logLevel != "" </span><span class="cov8" title="1">{
+                config.Logging.Level = logLevel
+        }</span>
+
+        <span class="cov8" title="1">if dbPath := os.Getenv("DB_PATH"); dbPath != "" </span><span class="cov8" title="1">{
+                config.Storage.Path = dbPath
+        }</span>
+
+        <span class="cov8" title="1">return config, nil</span>
+}
+</pre>
+		
+		<pre class="file" id="file2" style="display: none">package handlers
+
+import (
+        "net/http"
+
+        "github.com/ArtemStepanov/caddy-orchestrator/internal/caddy"
+        "github.com/ArtemStepanov/caddy-orchestrator/internal/storage"
+        "github.com/gin-gonic/gin"
+)
+
+// BulkHandler handles bulk operations
+type BulkHandler struct {
+        manager *caddy.Manager
+}
+
+// NewBulkHandler creates a new bulk handler
+func NewBulkHandler(manager *caddy.Manager) *BulkHandler <span class="cov8" title="1">{
+        return &amp;BulkHandler{
+                manager: manager,
+        }
+}</span>
+
+// BulkConfigUpdate applies configuration to multiple instances
+func (h *BulkHandler) BulkConfigUpdate(c *gin.Context) <span class="cov8" title="1">{
+        var request struct {
+                InstanceIDs []string       `json:"instance_ids" binding:"required"`
+                Path        string         `json:"path"`
+                Config      map[string]any `json:"config" binding:"required"`
+        }
+
+        if err := c.ShouldBindJSON(&amp;request); err != nil </span><span class="cov8" title="1">{
+                c.JSON(http.StatusBadRequest, storage.APIResponse{
+                        Success: false,
+                        Error: &amp;storage.APIError{
+                                Code:    "INVALID_REQUEST",
+                                Message: "Invalid request body",
+                                Details: err.Error(),
+                        },
+                })
+                return
+        }</span>
+
+        <span class="cov8" title="1">results := h.manager.BulkConfigUpdate(request.InstanceIDs, request.Path, request.Config)
+
+        // Check if all succeeded
+        allSucceeded := true
+        for _, err := range results </span><span class="cov8" title="1">{
+                if err != nil </span><span class="cov8" title="1">{
+                        allSucceeded = false
+                        break</span>
+                }
+        }
+
+        // Format results
+        <span class="cov8" title="1">formattedResults := make(map[string]any)
+        for instanceID, err := range results </span><span class="cov8" title="1">{
+                if err != nil </span><span class="cov8" title="1">{
+                        formattedResults[instanceID] = map[string]any{
+                                "success": false,
+                                "error":   err.Error(),
+                        }
+                }</span> else<span class="cov8" title="1"> {
+                        formattedResults[instanceID] = map[string]any{
+                                "success": true,
+                        }
+                }</span>
+        }
+
+        <span class="cov8" title="1">statusCode := http.StatusOK
+        if !allSucceeded </span><span class="cov8" title="1">{
+                statusCode = http.StatusMultiStatus
+        }</span>
+
+        <span class="cov8" title="1">c.JSON(statusCode, storage.APIResponse{
+                Success: allSucceeded,
+                Data:    formattedResults,
+        })</span>
+}
+
+// BulkTemplateApply applies a template to multiple instances
+func (h *BulkHandler) BulkTemplateApply(c *gin.Context) <span class="cov8" title="1">{
+        var request struct {
+                InstanceIDs []string       `json:"instance_ids" binding:"required"`
+                TemplateID  string         `json:"template_id" binding:"required"`
+                Variables   map[string]any `json:"variables" binding:"required"`
+                Path        string         `json:"path"`
+        }
+
+        if err := c.ShouldBindJSON(&amp;request); err != nil </span><span class="cov0" title="0">{
+                c.JSON(http.StatusBadRequest, storage.APIResponse{
+                        Success: false,
+                        Error: &amp;storage.APIError{
+                                Code:    "INVALID_REQUEST",
+                                Message: "Invalid request body",
+                                Details: err.Error(),
+                        },
+                })
+                return
+        }</span>
+
+        // This would need template manager integration
+        // For now, return not implemented
+        <span class="cov8" title="1">c.JSON(http.StatusNotImplemented, storage.APIResponse{
+                Success: false,
+                Error: &amp;storage.APIError{
+                        Code:    "NOT_IMPLEMENTED",
+                        Message: "Bulk template apply not yet implemented",
+                },
+        })</span>
+}
+</pre>
+		
+		<pre class="file" id="file3" style="display: none">package handlers
+
+import (
+        "fmt"
+        "net/http"
+
+        "github.com/ArtemStepanov/caddy-orchestrator/internal/caddy"
+        "github.com/ArtemStepanov/caddy-orchestrator/internal/storage"
+        "github.com/gin-gonic/gin"
+)
+
+// ConfigHandler handles configuration-related requests
+type ConfigHandler struct {
+        manager *caddy.Manager
+}
+
+// NewConfigHandler creates a new config handler
+func NewConfigHandler(manager *caddy.Manager) *ConfigHandler <span class="cov8" title="1">{
+        return &amp;ConfigHandler{
+                manager: manager,
+        }
+}</span>
+
+// GetConfig retrieves configuration from a Caddy instance
+func (h *ConfigHandler) GetConfig(c *gin.Context) <span class="cov8" title="1">{
+        instanceID := c.Param("id")
+        path := c.Param("path")
+
+        config, etag, err := h.manager.GetConfig(instanceID, path)
+        if err != nil </span><span class="cov8" title="1">{
+                c.JSON(http.StatusInternalServerError, storage.APIResponse{
+                        Success: false,
+                        Error: &amp;storage.APIError{
+                                Code:    "GET_CONFIG_FAILED",
+                                Message: "Failed to get configuration",
+                                Details: err.Error(),
+                        },
+                })
+                return
+        }</span>
+
+        // Set ETag header
+        <span class="cov8" title="1">if etag != "" </span><span class="cov8" title="1">{
+                c.Header("ETag", etag)
+        }</span>
+
+        <span class="cov8" title="1">c.JSON(http.StatusOK, storage.APIResponse{
+                Success: true,
+                Data:    config,
+        })</span>
+}
+
+// LoadConfig loads a new configuration (Caddy's /load endpoint)
+func (h *ConfigHandler) LoadConfig(c *gin.Context) <span class="cov8" title="1">{
+        instanceID := c.Param("id")
+
+        var config map[string]any
+        if err := c.ShouldBindJSON(&amp;config); err != nil </span><span class="cov8" title="1">{
+                c.JSON(http.StatusBadRequest, storage.APIResponse{
+                        Success: false,
+                        Error: &amp;storage.APIError{
+                                Code:    "INVALID_REQUEST",
+                                Message: "Invalid configuration",
+                                Details: err.Error(),
+                        },
+                })
+                return
+        }</span>
+
+        // Load config uses Caddy's /load endpoint (no ETag needed)
+        <span class="cov8" title="1">err := h.manager.LoadConfig(instanceID, config)
+        if err != nil </span><span class="cov0" title="0">{
+                c.JSON(http.StatusInternalServerError, storage.APIResponse{
+                        Success: false,
+                        Error: &amp;storage.APIError{
+                                Code:     "LOAD_CONFIG_FAILED",
+                                Message:  "Failed to load configuration",
+                                Details:  err.Error(),
+                                Rollback: false,
+                        },
+                })
+                return
+        }</span>
+
+        <span class="cov8" title="1">c.JSON(http.StatusOK, storage.APIResponse{
+                Success: true,
+                Data: map[string]string{
+                        "message": "Configuration loaded successfully",
+                },
+        })</span>
+}
+
+// SetConfig sets configuration on a Caddy instance
+func (h *ConfigHandler) SetConfig(c *gin.Context) <span class="cov8" title="1">{
+        instanceID := c.Param("id")
+        path := c.Param("path")
+
+        var config map[string]any
+        if err := c.ShouldBindJSON(&amp;config); err != nil </span><span class="cov8" title="1">{
+                c.JSON(http.StatusBadRequest, storage.APIResponse{
+                        Success: false,
+                        Error: &amp;storage.APIError{
+                                Code:    "INVALID_REQUEST",
+                                Message: "Invalid configuration",
+                                Details: err.Error(),
+                        },
+                })
+                return
+        }</span>
+
+        // Get ETag from If-Match header for optimistic locking
+        <span class="cov8" title="1">etag := c.GetHeader("If-Match")
+
+        err := h.manager.SetConfig(instanceID, path, config, etag)
+        if err != nil </span><span class="cov0" title="0">{
+                c.JSON(http.StatusInternalServerError, storage.APIResponse{
+                        Success: false,
+                        Error: &amp;storage.APIError{
+                                Code:     "SET_CONFIG_FAILED",
+                                Message:  "Failed to set configuration",
+                                Details:  err.Error(),
+                                Rollback: false,
+                        },
+                })
+                return
+        }</span>
+
+        <span class="cov8" title="1">c.JSON(http.StatusOK, storage.APIResponse{
+                Success: true,
+                Data: map[string]string{
+                        "message": "Configuration updated successfully",
+                },
+        })</span>
+}
+
+// PatchConfig patches configuration on a Caddy instance
+func (h *ConfigHandler) PatchConfig(c *gin.Context) <span class="cov8" title="1">{
+        instanceID := c.Param("id")
+        path := c.Param("path")
+
+        var config map[string]any
+        if err := c.ShouldBindJSON(&amp;config); err != nil </span><span class="cov8" title="1">{
+                c.JSON(http.StatusBadRequest, storage.APIResponse{
+                        Success: false,
+                        Error: &amp;storage.APIError{
+                                Code:    "INVALID_REQUEST",
+                                Message: "Invalid configuration",
+                                Details: err.Error(),
+                        },
+                })
+                return
+        }</span>
+
+        <span class="cov8" title="1">err := h.manager.PatchConfig(instanceID, path, config)
+        if err != nil </span><span class="cov0" title="0">{
+                c.JSON(http.StatusInternalServerError, storage.APIResponse{
+                        Success: false,
+                        Error: &amp;storage.APIError{
+                                Code:    "PATCH_CONFIG_FAILED",
+                                Message: "Failed to patch configuration",
+                                Details: err.Error(),
+                        },
+                })
+                return
+        }</span>
+
+        <span class="cov8" title="1">c.JSON(http.StatusOK, storage.APIResponse{
+                Success: true,
+                Data: map[string]string{
+                        "message": "Configuration patched successfully",
+                },
+        })</span>
+}
+
+// DeleteConfig deletes configuration from a Caddy instance
+func (h *ConfigHandler) DeleteConfig(c *gin.Context) <span class="cov8" title="1">{
+        instanceID := c.Param("id")
+        path := c.Param("path")
+
+        err := h.manager.DeleteConfig(instanceID, path)
+        if err != nil </span><span class="cov0" title="0">{
+                c.JSON(http.StatusInternalServerError, storage.APIResponse{
+                        Success: false,
+                        Error: &amp;storage.APIError{
+                                Code:    "DELETE_CONFIG_FAILED",
+                                Message: "Failed to delete configuration",
+                                Details: err.Error(),
+                        },
+                })
+                return
+        }</span>
+
+        <span class="cov8" title="1">c.JSON(http.StatusOK, storage.APIResponse{
+                Success: true,
+                Data: map[string]string{
+                        "message": "Configuration deleted successfully",
+                },
+        })</span>
+}
+
+// AdaptConfig adapts Caddyfile to JSON
+func (h *ConfigHandler) AdaptConfig(c *gin.Context) <span class="cov8" title="1">{
+        instanceID := c.Param("id")
+
+        var request struct {
+                Caddyfile string `json:"caddyfile" binding:"required"`
+                Adapter   string `json:"adapter"`
+        }
+
+        if err := c.ShouldBindJSON(&amp;request); err != nil </span><span class="cov8" title="1">{
+                c.JSON(http.StatusBadRequest, storage.APIResponse{
+                        Success: false,
+                        Error: &amp;storage.APIError{
+                                Code:    "INVALID_REQUEST",
+                                Message: "Invalid request body",
+                                Details: err.Error(),
+                        },
+                })
+                return
+        }</span>
+
+        // Log the request for debugging
+        <span class="cov8" title="1">c.Writer.Header().Set("X-Debug-Caddyfile-Length", fmt.Sprintf("%d", len(request.Caddyfile)))
+
+        config, err := h.manager.AdaptConfig(instanceID, request.Caddyfile, request.Adapter)
+        if err != nil </span><span class="cov0" title="0">{
+                // Log detailed error
+                errorDetails := fmt.Sprintf("Instance: %s, Adapter: %s, Error: %v", instanceID, request.Adapter, err)
+                c.Writer.Header().Set("X-Debug-Error", errorDetails)
+
+                c.JSON(http.StatusInternalServerError, storage.APIResponse{
+                        Success: false,
+                        Error: &amp;storage.APIError{
+                                Code:    "ADAPT_FAILED",
+                                Message: "Failed to adapt Caddyfile",
+                                Details: err.Error(),
+                        },
+                })
+                return
+        }</span>
+
+        <span class="cov8" title="1">c.JSON(http.StatusOK, storage.APIResponse{
+                Success: true,
+                Data:    config,
+        })</span>
+}
+
+// GetUpstreams retrieves upstream information
+func (h *ConfigHandler) GetUpstreams(c *gin.Context) <span class="cov8" title="1">{
+        instanceID := c.Param("id")
+
+        upstreams, err := h.manager.GetUpstreams(instanceID)
+        if err != nil </span><span class="cov8" title="1">{
+                c.JSON(http.StatusInternalServerError, storage.APIResponse{
+                        Success: false,
+                        Error: &amp;storage.APIError{
+                                Code:    "GET_UPSTREAMS_FAILED",
+                                Message: "Failed to get upstreams",
+                                Details: err.Error(),
+                        },
+                })
+                return
+        }</span>
+
+        <span class="cov8" title="1">c.JSON(http.StatusOK, storage.APIResponse{
+                Success: true,
+                Data:    upstreams,
+        })</span>
+}
+
+// GetPKICA retrieves PKI CA information
+func (h *ConfigHandler) GetPKICA(c *gin.Context) <span class="cov8" title="1">{
+        instanceID := c.Param("id")
+        caID := c.Param("ca_id")
+
+        ca, err := h.manager.GetPKICA(instanceID, caID)
+        if err != nil </span><span class="cov8" title="1">{
+                c.JSON(http.StatusInternalServerError, storage.APIResponse{
+                        Success: false,
+                        Error: &amp;storage.APIError{
+                                Code:    "GET_PKI_CA_FAILED",
+                                Message: "Failed to get PKI CA",
+                                Details: err.Error(),
+                        },
+                })
+                return
+        }</span>
+
+        <span class="cov8" title="1">c.JSON(http.StatusOK, storage.APIResponse{
+                Success: true,
+                Data:    ca,
+        })</span>
+}
+</pre>
+		
+		<pre class="file" id="file4" style="display: none">package handlers
+
+import (
+        "net/http"
+
+        "github.com/ArtemStepanov/caddy-orchestrator/internal/caddy"
+        "github.com/ArtemStepanov/caddy-orchestrator/internal/storage"
+        "github.com/gin-gonic/gin"
+)
+
+// InstanceHandler handles instance-related requests
+type InstanceHandler struct {
+        manager *caddy.Manager
+}
+
+// NewInstanceHandler creates a new instance handler
+func NewInstanceHandler(manager *caddy.Manager) *InstanceHandler <span class="cov8" title="1">{
+        return &amp;InstanceHandler{
+                manager: manager,
+        }
+}</span>
+
+// ListInstances lists all Caddy instances
+func (h *InstanceHandler) ListInstances(c *gin.Context) <span class="cov8" title="1">{
+        instances, err := h.manager.ListInstances()
+        if err != nil </span><span class="cov0" title="0">{
+                c.JSON(http.StatusInternalServerError, storage.APIResponse{
+                        Success: false,
+                        Error: &amp;storage.APIError{
+                                Code:    "LIST_FAILED",
+                                Message: "Failed to list instances",
+                                Details: err.Error(),
+                        },
+                })
+                return
+        }</span>
+
+        <span class="cov8" title="1">c.JSON(http.StatusOK, storage.APIResponse{
+                Success: true,
+                Data:    instances,
+        })</span>
+}
+
+// GetInstance retrieves a specific Caddy instance
+func (h *InstanceHandler) GetInstance(c *gin.Context) <span class="cov8" title="1">{
+        id := c.Param("id")
+
+        instance, err := h.manager.GetInstance(id)
+        if err != nil </span><span class="cov8" title="1">{
+                c.JSON(http.StatusNotFound, storage.APIResponse{
+                        Success: false,
+                        Error: &amp;storage.APIError{
+                                Code:    "NOT_FOUND",
+                                Message: "Instance not found",
+                                Details: err.Error(),
+                        },
+                })
+                return
+        }</span>
+
+        <span class="cov8" title="1">c.JSON(http.StatusOK, storage.APIResponse{
+                Success: true,
+                Data:    instance,
+        })</span>
+}
+
+// CreateInstance creates a new Caddy instance
+func (h *InstanceHandler) CreateInstance(c *gin.Context) <span class="cov8" title="1">{
+        var instance storage.CaddyInstance
+
+        if err := c.ShouldBindJSON(&amp;instance); err != nil </span><span class="cov8" title="1">{
+                c.JSON(http.StatusBadRequest, storage.APIResponse{
+                        Success: false,
+                        Error: &amp;storage.APIError{
+                                Code:    "INVALID_REQUEST",
+                                Message: "Invalid request body",
+                                Details: err.Error(),
+                        },
+                })
+                return
+        }</span>
+
+        <span class="cov8" title="1">if err := h.manager.AddInstance(&amp;instance); err != nil </span><span class="cov0" title="0">{
+                c.JSON(http.StatusInternalServerError, storage.APIResponse{
+                        Success: false,
+                        Error: &amp;storage.APIError{
+                                Code:    "CREATE_FAILED",
+                                Message: "Failed to create instance",
+                                Details: err.Error(),
+                        },
+                })
+                return
+        }</span>
+
+        <span class="cov8" title="1">c.JSON(http.StatusCreated, storage.APIResponse{
+                Success: true,
+                Data:    instance,
+        })</span>
+}
+
+// UpdateInstance updates a Caddy instance
+func (h *InstanceHandler) UpdateInstance(c *gin.Context) <span class="cov8" title="1">{
+        id := c.Param("id")
+
+        var instance storage.CaddyInstance
+        if err := c.ShouldBindJSON(&amp;instance); err != nil </span><span class="cov8" title="1">{
+                c.JSON(http.StatusBadRequest, storage.APIResponse{
+                        Success: false,
+                        Error: &amp;storage.APIError{
+                                Code:    "INVALID_REQUEST",
+                                Message: "Invalid request body",
+                                Details: err.Error(),
+                        },
+                })
+                return
+        }</span>
+
+        <span class="cov8" title="1">instance.ID = id
+
+        if err := h.manager.UpdateInstance(&amp;instance); err != nil </span><span class="cov8" title="1">{
+                c.JSON(http.StatusInternalServerError, storage.APIResponse{
+                        Success: false,
+                        Error: &amp;storage.APIError{
+                                Code:    "UPDATE_FAILED",
+                                Message: "Failed to update instance",
+                                Details: err.Error(),
+                        },
+                })
+                return
+        }</span>
+
+        <span class="cov8" title="1">c.JSON(http.StatusOK, storage.APIResponse{
+                Success: true,
+                Data:    instance,
+        })</span>
+}
+
+// DeleteInstance deletes a Caddy instance
+func (h *InstanceHandler) DeleteInstance(c *gin.Context) <span class="cov8" title="1">{
+        id := c.Param("id")
+
+        if err := h.manager.DeleteInstance(id); err != nil </span><span class="cov8" title="1">{
+                c.JSON(http.StatusInternalServerError, storage.APIResponse{
+                        Success: false,
+                        Error: &amp;storage.APIError{
+                                Code:    "DELETE_FAILED",
+                                Message: "Failed to delete instance",
+                                Details: err.Error(),
+                        },
+                })
+                return
+        }</span>
+
+        <span class="cov8" title="1">c.JSON(http.StatusOK, storage.APIResponse{
+                Success: true,
+                Data: map[string]string{
+                        "message": "Instance deleted successfully",
+                },
+        })</span>
+}
+
+// TestConnection tests connection to a Caddy instance
+func (h *InstanceHandler) TestConnection(c *gin.Context) <span class="cov8" title="1">{
+        id := c.Param("id")
+
+        result, err := h.manager.TestConnection(id)
+        if err != nil </span><span class="cov8" title="1">{
+                c.JSON(http.StatusOK, storage.APIResponse{
+                        Success: false,
+                        Data:    result,
+                        Error: &amp;storage.APIError{
+                                Code:    "CONNECTION_FAILED",
+                                Message: "Failed to connect to instance",
+                                Details: err.Error(),
+                        },
+                })
+                return
+        }</span>
+
+        <span class="cov8" title="1">c.JSON(http.StatusOK, storage.APIResponse{
+                Success: true,
+                Data:    result,
+        })</span>
+}
+</pre>
+		
+		<pre class="file" id="file5" style="display: none">package handlers
+
+import (
+        "net/http"
+
+        "github.com/ArtemStepanov/caddy-orchestrator/internal/storage"
+        "github.com/ArtemStepanov/caddy-orchestrator/internal/templates"
+        "github.com/gin-gonic/gin"
+)
+
+// TemplateHandler handles template-related requests
+type TemplateHandler struct {
+        manager *templates.Manager
+}
+
+// NewTemplateHandler creates a new template handler
+func NewTemplateHandler(manager *templates.Manager) *TemplateHandler <span class="cov8" title="1">{
+        return &amp;TemplateHandler{
+                manager: manager,
+        }
+}</span>
+
+// ListTemplates lists all configuration templates
+func (h *TemplateHandler) ListTemplates(c *gin.Context) <span class="cov8" title="1">{
+        templates, err := h.manager.ListTemplates()
+        if err != nil </span><span class="cov0" title="0">{
+                c.JSON(http.StatusInternalServerError, storage.APIResponse{
+                        Success: false,
+                        Error: &amp;storage.APIError{
+                                Code:    "LIST_FAILED",
+                                Message: "Failed to list templates",
+                                Details: err.Error(),
+                        },
+                })
+                return
+        }</span>
+
+        <span class="cov8" title="1">c.JSON(http.StatusOK, storage.APIResponse{
+                Success: true,
+                Data:    templates,
+        })</span>
+}
+
+// GetTemplate retrieves a specific template
+func (h *TemplateHandler) GetTemplate(c *gin.Context) <span class="cov8" title="1">{
+        id := c.Param("id")
+
+        template, err := h.manager.GetTemplate(id)
+        if err != nil </span><span class="cov8" title="1">{
+                c.JSON(http.StatusNotFound, storage.APIResponse{
+                        Success: false,
+                        Error: &amp;storage.APIError{
+                                Code:    "NOT_FOUND",
+                                Message: "Template not found",
+                                Details: err.Error(),
+                        },
+                })
+                return
+        }</span>
+
+        <span class="cov8" title="1">c.JSON(http.StatusOK, storage.APIResponse{
+                Success: true,
+                Data:    template,
+        })</span>
+}
+
+// CreateTemplate creates a new custom template
+func (h *TemplateHandler) CreateTemplate(c *gin.Context) <span class="cov8" title="1">{
+        var template storage.ConfigTemplate
+
+        if err := c.ShouldBindJSON(&amp;template); err != nil </span><span class="cov8" title="1">{
+                c.JSON(http.StatusBadRequest, storage.APIResponse{
+                        Success: false,
+                        Error: &amp;storage.APIError{
+                                Code:    "INVALID_REQUEST",
+                                Message: "Invalid request body",
+                                Details: err.Error(),
+                        },
+                })
+                return
+        }</span>
+
+        <span class="cov8" title="1">if err := h.manager.CreateTemplate(&amp;template); err != nil </span><span class="cov0" title="0">{
+                c.JSON(http.StatusInternalServerError, storage.APIResponse{
+                        Success: false,
+                        Error: &amp;storage.APIError{
+                                Code:    "CREATE_FAILED",
+                                Message: "Failed to create template",
+                                Details: err.Error(),
+                        },
+                })
+                return
+        }</span>
+
+        <span class="cov8" title="1">c.JSON(http.StatusCreated, storage.APIResponse{
+                Success: true,
+                Data:    template,
+        })</span>
+}
+
+// GenerateConfig generates configuration from a template
+func (h *TemplateHandler) GenerateConfig(c *gin.Context) <span class="cov8" title="1">{
+        id := c.Param("id")
+
+        var request struct {
+                Variables map[string]any `json:"variables" binding:"required"`
+        }
+
+        if err := c.ShouldBindJSON(&amp;request); err != nil </span><span class="cov8" title="1">{
+                c.JSON(http.StatusBadRequest, storage.APIResponse{
+                        Success: false,
+                        Error: &amp;storage.APIError{
+                                Code:    "INVALID_REQUEST",
+                                Message: "Invalid request body",
+                                Details: err.Error(),
+                        },
+                })
+                return
+        }</span>
+
+        // Validate variables
+        <span class="cov8" title="1">if err := h.manager.ValidateVariables(id, request.Variables); err != nil </span><span class="cov8" title="1">{
+                c.JSON(http.StatusBadRequest, storage.APIResponse{
+                        Success: false,
+                        Error: &amp;storage.APIError{
+                                Code:    "VALIDATION_FAILED",
+                                Message: "Variable validation failed",
+                                Details: err.Error(),
+                        },
+                })
+                return
+        }</span>
+
+        // Generate config
+        <span class="cov8" title="1">config, err := h.manager.GenerateConfig(id, request.Variables)
+        if err != nil </span><span class="cov0" title="0">{
+                c.JSON(http.StatusInternalServerError, storage.APIResponse{
+                        Success: false,
+                        Error: &amp;storage.APIError{
+                                Code:    "GENERATION_FAILED",
+                                Message: "Failed to generate configuration",
+                                Details: err.Error(),
+                        },
+                })
+                return
+        }</span>
+
+        <span class="cov8" title="1">c.JSON(http.StatusOK, storage.APIResponse{
+                Success: true,
+                Data:    config,
+        })</span>
+}
+</pre>
+		
+		<pre class="file" id="file6" style="display: none">package middleware
+
+import (
+        "github.com/gin-gonic/gin"
+)
+
+// CORSMiddleware handles CORS headers
+func CORSMiddleware(allowedOrigins []string) gin.HandlerFunc <span class="cov8" title="1">{
+        return func(c *gin.Context) </span><span class="cov8" title="1">{
+                origin := c.Request.Header.Get("Origin")
+
+                // Check if origin is allowed
+                allowed := false
+                for _, allowedOrigin := range allowedOrigins </span><span class="cov8" title="1">{
+                        if allowedOrigin == "*" || allowedOrigin == origin </span><span class="cov8" title="1">{
+                                allowed = true
+                                break</span>
+                        }
+                }
+
+                <span class="cov8" title="1">if allowed </span><span class="cov8" title="1">{
+                        c.Writer.Header().Set("Access-Control-Allow-Origin", origin)
+                }</span>
+
+                <span class="cov8" title="1">c.Writer.Header().Set("Access-Control-Allow-Credentials", "true")
+                c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, accept, origin, Cache-Control, X-Requested-With, If-Match")
+                c.Writer.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS, GET, PUT, PATCH, DELETE")
+                c.Writer.Header().Set("Access-Control-Expose-Headers", "ETag, Content-Type")
+
+                if c.Request.Method == "OPTIONS" </span><span class="cov8" title="1">{
+                        c.AbortWithStatus(204)
+                        return
+                }</span>
+
+                <span class="cov8" title="1">c.Next()</span>
+        }
+}
+</pre>
+		
+		<pre class="file" id="file7" style="display: none">package middleware
+
+import (
+        "log"
+        "time"
+
+        "github.com/gin-gonic/gin"
+        "github.com/google/uuid"
+)
+
+// LoggingMiddleware logs HTTP requests
+func LoggingMiddleware() gin.HandlerFunc <span class="cov8" title="1">{
+        return func(c *gin.Context) </span><span class="cov8" title="1">{
+                // Generate request ID
+                requestID := uuid.New().String()
+                c.Set("request_id", requestID)
+                c.Writer.Header().Set("X-Request-ID", requestID)
+
+                // Start timer
+                start := time.Now()
+                path := c.Request.URL.Path
+                raw := c.Request.URL.RawQuery
+
+                // Process request
+                c.Next()
+
+                // Calculate latency
+                latency := time.Since(start)
+
+                // Get status
+                statusCode := c.Writer.Status()
+
+                // Build log message
+                if raw != "" </span><span class="cov0" title="0">{
+                        path = path + "?" + raw
+                }</span>
+
+                <span class="cov8" title="1">log.Printf("[%s] %s %s %d %v %s",
+                        requestID,
+                        c.Request.Method,
+                        path,
+                        statusCode,
+                        latency,
+                        c.ClientIP(),
+                )</span>
+        }
+}
+</pre>
+		
+		<pre class="file" id="file8" style="display: none">package middleware
+
+import (
+        "net/http"
+        "sync"
+        "time"
+
+        "github.com/gin-gonic/gin"
+        "golang.org/x/time/rate"
+)
+
+// RateLimiter stores rate limiters for each client
+type RateLimiter struct {
+        limiters map[string]*rate.Limiter
+        mu       sync.RWMutex
+        r        rate.Limit
+        b        int
+}
+
+// NewRateLimiter creates a new rate limiter
+func NewRateLimiter(r rate.Limit, b int) *RateLimiter <span class="cov8" title="1">{
+        return &amp;RateLimiter{
+                limiters: make(map[string]*rate.Limiter),
+                r:        r,
+                b:        b,
+        }
+}</span>
+
+// getLimiter returns a rate limiter for a client
+func (rl *RateLimiter) getLimiter(key string) *rate.Limiter <span class="cov8" title="1">{
+        rl.mu.RLock()
+        limiter, exists := rl.limiters[key]
+        rl.mu.RUnlock()
+
+        if !exists </span><span class="cov8" title="1">{
+                rl.mu.Lock()
+                limiter = rate.NewLimiter(rl.r, rl.b)
+                rl.limiters[key] = limiter
+                rl.mu.Unlock()
+        }</span>
+
+        <span class="cov8" title="1">return limiter</span>
+}
+
+// Cleanup removes old limiters
+func (rl *RateLimiter) Cleanup() <span class="cov0" title="0">{
+        ticker := time.NewTicker(time.Minute)
+        go func() </span><span class="cov0" title="0">{
+                for range ticker.C </span><span class="cov0" title="0">{
+                        rl.mu.Lock()
+                        // In production, you'd want more sophisticated cleanup
+                        // For now, we'll just clear everything periodically
+                        if len(rl.limiters) &gt; 10000 </span><span class="cov0" title="0">{
+                                rl.limiters = make(map[string]*rate.Limiter)
+                        }</span>
+                        <span class="cov0" title="0">rl.mu.Unlock()</span>
+                }
+        }()
+}
+
+// RateLimitMiddleware creates a rate limiting middleware
+func RateLimitMiddleware(limiter *RateLimiter) gin.HandlerFunc <span class="cov8" title="1">{
+        return func(c *gin.Context) </span><span class="cov8" title="1">{
+                // Use IP address as key
+                key := c.ClientIP()
+
+                // Get limiter for this client
+                l := limiter.getLimiter(key)
+
+                if !l.Allow() </span><span class="cov8" title="1">{
+                        c.JSON(http.StatusTooManyRequests, gin.H{
+                                "success": false,
+                                "error": map[string]string{
+                                        "code":    "RATE_LIMIT_EXCEEDED",
+                                        "message": "Too many requests, please try again later",
+                                },
+                        })
+                        c.Abort()
+                        return
+                }</span>
+
+                <span class="cov8" title="1">c.Next()</span>
+        }
+}
+</pre>
+		
+		<pre class="file" id="file9" style="display: none">package middleware
+
+import (
+        "log"
+        "net/http"
+
+        "github.com/gin-gonic/gin"
+)
+
+// RecoveryMiddleware recovers from panics and returns error response
+func RecoveryMiddleware() gin.HandlerFunc <span class="cov8" title="1">{
+        return func(c *gin.Context) </span><span class="cov8" title="1">{
+                defer func() </span><span class="cov8" title="1">{
+                        if err := recover(); err != nil </span><span class="cov8" title="1">{
+                                log.Printf("Panic recovered: %v", err)
+
+                                c.JSON(http.StatusInternalServerError, gin.H{
+                                        "success": false,
+                                        "error": map[string]string{
+                                                "code":    "INTERNAL_ERROR",
+                                                "message": "An internal server error occurred",
+                                        },
+                                })
+                                c.Abort()
+                        }</span>
+                }()
+                <span class="cov8" title="1">c.Next()</span>
+        }
+}
+</pre>
+		
+		<pre class="file" id="file10" style="display: none">package api
+
+import (
+        "github.com/ArtemStepanov/caddy-orchestrator/internal/api/handlers"
+        "github.com/ArtemStepanov/caddy-orchestrator/internal/api/middleware"
+        "github.com/ArtemStepanov/caddy-orchestrator/internal/caddy"
+        "github.com/ArtemStepanov/caddy-orchestrator/internal/templates"
+        "github.com/gin-gonic/gin"
+        "golang.org/x/time/rate"
+)
+
+// SetupRoutes configures all API routes
+func SetupRoutes(
+        router *gin.Engine,
+        caddyManager *caddy.Manager,
+        templateManager *templates.Manager,
+        corsOrigins []string,
+) <span class="cov8" title="1">{
+        // Create handlers
+        instanceHandler := handlers.NewInstanceHandler(caddyManager)
+        configHandler := handlers.NewConfigHandler(caddyManager)
+        templateHandler := handlers.NewTemplateHandler(templateManager)
+        bulkHandler := handlers.NewBulkHandler(caddyManager)
+
+        // Setup middleware
+        router.Use(middleware.RecoveryMiddleware())
+        router.Use(middleware.LoggingMiddleware())
+        router.Use(middleware.CORSMiddleware(corsOrigins))
+
+        // Rate limiting: 100 requests per second with burst of 200
+        rateLimiter := middleware.NewRateLimiter(rate.Limit(100), 200)
+        rateLimiter.Cleanup()
+        router.Use(middleware.RateLimitMiddleware(rateLimiter))
+
+        // API v1 routes
+        api := router.Group("/api")
+        </span><span class="cov8" title="1">{
+                // Instance management
+                instances := api.Group("/instances")
+                </span><span class="cov8" title="1">{
+                        instances.GET("", instanceHandler.ListInstances)
+                        instances.POST("", instanceHandler.CreateInstance)
+                        instances.GET("/:id", instanceHandler.GetInstance)
+                        instances.PUT("/:id", instanceHandler.UpdateInstance)
+                        instances.DELETE("/:id", instanceHandler.DeleteInstance)
+                        instances.POST("/:id/test-connection", instanceHandler.TestConnection)
+
+                        // Configuration management
+                        instances.GET("/:id/config", configHandler.GetConfig)
+                        instances.GET("/:id/config/*path", configHandler.GetConfig)
+                        instances.POST("/:id/load", configHandler.LoadConfig) // Caddy's recommended endpoint
+                        instances.POST("/:id/config", configHandler.SetConfig)
+                        instances.POST("/:id/config/*path", configHandler.SetConfig)
+                        instances.PATCH("/:id/config", configHandler.PatchConfig)
+                        instances.PATCH("/:id/config/*path", configHandler.PatchConfig)
+                        instances.DELETE("/:id/config/*path", configHandler.DeleteConfig)
+
+                        // Utilities
+                        instances.POST("/:id/adapt", configHandler.AdaptConfig)
+                        instances.GET("/:id/upstreams", configHandler.GetUpstreams)
+                        instances.GET("/:id/pki/ca/:ca_id", configHandler.GetPKICA)
+                }</span>
+
+                // Template management
+                <span class="cov8" title="1">templates := api.Group("/templates")
+                </span><span class="cov8" title="1">{
+                        templates.GET("", templateHandler.ListTemplates)
+                        templates.POST("", templateHandler.CreateTemplate)
+                        templates.GET("/:id", templateHandler.GetTemplate)
+                        templates.POST("/:id/generate", templateHandler.GenerateConfig)
+                }</span>
+
+                // Bulk operations
+                <span class="cov8" title="1">bulk := api.Group("/bulk")
+                </span><span class="cov8" title="1">{
+                        bulk.POST("/config-update", bulkHandler.BulkConfigUpdate)
+                        bulk.POST("/template-apply", bulkHandler.BulkTemplateApply)
+                }</span>
+
+                // Health check
+                <span class="cov8" title="1">api.GET("/health", func(c *gin.Context) </span><span class="cov8" title="1">{
+                        c.JSON(200, gin.H{
+                                "status":  "ok",
+                                "service": "caddy-orchestrator",
+                        })
+                }</span>)
+        }
+}
+</pre>
+		
+		<pre class="file" id="file11" style="display: none">package caddy
+
+import (
+        "bytes"
+        "crypto/tls"
+        "crypto/x509"
+        "encoding/json"
+        "fmt"
+        "io"
+        "net/http"
+        "os"
+        "time"
+)
+
+// Client represents a Caddy Admin API client
+type Client struct {
+        baseURL     string
+        httpClient  *http.Client
+        authType    string
+        credentials map[string]string
+}
+
+// ClientConfig holds configuration for creating a Caddy client
+type ClientConfig struct {
+        BaseURL     string
+        AuthType    string
+        Credentials map[string]string
+        Timeout     time.Duration
+}
+
+// NewClient creates a new Caddy Admin API client
+func NewClient(config ClientConfig) (*Client, error) <span class="cov8" title="1">{
+        if config.Timeout == 0 </span><span class="cov8" title="1">{
+                config.Timeout = 10 * time.Second
+        }</span>
+
+        <span class="cov8" title="1">httpClient := &amp;http.Client{
+                Timeout: config.Timeout,
+        }
+
+        // Configure mTLS if specified
+        if config.AuthType == "mtls" </span><span class="cov0" title="0">{
+                tlsConfig, err := configureMTLS(config.Credentials)
+                if err != nil </span><span class="cov0" title="0">{
+                        return nil, fmt.Errorf("failed to configure mTLS: %w", err)
+                }</span>
+                <span class="cov0" title="0">httpClient.Transport = &amp;http.Transport{
+                        TLSClientConfig: tlsConfig,
+                }</span>
+        }
+
+        <span class="cov8" title="1">return &amp;Client{
+                baseURL:     config.BaseURL,
+                httpClient:  httpClient,
+                authType:    config.AuthType,
+                credentials: config.Credentials,
+        }, nil</span>
+}
+
+// configureMTLS sets up mutual TLS authentication
+func configureMTLS(credentials map[string]string) (*tls.Config, error) <span class="cov0" title="0">{
+        certFile, ok := credentials["cert_file"]
+        if !ok </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("cert_file not provided")
+        }</span>
+
+        <span class="cov0" title="0">keyFile, ok := credentials["key_file"]
+        if !ok </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("key_file not provided")
+        }</span>
+
+        <span class="cov0" title="0">cert, err := tls.LoadX509KeyPair(certFile, keyFile)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("failed to load client certificate: %w", err)
+        }</span>
+
+        <span class="cov0" title="0">tlsConfig := &amp;tls.Config{
+                Certificates: []tls.Certificate{cert},
+                MinVersion:   tls.VersionTLS12,
+        }
+
+        // Load CA certificate if provided
+        if caFile, ok := credentials["ca_file"]; ok </span><span class="cov0" title="0">{
+                caCert, err := os.ReadFile(caFile)
+                if err != nil </span><span class="cov0" title="0">{
+                        return nil, fmt.Errorf("failed to read CA certificate: %w", err)
+                }</span>
+
+                <span class="cov0" title="0">caCertPool := x509.NewCertPool()
+                if !caCertPool.AppendCertsFromPEM(caCert) </span><span class="cov0" title="0">{
+                        return nil, fmt.Errorf("failed to append CA certificate")
+                }</span>
+
+                <span class="cov0" title="0">tlsConfig.RootCAs = caCertPool</span>
+        }
+
+        <span class="cov0" title="0">return tlsConfig, nil</span>
+}
+
+// doRequest performs an HTTP request with authentication
+func (c *Client) doRequest(method, path string, body any, headers map[string]string) (*http.Response, error) <span class="cov8" title="1">{
+        url := c.baseURL + path
+
+        var reqBody io.Reader
+        if body != nil </span><span class="cov8" title="1">{
+                jsonData, err := json.Marshal(body)
+                if err != nil </span><span class="cov0" title="0">{
+                        return nil, fmt.Errorf("failed to marshal request body: %w", err)
+                }</span>
+                <span class="cov8" title="1">reqBody = bytes.NewBuffer(jsonData)</span>
+        }
+
+        <span class="cov8" title="1">req, err := http.NewRequest(method, url, reqBody)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("failed to create request: %w", err)
+        }</span>
+
+        // Set headers
+        <span class="cov8" title="1">req.Header.Set("Content-Type", "application/json")
+        for key, value := range headers </span><span class="cov8" title="1">{
+                req.Header.Set(key, value)
+        }</span>
+
+        // Add authentication
+        <span class="cov8" title="1">if c.authType == "bearer" </span><span class="cov8" title="1">{
+                if token, ok := c.credentials["token"]; ok </span><span class="cov8" title="1">{
+                        req.Header.Set("Authorization", "Bearer "+token)
+                }</span>
+        }
+
+        <span class="cov8" title="1">resp, err := c.httpClient.Do(req)
+        if err != nil </span><span class="cov8" title="1">{
+                return nil, fmt.Errorf("request failed: %w", err)
+        }</span>
+
+        <span class="cov8" title="1">return resp, nil</span>
+}
+
+// GetConfig retrieves the configuration from Caddy
+func (c *Client) GetConfig(path string) (map[string]any, string, error) <span class="cov8" title="1">{
+        endpoint := "/config"
+        if path != "" </span><span class="cov8" title="1">{
+                endpoint = "/config/" + path
+        }</span>
+
+        <span class="cov8" title="1">resp, err := c.doRequest("GET", endpoint, nil, nil)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, "", err
+        }</span>
+        <span class="cov8" title="1">defer resp.Body.Close()
+
+        if resp.StatusCode != http.StatusOK </span><span class="cov8" title="1">{
+                body, _ := io.ReadAll(resp.Body)
+                return nil, "", fmt.Errorf("failed to get config: status %d, body: %s", resp.StatusCode, string(body))
+        }</span>
+
+        // Get ETag from response
+        <span class="cov8" title="1">etag := resp.Header.Get("ETag")
+
+        var config map[string]any
+        if err := json.NewDecoder(resp.Body).Decode(&amp;config); err != nil </span><span class="cov0" title="0">{
+                return nil, "", fmt.Errorf("failed to decode config: %w", err)
+        }</span>
+
+        <span class="cov8" title="1">return config, etag, nil</span>
+}
+
+// GetConfigRaw retrieves the raw configuration without path or etag
+func (c *Client) GetConfigRaw() (map[string]any, error) <span class="cov8" title="1">{
+        config, _, err := c.GetConfig("")
+        return config, err
+}</span>
+
+// SetConfig sets the configuration in Caddy
+func (c *Client) SetConfig(path string, config any, etag string) error <span class="cov8" title="1">{
+        endpoint := "/config"
+        if path != "" </span><span class="cov8" title="1">{
+                endpoint = "/config/" + path
+        }</span>
+
+        <span class="cov8" title="1">headers := make(map[string]string)
+        if etag != "" </span><span class="cov8" title="1">{
+                headers["If-Match"] = etag
+        }</span>
+
+        <span class="cov8" title="1">configJSON, _ := json.Marshal(config)
+        fmt.Printf("SetConfig: endpoint=%s, configSize=%d bytes, etag=%s\n", endpoint, len(configJSON), etag)
+
+        resp, err := c.doRequest("POST", endpoint, config, headers)
+        if err != nil </span><span class="cov8" title="1">{
+                fmt.Printf("SetConfig error: %v\n", err)
+                return err
+        }</span>
+        <span class="cov8" title="1">defer resp.Body.Close()
+
+        body, _ := io.ReadAll(resp.Body)
+
+        if resp.StatusCode != http.StatusOK </span><span class="cov8" title="1">{
+                fmt.Printf("SetConfig failed: status=%d, body=%s\n", resp.StatusCode, string(body))
+                return fmt.Errorf("failed to set config: status %d, body: %s", resp.StatusCode, string(body))
+        }</span>
+
+        // Check response body - Caddy returns the current config on success
+        <span class="cov8" title="1">bodyPreview := string(body)
+        if len(bodyPreview) &gt; 200 </span><span class="cov0" title="0">{
+                bodyPreview = bodyPreview[:200] + "..."
+        }</span>
+        <span class="cov8" title="1">fmt.Printf("SetConfig success: status=%d, bodyPreview=%s\n", resp.StatusCode, bodyPreview)
+
+        // The fact that we got 200 OK means config was applied successfully
+        // Caddy returns the current (newly applied) config in the body
+        return nil</span>
+}
+
+// PatchConfig patches the configuration in Caddy
+func (c *Client) PatchConfig(path string, config any) error <span class="cov8" title="1">{
+        endpoint := "/config"
+        if path != "" </span><span class="cov8" title="1">{
+                endpoint = "/config/" + path
+        }</span>
+
+        <span class="cov8" title="1">resp, err := c.doRequest("PATCH", endpoint, config, nil)
+        if err != nil </span><span class="cov0" title="0">{
+                return err
+        }</span>
+        <span class="cov8" title="1">defer resp.Body.Close()
+
+        if resp.StatusCode != http.StatusOK </span><span class="cov0" title="0">{
+                body, _ := io.ReadAll(resp.Body)
+                return fmt.Errorf("failed to patch config: status %d, body: %s", resp.StatusCode, string(body))
+        }</span>
+
+        <span class="cov8" title="1">return nil</span>
+}
+
+// DeleteConfig deletes configuration at the specified path
+func (c *Client) DeleteConfig(path string) error <span class="cov8" title="1">{
+        endpoint := "/config/" + path
+
+        resp, err := c.doRequest("DELETE", endpoint, nil, nil)
+        if err != nil </span><span class="cov0" title="0">{
+                return err
+        }</span>
+        <span class="cov8" title="1">defer resp.Body.Close()
+
+        if resp.StatusCode != http.StatusOK </span><span class="cov0" title="0">{
+                body, _ := io.ReadAll(resp.Body)
+                return fmt.Errorf("failed to delete config: status %d, body: %s", resp.StatusCode, string(body))
+        }</span>
+
+        <span class="cov8" title="1">return nil</span>
+}
+
+// AdaptConfig adapts a Caddyfile to JSON format
+func (c *Client) AdaptConfig(caddyfile string, adapter string) (map[string]any, error) <span class="cov8" title="1">{
+        if adapter == "" </span><span class="cov8" title="1">{
+                adapter = "caddyfile"
+        }</span>
+
+        // Use /adapt endpoint which only converts without applying
+        <span class="cov8" title="1">url := c.baseURL + fmt.Sprintf("/adapt?adapter=%s", adapter)
+
+        // Log for debugging
+        fmt.Printf("AdaptConfig: URL=%s, Caddyfile length=%d bytes\n", url, len(caddyfile))
+
+        // Create request with text body (not JSON)
+        req, err := http.NewRequest("POST", url, bytes.NewBufferString(caddyfile))
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("failed to create request: %w", err)
+        }</span>
+
+        // Set headers - Content-Type for adapt should be text/caddyfile
+        <span class="cov8" title="1">req.Header.Set("Content-Type", "text/caddyfile")
+
+        // Add authentication
+        if c.authType == "bearer" </span><span class="cov0" title="0">{
+                if token, ok := c.credentials["token"]; ok </span><span class="cov0" title="0">{
+                        req.Header.Set("Authorization", "Bearer "+token)
+                }</span>
+        }
+
+        <span class="cov8" title="1">resp, err := c.httpClient.Do(req)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("request failed: %w", err)
+        }</span>
+        <span class="cov8" title="1">defer resp.Body.Close()
+
+        body, _ := io.ReadAll(resp.Body)
+
+        if resp.StatusCode != http.StatusOK </span><span class="cov8" title="1">{
+                // Try to parse error message
+                var errResponse map[string]any
+                if json.Unmarshal(body, &amp;errResponse) == nil </span><span class="cov8" title="1">{
+                        if errMsg, ok := errResponse["error"].(string); ok </span><span class="cov8" title="1">{
+                                fmt.Printf("adapt config failed: %s\n", errMsg)
+                                return nil, fmt.Errorf("failed to parse caddyfile: %s", errMsg)
+                        }</span>
+                }
+                <span class="cov0" title="0">fmt.Printf("adapt config failed: status=%d, body=%s\n", resp.StatusCode, string(body))
+                return nil, fmt.Errorf("failed to adapt config: status %d, body: %s", resp.StatusCode, string(body))</span>
+        }
+
+        // Parse the adapted config
+        <span class="cov8" title="1">var config map[string]any
+        if err := json.Unmarshal(body, &amp;config); err != nil </span><span class="cov0" title="0">{
+                fmt.Printf("AdaptConfig decode error: %v, body=%s\n", err, string(body))
+                return nil, fmt.Errorf("failed to decode adapted config: %w", err)
+        }</span>
+
+        <span class="cov8" title="1">fmt.Printf("AdaptConfig success: adapted %d bytes Caddyfile to JSON\n", len(caddyfile))
+        return config, nil</span>
+}
+
+// GetUpstreams retrieves reverse proxy upstream information
+func (c *Client) GetUpstreams() ([]any, error) <span class="cov8" title="1">{
+        resp, err := c.doRequest("GET", "/reverse_proxy/upstreams", nil, nil)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+        <span class="cov8" title="1">defer resp.Body.Close()
+
+        if resp.StatusCode != http.StatusOK </span><span class="cov0" title="0">{
+                body, _ := io.ReadAll(resp.Body)
+                return nil, fmt.Errorf("failed to get upstreams: status %d, body: %s", resp.StatusCode, string(body))
+        }</span>
+
+        <span class="cov8" title="1">var upstreams []any
+        if err := json.NewDecoder(resp.Body).Decode(&amp;upstreams); err != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("failed to decode upstreams: %w", err)
+        }</span>
+
+        <span class="cov8" title="1">return upstreams, nil</span>
+}
+
+// GetPKICA retrieves PKI CA information
+func (c *Client) GetPKICA(caID string) (map[string]any, error) <span class="cov8" title="1">{
+        endpoint := "/pki/ca/" + caID
+
+        resp, err := c.doRequest("GET", endpoint, nil, nil)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+        <span class="cov8" title="1">defer resp.Body.Close()
+
+        if resp.StatusCode != http.StatusOK </span><span class="cov0" title="0">{
+                body, _ := io.ReadAll(resp.Body)
+                return nil, fmt.Errorf("failed to get PKI CA: status %d, body: %s", resp.StatusCode, string(body))
+        }</span>
+
+        <span class="cov8" title="1">var ca map[string]any
+        if err := json.NewDecoder(resp.Body).Decode(&amp;ca); err != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("failed to decode PKI CA: %w", err)
+        }</span>
+
+        <span class="cov8" title="1">return ca, nil</span>
+}
+
+// HealthCheck performs a health check on the Caddy instance
+func (c *Client) HealthCheck() (bool, error) <span class="cov8" title="1">{
+        start := time.Now()
+
+        resp, err := c.doRequest("GET", "/config/", nil, nil)
+        if err != nil </span><span class="cov8" title="1">{
+                return false, err
+        }</span>
+        <span class="cov8" title="1">defer resp.Body.Close()
+
+        latency := time.Since(start).Milliseconds()
+
+        if resp.StatusCode != http.StatusOK </span><span class="cov8" title="1">{
+                return false, fmt.Errorf("health check failed with status: %d", resp.StatusCode)
+        }</span>
+
+        // Log latency for monitoring
+        <span class="cov8" title="1">_ = latency
+
+        return true, nil</span>
+}
+
+// LoadConfig loads a complete configuration (replaces entire config)
+func (c *Client) LoadConfig(config any) error <span class="cov8" title="1">{
+        configJSON, _ := json.Marshal(config)
+        fmt.Printf("LoadConfig: configSize=%d bytes\n", len(configJSON))
+
+        resp, err := c.doRequest("POST", "/load", config, nil)
+        if err != nil </span><span class="cov0" title="0">{
+                fmt.Printf("LoadConfig error: %v\n", err)
+                return err
+        }</span>
+        <span class="cov8" title="1">defer resp.Body.Close()
+
+        body, _ := io.ReadAll(resp.Body)
+
+        if resp.StatusCode != http.StatusOK </span><span class="cov0" title="0">{
+                fmt.Printf("LoadConfig failed: status=%d, body=%s\n", resp.StatusCode, string(body))
+                return fmt.Errorf("failed to load config: status %d, body: %s", resp.StatusCode, string(body))
+        }</span>
+
+        <span class="cov8" title="1">bodyPreview := string(body)
+        if len(bodyPreview) &gt; 200 </span><span class="cov0" title="0">{
+                bodyPreview = bodyPreview[:200] + "..."
+        }</span>
+        <span class="cov8" title="1">fmt.Printf("LoadConfig success: status=%d, bodyPreview=%s\n", resp.StatusCode, bodyPreview)
+
+        return nil</span>
+}
+
+// Stop gracefully stops the Caddy server
+func (c *Client) Stop() error <span class="cov8" title="1">{
+        resp, err := c.doRequest("POST", "/stop", nil, nil)
+        if err != nil </span><span class="cov0" title="0">{
+                return err
+        }</span>
+        <span class="cov8" title="1">defer resp.Body.Close()
+
+        if resp.StatusCode != http.StatusOK </span><span class="cov0" title="0">{
+                body, _ := io.ReadAll(resp.Body)
+                return fmt.Errorf("failed to stop server: status %d, body: %s", resp.StatusCode, string(body))
+        }</span>
+
+        <span class="cov8" title="1">return nil</span>
+}
+</pre>
+		
+		<pre class="file" id="file12" style="display: none">package caddy
+
+import (
+        "fmt"
+        "sync"
+        "time"
+
+        "github.com/ArtemStepanov/caddy-orchestrator/internal/storage"
+        "github.com/google/uuid"
+)
+
+// Manager manages multiple Caddy instances
+type Manager struct {
+        storage     *storage.SQLiteStorage
+        clients     map[string]*Client
+        clientMutex sync.RWMutex
+}
+
+// NewManager creates a new Caddy instance manager
+func NewManager(storage *storage.SQLiteStorage) *Manager <span class="cov8" title="1">{
+        return &amp;Manager{
+                storage: storage,
+                clients: make(map[string]*Client),
+        }
+}</span>
+
+// AddInstance adds a new Caddy instance
+func (m *Manager) AddInstance(instance *storage.CaddyInstance) error <span class="cov8" title="1">{
+        if instance.ID == "" </span><span class="cov8" title="1">{
+                instance.ID = uuid.New().String()
+        }</span>
+
+        <span class="cov8" title="1">instance.Status = "unknown"
+        instance.LastSeen = time.Time{}
+
+        // Create storage entry
+        if err := m.storage.CreateInstance(instance); err != nil </span><span class="cov0" title="0">{
+                return fmt.Errorf("failed to create instance: %w", err)
+        }</span>
+
+        // Create client
+        <span class="cov8" title="1">client, err := NewClient(ClientConfig{
+                BaseURL:     instance.AdminURL,
+                AuthType:    instance.AuthType,
+                Credentials: instance.Credentials,
+                Timeout:     10 * time.Second,
+        })
+        if err != nil </span><span class="cov0" title="0">{
+                return fmt.Errorf("failed to create client: %w", err)
+        }</span>
+
+        <span class="cov8" title="1">m.clientMutex.Lock()
+        m.clients[instance.ID] = client
+        m.clientMutex.Unlock()
+
+        // Test connection
+        go m.updateInstanceStatus(instance.ID)
+
+        return nil</span>
+}
+
+// GetInstance retrieves a Caddy instance
+func (m *Manager) GetInstance(id string) (*storage.CaddyInstance, error) <span class="cov8" title="1">{
+        return m.storage.GetInstance(id)
+}</span>
+
+// ListInstances lists all Caddy instances
+func (m *Manager) ListInstances() ([]*storage.CaddyInstance, error) <span class="cov8" title="1">{
+        return m.storage.ListInstances()
+}</span>
+
+// UpdateInstance updates a Caddy instance
+func (m *Manager) UpdateInstance(instance *storage.CaddyInstance) error <span class="cov8" title="1">{
+        if err := m.storage.UpdateInstance(instance); err != nil </span><span class="cov0" title="0">{
+                return fmt.Errorf("failed to update instance: %w", err)
+        }</span>
+
+        // Recreate client if connection details changed
+        <span class="cov8" title="1">client, err := NewClient(ClientConfig{
+                BaseURL:     instance.AdminURL,
+                AuthType:    instance.AuthType,
+                Credentials: instance.Credentials,
+                Timeout:     10 * time.Second,
+        })
+        if err != nil </span><span class="cov0" title="0">{
+                return fmt.Errorf("failed to create client: %w", err)
+        }</span>
+
+        <span class="cov8" title="1">m.clientMutex.Lock()
+        m.clients[instance.ID] = client
+        m.clientMutex.Unlock()
+
+        // Test connection
+        go m.updateInstanceStatus(instance.ID)
+
+        return nil</span>
+}
+
+// DeleteInstance removes a Caddy instance
+func (m *Manager) DeleteInstance(id string) error <span class="cov8" title="1">{
+        m.clientMutex.Lock()
+        delete(m.clients, id)
+        m.clientMutex.Unlock()
+
+        return m.storage.DeleteInstance(id)
+}</span>
+
+// GetClient retrieves a Caddy client for an instance
+func (m *Manager) GetClient(id string) (*Client, error) <span class="cov8" title="1">{
+        m.clientMutex.RLock()
+        client, ok := m.clients[id]
+        m.clientMutex.RUnlock()
+
+        if !ok </span><span class="cov8" title="1">{
+                // Try to load from storage and create client
+                instance, err := m.storage.GetInstance(id)
+                if err != nil </span><span class="cov8" title="1">{
+                        return nil, fmt.Errorf("instance not found: %w", err)
+                }</span>
+
+                <span class="cov8" title="1">client, err = NewClient(ClientConfig{
+                        BaseURL:     instance.AdminURL,
+                        AuthType:    instance.AuthType,
+                        Credentials: instance.Credentials,
+                        Timeout:     10 * time.Second,
+                })
+                if err != nil </span><span class="cov0" title="0">{
+                        return nil, fmt.Errorf("failed to create client: %w", err)
+                }</span>
+
+                <span class="cov8" title="1">m.clientMutex.Lock()
+                m.clients[id] = client
+                m.clientMutex.Unlock()</span>
+        }
+
+        <span class="cov8" title="1">return client, nil</span>
+}
+
+// TestConnection tests the connection to a Caddy instance
+func (m *Manager) TestConnection(id string) (*storage.HealthCheckResult, error) <span class="cov8" title="1">{
+        client, err := m.GetClient(id)
+        if err != nil </span><span class="cov0" title="0">{
+                return &amp;storage.HealthCheckResult{
+                        InstanceID: id,
+                        Healthy:    false,
+                        Message:    err.Error(),
+                        Timestamp:  time.Now(),
+                }, err
+        }</span>
+
+        <span class="cov8" title="1">start := time.Now()
+        healthy, err := client.HealthCheck()
+        latency := time.Since(start).Milliseconds()
+
+        result := &amp;storage.HealthCheckResult{
+                InstanceID: id,
+                Healthy:    healthy,
+                Timestamp:  time.Now(),
+                Latency:    latency,
+        }
+
+        if err != nil </span><span class="cov8" title="1">{
+                result.Message = err.Error()
+        }</span> else<span class="cov8" title="1"> {
+                result.Message = "Connection successful"
+        }</span>
+
+        // Update instance status
+        <span class="cov8" title="1">go m.updateInstanceStatus(id)
+
+        return result, err</span>
+}
+
+// updateInstanceStatus updates the status of an instance
+func (m *Manager) updateInstanceStatus(id string) <span class="cov8" title="1">{
+        instance, err := m.storage.GetInstance(id)
+        if err != nil </span><span class="cov8" title="1">{
+                return
+        }</span>
+
+        <span class="cov8" title="1">client, err := m.GetClient(id)
+        if err != nil </span><span class="cov0" title="0">{
+                instance.Status = "error"
+                m.storage.UpdateInstance(instance)
+                return
+        }</span>
+
+        <span class="cov8" title="1">healthy, err := client.HealthCheck()
+        if err != nil || !healthy </span><span class="cov0" title="0">{
+                instance.Status = "offline"
+        }</span> else<span class="cov8" title="1"> {
+                instance.Status = "online"
+                instance.LastSeen = time.Now()
+        }</span>
+
+        <span class="cov8" title="1">m.storage.UpdateInstance(instance)</span>
+}
+
+// StartHealthChecks starts periodic health checks for all instances
+func (m *Manager) StartHealthChecks(interval time.Duration) <span class="cov0" title="0">{
+        ticker := time.NewTicker(interval)
+        go func() </span><span class="cov0" title="0">{
+                for range ticker.C </span><span class="cov0" title="0">{
+                        instances, err := m.storage.ListInstances()
+                        if err != nil </span><span class="cov0" title="0">{
+                                continue</span>
+                        }
+
+                        // Check instances concurrently
+                        <span class="cov0" title="0">var wg sync.WaitGroup
+                        for _, instance := range instances </span><span class="cov0" title="0">{
+                                wg.Add(1)
+                                go func(id string) </span><span class="cov0" title="0">{
+                                        defer wg.Done()
+                                        m.updateInstanceStatus(id)
+                                }</span>(instance.ID)
+                        }
+                        <span class="cov0" title="0">wg.Wait()</span>
+                }
+        }()
+}
+
+// GetConfig retrieves configuration from a Caddy instance
+func (m *Manager) GetConfig(instanceID string, path string) (map[string]any, string, error) <span class="cov8" title="1">{
+        client, err := m.GetClient(instanceID)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, "", err
+        }</span>
+
+        <span class="cov8" title="1">return client.GetConfig(path)</span>
+}
+
+// LoadConfig loads a new configuration using Caddy's /load endpoint
+func (m *Manager) LoadConfig(instanceID string, config any) error <span class="cov8" title="1">{
+        client, err := m.GetClient(instanceID)
+        if err != nil </span><span class="cov0" title="0">{
+                return err
+        }</span>
+
+        <span class="cov8" title="1">return client.LoadConfig(config)</span>
+}
+
+// SetConfig sets configuration on a Caddy instance
+func (m *Manager) SetConfig(instanceID string, path string, config any, etag string) error <span class="cov8" title="1">{
+        client, err := m.GetClient(instanceID)
+        if err != nil </span><span class="cov0" title="0">{
+                return err
+        }</span>
+
+        // Create backup before applying new config
+        <span class="cov8" title="1">if etag != "" </span><span class="cov0" title="0">{
+                currentConfig, currentETag, err := client.GetConfig(path)
+                if err == nil </span><span class="cov0" title="0">{
+                        backup := &amp;storage.ConfigBackup{
+                                ID:         uuid.New().String(),
+                                InstanceID: instanceID,
+                                Config:     currentConfig,
+                                ETag:       currentETag,
+                                CreatedBy:  "system",
+                        }
+                        m.storage.CreateConfigBackup(backup)
+                }</span>
+        }
+
+        <span class="cov8" title="1">return client.SetConfig(path, config, etag)</span>
+}
+
+// PatchConfig patches configuration on a Caddy instance
+func (m *Manager) PatchConfig(instanceID string, path string, config any) error <span class="cov8" title="1">{
+        client, err := m.GetClient(instanceID)
+        if err != nil </span><span class="cov0" title="0">{
+                return err
+        }</span>
+
+        <span class="cov8" title="1">return client.PatchConfig(path, config)</span>
+}
+
+// DeleteConfig deletes configuration from a Caddy instance
+func (m *Manager) DeleteConfig(instanceID string, path string) error <span class="cov8" title="1">{
+        client, err := m.GetClient(instanceID)
+        if err != nil </span><span class="cov0" title="0">{
+                return err
+        }</span>
+
+        <span class="cov8" title="1">return client.DeleteConfig(path)</span>
+}
+
+// AdaptConfig adapts a Caddyfile to JSON
+func (m *Manager) AdaptConfig(instanceID string, caddyfile string, adapter string) (map[string]any, error) <span class="cov8" title="1">{
+        client, err := m.GetClient(instanceID)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+
+        <span class="cov8" title="1">return client.AdaptConfig(caddyfile, adapter)</span>
+}
+
+// GetUpstreams retrieves upstream information
+func (m *Manager) GetUpstreams(instanceID string) ([]any, error) <span class="cov8" title="1">{
+        client, err := m.GetClient(instanceID)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+
+        <span class="cov8" title="1">return client.GetUpstreams()</span>
+}
+
+// GetPKICA retrieves PKI CA information
+func (m *Manager) GetPKICA(instanceID string, caID string) (map[string]any, error) <span class="cov8" title="1">{
+        client, err := m.GetClient(instanceID)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+
+        <span class="cov8" title="1">return client.GetPKICA(caID)</span>
+}
+
+// RollbackConfig rolls back to a previous configuration
+func (m *Manager) RollbackConfig(instanceID string, backupID string) error <span class="cov8" title="1">{
+        backups, err := m.storage.GetConfigBackups(instanceID, 100)
+        if err != nil </span><span class="cov0" title="0">{
+                return fmt.Errorf("failed to get backups: %w", err)
+        }</span>
+
+        <span class="cov8" title="1">var backup *storage.ConfigBackup
+        for _, b := range backups </span><span class="cov8" title="1">{
+                if b.ID == backupID </span><span class="cov8" title="1">{
+                        backup = b
+                        break</span>
+                }
+        }
+
+        <span class="cov8" title="1">if backup == nil </span><span class="cov8" title="1">{
+                return fmt.Errorf("backup not found")
+        }</span>
+
+        <span class="cov8" title="1">client, err := m.GetClient(instanceID)
+        if err != nil </span><span class="cov0" title="0">{
+                return err
+        }</span>
+
+        <span class="cov8" title="1">return client.SetConfig("", backup.Config, "")</span>
+}
+
+// BulkConfigUpdate applies configuration to multiple instances
+func (m *Manager) BulkConfigUpdate(instanceIDs []string, path string, config any) map[string]error <span class="cov8" title="1">{
+        results := make(map[string]error)
+        var mu sync.Mutex
+        var wg sync.WaitGroup
+
+        for _, instanceID := range instanceIDs </span><span class="cov8" title="1">{
+                wg.Add(1)
+                go func(id string) </span><span class="cov8" title="1">{
+                        defer wg.Done()
+
+                        err := m.SetConfig(id, path, config, "")
+
+                        mu.Lock()
+                        results[id] = err
+                        mu.Unlock()
+                }</span>(instanceID)
+        }
+
+        <span class="cov8" title="1">wg.Wait()
+        return results</span>
+}
+</pre>
+		
+		<pre class="file" id="file13" style="display: none">package docker
+
+import (
+        "context"
+        "encoding/json"
+        "fmt"
+
+        "github.com/ArtemStepanov/caddy-orchestrator/internal/storage"
+)
+
+// Integration provides Docker integration features
+type Integration struct {
+        enabled bool
+}
+
+// NewIntegration creates a new Docker integration
+func NewIntegration(enabled bool) *Integration <span class="cov0" title="0">{
+        return &amp;Integration{
+                enabled: enabled,
+        }
+}</span>
+
+// DiscoverContainers discovers Docker containers with Caddy labels
+// This is a placeholder for future Docker integration
+func (i *Integration) DiscoverContainers(ctx context.Context) ([]*ContainerInfo, error) <span class="cov0" title="0">{
+        if !i.enabled </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("Docker integration is not enabled")
+        }</span>
+
+        // TODO: Implement Docker API client
+        // - Connect to Docker socket
+        // - List containers with caddy labels
+        // - Parse labels for routing configuration
+
+        <span class="cov0" title="0">return nil, fmt.Errorf("not implemented yet")</span>
+}
+
+// ContainerInfo represents information about a Docker container
+type ContainerInfo struct {
+        ID     string            `json:"id"`
+        Name   string            `json:"name"`
+        Image  string            `json:"image"`
+        Labels map[string]string `json:"labels"`
+        State  string            `json:"state"`
+}
+
+// GenerateConfigFromContainer generates Caddy configuration from container labels
+func (i *Integration) GenerateConfigFromContainer(container *ContainerInfo) (map[string]any, error) <span class="cov0" title="0">{
+        if !i.enabled </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("Docker integration is not enabled")
+        }</span>
+
+        // Parse caddy.* labels
+        // Example labels:
+        // - caddy.address: example.com
+        // - caddy.reverse_proxy: {{upstreams}}
+        // - caddy.tls: internal
+
+        <span class="cov0" title="0">config := make(map[string]any)
+
+        // TODO: Implement label parsing and config generation
+
+        return config, nil</span>
+}
+
+// WatchContainerEvents watches for Docker container events
+// This is a placeholder for future implementation
+func (i *Integration) WatchContainerEvents(ctx context.Context, handler func(*ContainerEvent)) error <span class="cov0" title="0">{
+        if !i.enabled </span><span class="cov0" title="0">{
+                return fmt.Errorf("Docker integration is not enabled")
+        }</span>
+
+        // TODO: Implement Docker event watching
+        // - Connect to Docker events API
+        // - Filter for container start/stop/die events
+        // - Parse events and call handler
+
+        <span class="cov0" title="0">return fmt.Errorf("not implemented yet")</span>
+}
+
+// ContainerEvent represents a Docker container event
+type ContainerEvent struct {
+        Type      string         `json:"type"`
+        Action    string         `json:"action"`
+        Container *ContainerInfo `json:"container"`
+        Timestamp int64          `json:"timestamp"`
+}
+
+// MigrateFromDockerProxy migrates configuration from caddy-docker-proxy
+// This is a placeholder for future implementation
+func (i *Integration) MigrateFromDockerProxy() ([]*storage.CaddyInstance, error) <span class="cov0" title="0">{
+        if !i.enabled </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("Docker integration is not enabled")
+        }</span>
+
+        // TODO: Implement migration from caddy-docker-proxy
+        // - Detect existing caddy-docker-proxy setup
+        // - Extract container labels
+        // - Convert to orchestrator instances
+
+        <span class="cov0" title="0">return nil, fmt.Errorf("not implemented yet")</span>
+}
+
+// IsEnabled returns whether Docker integration is enabled
+func (i *Integration) IsEnabled() bool <span class="cov0" title="0">{
+        return i.enabled
+}</span>
+
+// ValidateLabels validates Caddy labels on a container
+func ValidateLabels(labels map[string]string) error <span class="cov0" title="0">{
+        // Check for required labels
+        if _, ok := labels["caddy.address"]; !ok </span><span class="cov0" title="0">{
+                return fmt.Errorf("missing required label: caddy.address")
+        }</span>
+
+        // Validate label format
+        <span class="cov0" title="0">for key := range labels </span><span class="cov0" title="0">{
+                if len(key) &gt; 7 &amp;&amp; key[:6] == "caddy." </span><span class="cov0" title="0">{
+                        // Valid Caddy label
+                        continue</span>
+                }
+        }
+
+        <span class="cov0" title="0">return nil</span>
+}
+
+// ParseLabels parses Caddy labels into a structured format
+func ParseLabels(labels map[string]string) map[string]any <span class="cov0" title="0">{
+        result := make(map[string]any)
+
+        for key, value := range labels </span><span class="cov0" title="0">{
+                if len(key) &gt; 6 &amp;&amp; key[:6] == "caddy." </span><span class="cov0" title="0">{
+                        // Remove "caddy." prefix
+                        configKey := key[6:]
+
+                        // Try to parse as JSON for complex values
+                        var jsonValue any
+                        if err := json.Unmarshal([]byte(value), &amp;jsonValue); err == nil </span><span class="cov0" title="0">{
+                                result[configKey] = jsonValue
+                        }</span> else<span class="cov0" title="0"> {
+                                result[configKey] = value
+                        }</span>
+                }
+        }
+
+        <span class="cov0" title="0">return result</span>
+}
+
+// Note: Full Docker integration requires the Docker SDK:
+// import "github.com/docker/docker/client"
+// This is left as a future enhancement to keep dependencies minimal
+</pre>
+		
+		<pre class="file" id="file14" style="display: none">package storage
+
+import (
+        "database/sql"
+        "encoding/json"
+        "fmt"
+        "time"
+
+        _ "github.com/mattn/go-sqlite3"
+)
+
+// SQLiteStorage implements storage using SQLite
+type SQLiteStorage struct {
+        db *sql.DB
+}
+
+// NewSQLiteStorage creates a new SQLite storage instance
+func NewSQLiteStorage(dbPath string) (*SQLiteStorage, error) <span class="cov8" title="1">{
+        db, err := sql.Open("sqlite3", dbPath)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("failed to open database: %w", err)
+        }</span>
+
+        <span class="cov8" title="1">if err := db.Ping(); err != nil </span><span class="cov8" title="1">{
+                return nil, fmt.Errorf("failed to ping database: %w", err)
+        }</span>
+
+        <span class="cov8" title="1">storage := &amp;SQLiteStorage{db: db}
+
+        if err := storage.migrate(); err != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("failed to migrate database: %w", err)
+        }</span>
+
+        <span class="cov8" title="1">return storage, nil</span>
+}
+
+// migrate creates the database schema
+func (s *SQLiteStorage) migrate() error <span class="cov8" title="1">{
+        schema := `
+        CREATE TABLE IF NOT EXISTS caddy_instances (
+                id TEXT PRIMARY KEY,
+                name TEXT NOT NULL,
+                admin_url TEXT NOT NULL,
+                auth_type TEXT NOT NULL DEFAULT 'none',
+                credentials TEXT,
+                status TEXT NOT NULL DEFAULT 'unknown',
+                last_seen DATETIME,
+                created_at DATETIME NOT NULL,
+                updated_at DATETIME NOT NULL
+        );
+
+        CREATE INDEX IF NOT EXISTS idx_instances_status ON caddy_instances(status);
+        CREATE INDEX IF NOT EXISTS idx_instances_name ON caddy_instances(name);
+
+        CREATE TABLE IF NOT EXISTS config_templates (
+                id TEXT PRIMARY KEY,
+                name TEXT NOT NULL,
+                description TEXT,
+                category TEXT NOT NULL,
+                template TEXT NOT NULL,
+                variables TEXT NOT NULL,
+                created_at DATETIME NOT NULL,
+                updated_at DATETIME NOT NULL
+        );
+
+        CREATE INDEX IF NOT EXISTS idx_templates_category ON config_templates(category);
+
+        CREATE TABLE IF NOT EXISTS audit_logs (
+                id TEXT PRIMARY KEY,
+                timestamp DATETIME NOT NULL,
+                user_id TEXT NOT NULL,
+                instance_id TEXT,
+                action TEXT NOT NULL,
+                changes TEXT,
+                status TEXT NOT NULL,
+                error TEXT
+        );
+
+        CREATE INDEX IF NOT EXISTS idx_logs_timestamp ON audit_logs(timestamp);
+        CREATE INDEX IF NOT EXISTS idx_logs_instance ON audit_logs(instance_id);
+        CREATE INDEX IF NOT EXISTS idx_logs_user ON audit_logs(user_id);
+
+        CREATE TABLE IF NOT EXISTS config_backups (
+                id TEXT PRIMARY KEY,
+                instance_id TEXT NOT NULL,
+                config TEXT NOT NULL,
+                etag TEXT NOT NULL,
+                created_at DATETIME NOT NULL,
+                created_by TEXT NOT NULL
+        );
+
+        CREATE INDEX IF NOT EXISTS idx_backups_instance ON config_backups(instance_id);
+        CREATE INDEX IF NOT EXISTS idx_backups_created ON config_backups(created_at);
+        `
+
+        _, err := s.db.Exec(schema)
+        return err
+}</span>
+
+// Close closes the database connection
+func (s *SQLiteStorage) Close() error <span class="cov8" title="1">{
+        return s.db.Close()
+}</span>
+
+// CreateInstance creates a new Caddy instance
+func (s *SQLiteStorage) CreateInstance(instance *CaddyInstance) error <span class="cov8" title="1">{
+        credentialsJSON, err := json.Marshal(instance.Credentials)
+        if err != nil </span><span class="cov0" title="0">{
+                return fmt.Errorf("failed to marshal credentials: %w", err)
+        }</span>
+
+        <span class="cov8" title="1">now := time.Now()
+        instance.CreatedAt = now
+        instance.UpdatedAt = now
+
+        query := `
+                INSERT INTO caddy_instances (id, name, admin_url, auth_type, credentials, status, last_seen, created_at, updated_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `
+
+        _, err = s.db.Exec(query,
+                instance.ID,
+                instance.Name,
+                instance.AdminURL,
+                instance.AuthType,
+                string(credentialsJSON),
+                instance.Status,
+                instance.LastSeen,
+                instance.CreatedAt,
+                instance.UpdatedAt,
+        )
+
+        if err != nil </span><span class="cov0" title="0">{
+                return fmt.Errorf("failed to create instance: %w", err)
+        }</span>
+
+        <span class="cov8" title="1">return nil</span>
+}
+
+// GetInstance retrieves a Caddy instance by ID
+func (s *SQLiteStorage) GetInstance(id string) (*CaddyInstance, error) <span class="cov8" title="1">{
+        query := `
+                SELECT id, name, admin_url, auth_type, credentials, status, last_seen, created_at, updated_at
+                FROM caddy_instances
+                WHERE id = ?
+        `
+
+        var instance CaddyInstance
+        var credentialsJSON string
+        var lastSeen sql.NullTime
+
+        err := s.db.QueryRow(query, id).Scan(
+                &amp;instance.ID,
+                &amp;instance.Name,
+                &amp;instance.AdminURL,
+                &amp;instance.AuthType,
+                &amp;credentialsJSON,
+                &amp;instance.Status,
+                &amp;lastSeen,
+                &amp;instance.CreatedAt,
+                &amp;instance.UpdatedAt,
+        )
+
+        if err == sql.ErrNoRows </span><span class="cov8" title="1">{
+                return nil, fmt.Errorf("instance not found")
+        }</span>
+        <span class="cov8" title="1">if err != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("failed to get instance: %w", err)
+        }</span>
+
+        <span class="cov8" title="1">if lastSeen.Valid </span><span class="cov8" title="1">{
+                instance.LastSeen = lastSeen.Time
+        }</span>
+
+        <span class="cov8" title="1">if credentialsJSON != "" </span><span class="cov8" title="1">{
+                if err := json.Unmarshal([]byte(credentialsJSON), &amp;instance.Credentials); err != nil </span><span class="cov0" title="0">{
+                        return nil, fmt.Errorf("failed to unmarshal credentials: %w", err)
+                }</span>
+        }
+
+        <span class="cov8" title="1">return &amp;instance, nil</span>
+}
+
+// ListInstances retrieves all Caddy instances
+func (s *SQLiteStorage) ListInstances() ([]*CaddyInstance, error) <span class="cov8" title="1">{
+        query := `
+                SELECT id, name, admin_url, auth_type, credentials, status, last_seen, created_at, updated_at
+                FROM caddy_instances
+                ORDER BY name
+        `
+
+        rows, err := s.db.Query(query)
+        if err != nil </span><span class="cov8" title="1">{
+                return nil, fmt.Errorf("failed to list instances: %w", err)
+        }</span>
+        <span class="cov8" title="1">defer rows.Close()
+
+        var instances []*CaddyInstance
+
+        for rows.Next() </span><span class="cov8" title="1">{
+                var instance CaddyInstance
+                var credentialsJSON string
+                var lastSeen sql.NullTime
+
+                err := rows.Scan(
+                        &amp;instance.ID,
+                        &amp;instance.Name,
+                        &amp;instance.AdminURL,
+                        &amp;instance.AuthType,
+                        &amp;credentialsJSON,
+                        &amp;instance.Status,
+                        &amp;lastSeen,
+                        &amp;instance.CreatedAt,
+                        &amp;instance.UpdatedAt,
+                )
+                if err != nil </span><span class="cov0" title="0">{
+                        return nil, fmt.Errorf("failed to scan instance: %w", err)
+                }</span>
+
+                <span class="cov8" title="1">if lastSeen.Valid </span><span class="cov8" title="1">{
+                        instance.LastSeen = lastSeen.Time
+                }</span>
+
+                <span class="cov8" title="1">if credentialsJSON != "" </span><span class="cov8" title="1">{
+                        if err := json.Unmarshal([]byte(credentialsJSON), &amp;instance.Credentials); err != nil </span><span class="cov0" title="0">{
+                                return nil, fmt.Errorf("failed to unmarshal credentials: %w", err)
+                        }</span>
+                }
+
+                <span class="cov8" title="1">instances = append(instances, &amp;instance)</span>
+        }
+
+        <span class="cov8" title="1">return instances, nil</span>
+}
+
+// UpdateInstance updates a Caddy instance
+func (s *SQLiteStorage) UpdateInstance(instance *CaddyInstance) error <span class="cov8" title="1">{
+        credentialsJSON, err := json.Marshal(instance.Credentials)
+        if err != nil </span><span class="cov0" title="0">{
+                return fmt.Errorf("failed to marshal credentials: %w", err)
+        }</span>
+
+        <span class="cov8" title="1">instance.UpdatedAt = time.Now()
+
+        query := `
+                UPDATE caddy_instances
+                SET name = ?, admin_url = ?, auth_type = ?, credentials = ?, status = ?, last_seen = ?, updated_at = ?
+                WHERE id = ?
+        `
+
+        result, err := s.db.Exec(query,
+                instance.Name,
+                instance.AdminURL,
+                instance.AuthType,
+                string(credentialsJSON),
+                instance.Status,
+                instance.LastSeen,
+                instance.UpdatedAt,
+                instance.ID,
+        )
+
+        if err != nil </span><span class="cov0" title="0">{
+                return fmt.Errorf("failed to update instance: %w", err)
+        }</span>
+
+        <span class="cov8" title="1">rowsAffected, err := result.RowsAffected()
+        if err != nil </span><span class="cov0" title="0">{
+                return fmt.Errorf("failed to get rows affected: %w", err)
+        }</span>
+
+        <span class="cov8" title="1">if rowsAffected == 0 </span><span class="cov8" title="1">{
+                return fmt.Errorf("instance not found")
+        }</span>
+
+        <span class="cov8" title="1">return nil</span>
+}
+
+// DeleteInstance deletes a Caddy instance
+func (s *SQLiteStorage) DeleteInstance(id string) error <span class="cov8" title="1">{
+        query := `DELETE FROM caddy_instances WHERE id = ?`
+
+        result, err := s.db.Exec(query, id)
+        if err != nil </span><span class="cov0" title="0">{
+                return fmt.Errorf("failed to delete instance: %w", err)
+        }</span>
+
+        <span class="cov8" title="1">rowsAffected, err := result.RowsAffected()
+        if err != nil </span><span class="cov0" title="0">{
+                return fmt.Errorf("failed to get rows affected: %w", err)
+        }</span>
+
+        <span class="cov8" title="1">if rowsAffected == 0 </span><span class="cov8" title="1">{
+                return fmt.Errorf("instance not found")
+        }</span>
+
+        <span class="cov8" title="1">return nil</span>
+}
+
+// CreateTemplate creates a new configuration template
+func (s *SQLiteStorage) CreateTemplate(template *ConfigTemplate) error <span class="cov8" title="1">{
+        templateJSON, err := json.Marshal(template.Template)
+        if err != nil </span><span class="cov0" title="0">{
+                return fmt.Errorf("failed to marshal template: %w", err)
+        }</span>
+
+        <span class="cov8" title="1">variablesJSON, err := json.Marshal(template.Variables)
+        if err != nil </span><span class="cov0" title="0">{
+                return fmt.Errorf("failed to marshal variables: %w", err)
+        }</span>
+
+        <span class="cov8" title="1">now := time.Now()
+        template.CreatedAt = now
+        template.UpdatedAt = now
+
+        query := `
+                INSERT INTO config_templates (id, name, description, category, template, variables, created_at, updated_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        `
+
+        _, err = s.db.Exec(query,
+                template.ID,
+                template.Name,
+                template.Description,
+                template.Category,
+                string(templateJSON),
+                string(variablesJSON),
+                template.CreatedAt,
+                template.UpdatedAt,
+        )
+
+        if err != nil </span><span class="cov0" title="0">{
+                return fmt.Errorf("failed to create template: %w", err)
+        }</span>
+
+        <span class="cov8" title="1">return nil</span>
+}
+
+// GetTemplate retrieves a configuration template by ID
+func (s *SQLiteStorage) GetTemplate(id string) (*ConfigTemplate, error) <span class="cov8" title="1">{
+        query := `
+                SELECT id, name, description, category, template, variables, created_at, updated_at
+                FROM config_templates
+                WHERE id = ?
+        `
+
+        var template ConfigTemplate
+        var templateJSON, variablesJSON string
+
+        err := s.db.QueryRow(query, id).Scan(
+                &amp;template.ID,
+                &amp;template.Name,
+                &amp;template.Description,
+                &amp;template.Category,
+                &amp;templateJSON,
+                &amp;variablesJSON,
+                &amp;template.CreatedAt,
+                &amp;template.UpdatedAt,
+        )
+
+        if err == sql.ErrNoRows </span><span class="cov8" title="1">{
+                return nil, fmt.Errorf("template not found")
+        }</span>
+        <span class="cov8" title="1">if err != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("failed to get template: %w", err)
+        }</span>
+
+        <span class="cov8" title="1">if err := json.Unmarshal([]byte(templateJSON), &amp;template.Template); err != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("failed to unmarshal template: %w", err)
+        }</span>
+
+        <span class="cov8" title="1">if err := json.Unmarshal([]byte(variablesJSON), &amp;template.Variables); err != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("failed to unmarshal variables: %w", err)
+        }</span>
+
+        <span class="cov8" title="1">return &amp;template, nil</span>
+}
+
+// ListTemplates retrieves all configuration templates
+func (s *SQLiteStorage) ListTemplates() ([]*ConfigTemplate, error) <span class="cov8" title="1">{
+        query := `
+                SELECT id, name, description, category, template, variables, created_at, updated_at
+                FROM config_templates
+                ORDER BY category, name
+        `
+
+        rows, err := s.db.Query(query)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("failed to list templates: %w", err)
+        }</span>
+        <span class="cov8" title="1">defer rows.Close()
+
+        var templates []*ConfigTemplate
+
+        for rows.Next() </span><span class="cov8" title="1">{
+                var template ConfigTemplate
+                var templateJSON, variablesJSON string
+
+                err := rows.Scan(
+                        &amp;template.ID,
+                        &amp;template.Name,
+                        &amp;template.Description,
+                        &amp;template.Category,
+                        &amp;templateJSON,
+                        &amp;variablesJSON,
+                        &amp;template.CreatedAt,
+                        &amp;template.UpdatedAt,
+                )
+                if err != nil </span><span class="cov0" title="0">{
+                        return nil, fmt.Errorf("failed to scan template: %w", err)
+                }</span>
+
+                <span class="cov8" title="1">if err := json.Unmarshal([]byte(templateJSON), &amp;template.Template); err != nil </span><span class="cov0" title="0">{
+                        return nil, fmt.Errorf("failed to unmarshal template: %w", err)
+                }</span>
+
+                <span class="cov8" title="1">if err := json.Unmarshal([]byte(variablesJSON), &amp;template.Variables); err != nil </span><span class="cov0" title="0">{
+                        return nil, fmt.Errorf("failed to unmarshal variables: %w", err)
+                }</span>
+
+                <span class="cov8" title="1">templates = append(templates, &amp;template)</span>
+        }
+
+        <span class="cov8" title="1">return templates, nil</span>
+}
+
+// CreateAuditLog creates a new audit log entry
+func (s *SQLiteStorage) CreateAuditLog(log *AuditLog) error <span class="cov8" title="1">{
+        changesJSON, err := json.Marshal(log.Changes)
+        if err != nil </span><span class="cov0" title="0">{
+                return fmt.Errorf("failed to marshal changes: %w", err)
+        }</span>
+
+        <span class="cov8" title="1">query := `
+                INSERT INTO audit_logs (id, timestamp, user_id, instance_id, action, changes, status, error)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        `
+
+        _, err = s.db.Exec(query,
+                log.ID,
+                log.Timestamp,
+                log.UserID,
+                log.InstanceID,
+                log.Action,
+                string(changesJSON),
+                log.Status,
+                log.Error,
+        )
+
+        if err != nil </span><span class="cov0" title="0">{
+                return fmt.Errorf("failed to create audit log: %w", err)
+        }</span>
+
+        <span class="cov8" title="1">return nil</span>
+}
+
+// ListAuditLogs retrieves audit logs with optional filtering
+func (s *SQLiteStorage) ListAuditLogs(instanceID string, limit int) ([]*AuditLog, error) <span class="cov8" title="1">{
+        query := `
+                SELECT id, timestamp, user_id, instance_id, action, changes, status, error
+                FROM audit_logs
+                WHERE (? = '' OR instance_id = ?)
+                ORDER BY timestamp DESC
+                LIMIT ?
+        `
+
+        rows, err := s.db.Query(query, instanceID, instanceID, limit)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("failed to list audit logs: %w", err)
+        }</span>
+        <span class="cov8" title="1">defer rows.Close()
+
+        var logs []*AuditLog
+
+        for rows.Next() </span><span class="cov8" title="1">{
+                var log AuditLog
+                var changesJSON string
+                var instanceIDNull sql.NullString
+                var errorNull sql.NullString
+
+                err := rows.Scan(
+                        &amp;log.ID,
+                        &amp;log.Timestamp,
+                        &amp;log.UserID,
+                        &amp;instanceIDNull,
+                        &amp;log.Action,
+                        &amp;changesJSON,
+                        &amp;log.Status,
+                        &amp;errorNull,
+                )
+                if err != nil </span><span class="cov0" title="0">{
+                        return nil, fmt.Errorf("failed to scan audit log: %w", err)
+                }</span>
+
+                <span class="cov8" title="1">if instanceIDNull.Valid </span><span class="cov8" title="1">{
+                        log.InstanceID = instanceIDNull.String
+                }</span>
+
+                <span class="cov8" title="1">if errorNull.Valid </span><span class="cov8" title="1">{
+                        log.Error = errorNull.String
+                }</span>
+
+                <span class="cov8" title="1">if changesJSON != "" </span><span class="cov8" title="1">{
+                        if err := json.Unmarshal([]byte(changesJSON), &amp;log.Changes); err != nil </span><span class="cov0" title="0">{
+                                return nil, fmt.Errorf("failed to unmarshal changes: %w", err)
+                        }</span>
+                }
+
+                <span class="cov8" title="1">logs = append(logs, &amp;log)</span>
+        }
+
+        <span class="cov8" title="1">return logs, nil</span>
+}
+
+// CreateConfigBackup creates a configuration backup
+func (s *SQLiteStorage) CreateConfigBackup(backup *ConfigBackup) error <span class="cov8" title="1">{
+        configJSON, err := json.Marshal(backup.Config)
+        if err != nil </span><span class="cov0" title="0">{
+                return fmt.Errorf("failed to marshal config: %w", err)
+        }</span>
+
+        <span class="cov8" title="1">backup.CreatedAt = time.Now()
+
+        query := `
+                INSERT INTO config_backups (id, instance_id, config, etag, created_at, created_by)
+                VALUES (?, ?, ?, ?, ?, ?)
+        `
+
+        _, err = s.db.Exec(query,
+                backup.ID,
+                backup.InstanceID,
+                string(configJSON),
+                backup.ETag,
+                backup.CreatedAt,
+                backup.CreatedBy,
+        )
+
+        if err != nil </span><span class="cov0" title="0">{
+                return fmt.Errorf("failed to create config backup: %w", err)
+        }</span>
+
+        <span class="cov8" title="1">return nil</span>
+}
+
+// GetConfigBackups retrieves backups for an instance
+func (s *SQLiteStorage) GetConfigBackups(instanceID string, limit int) ([]*ConfigBackup, error) <span class="cov8" title="1">{
+        query := `
+                SELECT id, instance_id, config, etag, created_at, created_by
+                FROM config_backups
+                WHERE instance_id = ?
+                ORDER BY created_at DESC
+                LIMIT ?
+        `
+
+        rows, err := s.db.Query(query, instanceID, limit)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("failed to list config backups: %w", err)
+        }</span>
+        <span class="cov8" title="1">defer rows.Close()
+
+        var backups []*ConfigBackup
+
+        for rows.Next() </span><span class="cov8" title="1">{
+                var backup ConfigBackup
+                var configJSON string
+
+                err := rows.Scan(
+                        &amp;backup.ID,
+                        &amp;backup.InstanceID,
+                        &amp;configJSON,
+                        &amp;backup.ETag,
+                        &amp;backup.CreatedAt,
+                        &amp;backup.CreatedBy,
+                )
+                if err != nil </span><span class="cov0" title="0">{
+                        return nil, fmt.Errorf("failed to scan config backup: %w", err)
+                }</span>
+
+                <span class="cov8" title="1">if err := json.Unmarshal([]byte(configJSON), &amp;backup.Config); err != nil </span><span class="cov0" title="0">{
+                        return nil, fmt.Errorf("failed to unmarshal config: %w", err)
+                }</span>
+
+                <span class="cov8" title="1">backups = append(backups, &amp;backup)</span>
+        }
+
+        <span class="cov8" title="1">return backups, nil</span>
+}
+</pre>
+		
+		<pre class="file" id="file15" style="display: none">package templates
+
+import (
+        "github.com/ArtemStepanov/caddy-orchestrator/internal/storage"
+)
+
+// GetBuiltinTemplates returns the built-in configuration templates
+func GetBuiltinTemplates() []*storage.ConfigTemplate <span class="cov8" title="1">{
+        return []*storage.ConfigTemplate{
+                {
+                        ID:          "reverse-proxy-basic",
+                        Name:        "Basic Reverse Proxy",
+                        Description: "Simple reverse proxy configuration for internal services",
+                        Category:    "reverse-proxy",
+                        Template: map[string]any{
+                                "apps": map[string]any{
+                                        "http": map[string]any{
+                                                "servers": map[string]any{
+                                                        "{{.server_name}}": map[string]any{
+                                                                "listen": []string{":{{.port}}"},
+                                                                "routes": []any{
+                                                                        map[string]any{
+                                                                                "match": []map[string]any{
+                                                                                        {
+                                                                                                "host": []string{"{{.domain}}"},
+                                                                                        },
+                                                                                },
+                                                                                "handle": []map[string]any{
+                                                                                        {
+                                                                                                "handler": "reverse_proxy",
+                                                                                                "upstreams": []map[string]any{
+                                                                                                        {
+                                                                                                                "dial": "{{.upstream}}",
+                                                                                                        },
+                                                                                                },
+                                                                                        },
+                                                                                },
+                                                                        },
+                                                                },
+                                                        },
+                                                },
+                                        },
+                                },
+                        },
+                        Variables: []storage.TemplateVariable{
+                                {
+                                        Name:         "server_name",
+                                        Type:         "string",
+                                        Required:     true,
+                                        DefaultValue: "srv0",
+                                        Description:  "Server name identifier",
+                                },
+                                {
+                                        Name:         "port",
+                                        Type:         "number",
+                                        Required:     true,
+                                        DefaultValue: 443,
+                                        Description:  "Port to listen on",
+                                },
+                                {
+                                        Name:        "domain",
+                                        Type:        "string",
+                                        Required:    true,
+                                        Description: "Domain name to match",
+                                },
+                                {
+                                        Name:        "upstream",
+                                        Type:        "string",
+                                        Required:    true,
+                                        Description: "Upstream server address (e.g., localhost:8080)",
+                                },
+                        },
+                },
+                {
+                        ID:          "static-file-server",
+                        Name:        "Static File Server",
+                        Description: "Serve static files with automatic HTTPS",
+                        Category:    "file-server",
+                        Template: map[string]any{
+                                "apps": map[string]any{
+                                        "http": map[string]any{
+                                                "servers": map[string]any{
+                                                        "{{.server_name}}": map[string]any{
+                                                                "listen": []string{":{{.port}}"},
+                                                                "routes": []any{
+                                                                        map[string]any{
+                                                                                "match": []map[string]any{
+                                                                                        {
+                                                                                                "host": []string{"{{.domain}}"},
+                                                                                        },
+                                                                                },
+                                                                                "handle": []map[string]any{
+                                                                                        {
+                                                                                                "handler": "file_server",
+                                                                                                "root":    "{{.root_path}}",
+                                                                                                "browse":  "{{.enable_browse}}",
+                                                                                        },
+                                                                                },
+                                                                        },
+                                                                },
+                                                        },
+                                                },
+                                        },
+                                },
+                        },
+                        Variables: []storage.TemplateVariable{
+                                {
+                                        Name:         "server_name",
+                                        Type:         "string",
+                                        Required:     true,
+                                        DefaultValue: "srv0",
+                                        Description:  "Server name identifier",
+                                },
+                                {
+                                        Name:         "port",
+                                        Type:         "number",
+                                        Required:     true,
+                                        DefaultValue: 443,
+                                        Description:  "Port to listen on",
+                                },
+                                {
+                                        Name:        "domain",
+                                        Type:        "string",
+                                        Required:    true,
+                                        Description: "Domain name to serve",
+                                },
+                                {
+                                        Name:        "root_path",
+                                        Type:        "string",
+                                        Required:    true,
+                                        Description: "Root directory path for static files",
+                                },
+                                {
+                                        Name:         "enable_browse",
+                                        Type:         "boolean",
+                                        Required:     false,
+                                        DefaultValue: false,
+                                        Description:  "Enable directory browsing",
+                                },
+                        },
+                },
+                {
+                        ID:          "websocket-proxy",
+                        Name:        "WebSocket Proxy",
+                        Description: "Reverse proxy with WebSocket support",
+                        Category:    "reverse-proxy",
+                        Template: map[string]any{
+                                "apps": map[string]any{
+                                        "http": map[string]any{
+                                                "servers": map[string]any{
+                                                        "{{.server_name}}": map[string]any{
+                                                                "listen": []string{":{{.port}}"},
+                                                                "routes": []any{
+                                                                        map[string]any{
+                                                                                "match": []map[string]any{
+                                                                                        {
+                                                                                                "host": []string{"{{.domain}}"},
+                                                                                        },
+                                                                                },
+                                                                                "handle": []map[string]any{
+                                                                                        {
+                                                                                                "handler": "reverse_proxy",
+                                                                                                "upstreams": []map[string]any{
+                                                                                                        {
+                                                                                                                "dial": "{{.upstream}}",
+                                                                                                        },
+                                                                                                },
+                                                                                                "headers": map[string]any{
+                                                                                                        "request": map[string]any{
+                                                                                                                "set": map[string][]string{
+                                                                                                                        "Connection": {"Upgrade"},
+                                                                                                                        "Upgrade":    {"websocket"},
+                                                                                                                },
+                                                                                                        },
+                                                                                                },
+                                                                                        },
+                                                                                },
+                                                                        },
+                                                                },
+                                                        },
+                                                },
+                                        },
+                                },
+                        },
+                        Variables: []storage.TemplateVariable{
+                                {
+                                        Name:         "server_name",
+                                        Type:         "string",
+                                        Required:     true,
+                                        DefaultValue: "srv0",
+                                        Description:  "Server name identifier",
+                                },
+                                {
+                                        Name:         "port",
+                                        Type:         "number",
+                                        Required:     true,
+                                        DefaultValue: 443,
+                                        Description:  "Port to listen on",
+                                },
+                                {
+                                        Name:        "domain",
+                                        Type:        "string",
+                                        Required:    true,
+                                        Description: "Domain name to match",
+                                },
+                                {
+                                        Name:        "upstream",
+                                        Type:        "string",
+                                        Required:    true,
+                                        Description: "WebSocket upstream server address",
+                                },
+                        },
+                },
+                {
+                        ID:          "load-balancer",
+                        Name:        "Load Balancer",
+                        Description: "Load balancer with health checks",
+                        Category:    "load-balancer",
+                        Template: map[string]any{
+                                "apps": map[string]any{
+                                        "http": map[string]any{
+                                                "servers": map[string]any{
+                                                        "{{.server_name}}": map[string]any{
+                                                                "listen": []string{":{{.port}}"},
+                                                                "routes": []any{
+                                                                        map[string]any{
+                                                                                "match": []map[string]any{
+                                                                                        {
+                                                                                                "host": []string{"{{.domain}}"},
+                                                                                        },
+                                                                                },
+                                                                                "handle": []map[string]any{
+                                                                                        {
+                                                                                                "handler": "reverse_proxy",
+                                                                                                "load_balancing": map[string]any{
+                                                                                                        "selection_policy": map[string]any{
+                                                                                                                "policy": "{{.lb_policy}}",
+                                                                                                        },
+                                                                                                },
+                                                                                                "health_checks": map[string]any{
+                                                                                                        "active": map[string]any{
+                                                                                                                "path":     "{{.health_path}}",
+                                                                                                                "interval": "{{.health_interval}}",
+                                                                                                                "timeout":  "{{.health_timeout}}",
+                                                                                                        },
+                                                                                                },
+                                                                                                "upstreams": "{{.upstreams}}",
+                                                                                        },
+                                                                                },
+                                                                        },
+                                                                },
+                                                        },
+                                                },
+                                        },
+                                },
+                        },
+                        Variables: []storage.TemplateVariable{
+                                {
+                                        Name:         "server_name",
+                                        Type:         "string",
+                                        Required:     true,
+                                        DefaultValue: "srv0",
+                                        Description:  "Server name identifier",
+                                },
+                                {
+                                        Name:         "port",
+                                        Type:         "number",
+                                        Required:     true,
+                                        DefaultValue: 443,
+                                        Description:  "Port to listen on",
+                                },
+                                {
+                                        Name:        "domain",
+                                        Type:        "string",
+                                        Required:    true,
+                                        Description: "Domain name to match",
+                                },
+                                {
+                                        Name:         "lb_policy",
+                                        Type:         "string",
+                                        Required:     false,
+                                        DefaultValue: "round_robin",
+                                        Description:  "Load balancing policy (round_robin, least_conn, ip_hash)",
+                                },
+                                {
+                                        Name:         "health_path",
+                                        Type:         "string",
+                                        Required:     false,
+                                        DefaultValue: "/health",
+                                        Description:  "Health check endpoint path",
+                                },
+                                {
+                                        Name:         "health_interval",
+                                        Type:         "string",
+                                        Required:     false,
+                                        DefaultValue: "30s",
+                                        Description:  "Health check interval",
+                                },
+                                {
+                                        Name:         "health_timeout",
+                                        Type:         "string",
+                                        Required:     false,
+                                        DefaultValue: "5s",
+                                        Description:  "Health check timeout",
+                                },
+                                {
+                                        Name:        "upstreams",
+                                        Type:        "array",
+                                        Required:    true,
+                                        Description: "Array of upstream servers",
+                                },
+                        },
+                },
+        }
+}</span>
+</pre>
+		
+		<pre class="file" id="file16" style="display: none">package templates
+
+import (
+        "bytes"
+        "encoding/json"
+        "fmt"
+        "text/template"
+
+        "github.com/ArtemStepanov/caddy-orchestrator/internal/storage"
+        "github.com/google/uuid"
+)
+
+// Manager manages configuration templates
+type Manager struct {
+        storage *storage.SQLiteStorage
+}
+
+// NewManager creates a new template manager
+func NewManager(storage *storage.SQLiteStorage) *Manager <span class="cov8" title="1">{
+        return &amp;Manager{
+                storage: storage,
+        }
+}</span>
+
+// InitializeBuiltinTemplates loads built-in templates into storage
+func (m *Manager) InitializeBuiltinTemplates() error <span class="cov8" title="1">{
+        templates := GetBuiltinTemplates()
+
+        for _, tmpl := range templates </span><span class="cov8" title="1">{
+                existing, err := m.storage.GetTemplate(tmpl.ID)
+                if err == nil &amp;&amp; existing != nil </span><span class="cov8" title="1">{
+                        // Template already exists, skip
+                        continue</span>
+                }
+
+                <span class="cov8" title="1">if err := m.storage.CreateTemplate(tmpl); err != nil </span><span class="cov0" title="0">{
+                        return fmt.Errorf("failed to create template %s: %w", tmpl.ID, err)
+                }</span>
+        }
+
+        <span class="cov8" title="1">return nil</span>
+}
+
+// GetTemplate retrieves a template by ID
+func (m *Manager) GetTemplate(id string) (*storage.ConfigTemplate, error) <span class="cov8" title="1">{
+        return m.storage.GetTemplate(id)
+}</span>
+
+// ListTemplates lists all templates
+func (m *Manager) ListTemplates() ([]*storage.ConfigTemplate, error) <span class="cov8" title="1">{
+        return m.storage.ListTemplates()
+}</span>
+
+// CreateTemplate creates a new custom template
+func (m *Manager) CreateTemplate(tmpl *storage.ConfigTemplate) error <span class="cov8" title="1">{
+        if tmpl.ID == "" </span><span class="cov8" title="1">{
+                tmpl.ID = uuid.New().String()
+        }</span>
+
+        <span class="cov8" title="1">return m.storage.CreateTemplate(tmpl)</span>
+}
+
+// GenerateConfig generates a configuration from a template with provided variables
+func (m *Manager) GenerateConfig(templateID string, variables map[string]any) (map[string]any, error) <span class="cov8" title="1">{
+        tmpl, err := m.storage.GetTemplate(templateID)
+        if err != nil </span><span class="cov8" title="1">{
+                return nil, fmt.Errorf("template not found: %w", err)
+        }</span>
+
+        // Validate required variables
+        <span class="cov8" title="1">for _, v := range tmpl.Variables </span><span class="cov8" title="1">{
+                if v.Required </span><span class="cov8" title="1">{
+                        if _, ok := variables[v.Name]; !ok </span><span class="cov8" title="1">{
+                                // Use default value if available
+                                if v.DefaultValue != nil </span><span class="cov8" title="1">{
+                                        variables[v.Name] = v.DefaultValue
+                                }</span> else<span class="cov8" title="1"> {
+                                        return nil, fmt.Errorf("required variable '%s' not provided", v.Name)
+                                }</span>
+                        }
+                } else<span class="cov0" title="0"> if _, ok := variables[v.Name]; !ok </span><span class="cov0" title="0">{
+                        // Use default value for optional variables
+                        if v.DefaultValue != nil </span><span class="cov0" title="0">{
+                                variables[v.Name] = v.DefaultValue
+                        }</span>
+                }
+        }
+
+        // Convert template to JSON string
+        <span class="cov8" title="1">templateJSON, err := json.Marshal(tmpl.Template)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("failed to marshal template: %w", err)
+        }</span>
+
+        // Apply variables using text/template
+        <span class="cov8" title="1">t, err := template.New("config").Parse(string(templateJSON))
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("failed to parse template: %w", err)
+        }</span>
+
+        <span class="cov8" title="1">var buf bytes.Buffer
+        if err := t.Execute(&amp;buf, variables); err != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("failed to execute template: %w", err)
+        }</span>
+
+        // Parse back to map
+        <span class="cov8" title="1">var config map[string]any
+        if err := json.Unmarshal(buf.Bytes(), &amp;config); err != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("failed to unmarshal generated config: %w", err)
+        }</span>
+
+        <span class="cov8" title="1">return config, nil</span>
+}
+
+// ValidateVariables validates that provided variables match template requirements
+func (m *Manager) ValidateVariables(templateID string, variables map[string]any) error <span class="cov8" title="1">{
+        tmpl, err := m.storage.GetTemplate(templateID)
+        if err != nil </span><span class="cov0" title="0">{
+                return fmt.Errorf("template not found: %w", err)
+        }</span>
+
+        <span class="cov8" title="1">for _, v := range tmpl.Variables </span><span class="cov8" title="1">{
+                value, ok := variables[v.Name]
+
+                if !ok </span><span class="cov8" title="1">{
+                        if v.Required &amp;&amp; v.DefaultValue == nil </span><span class="cov8" title="1">{
+                                return fmt.Errorf("required variable '%s' not provided", v.Name)
+                        }</span>
+                        <span class="cov8" title="1">continue</span>
+                }
+
+                // Type validation
+                <span class="cov8" title="1">switch v.Type </span>{
+                case "string":<span class="cov8" title="1">
+                        if _, ok := value.(string); !ok </span><span class="cov0" title="0">{
+                                return fmt.Errorf("variable '%s' must be a string", v.Name)
+                        }</span>
+                case "number":<span class="cov8" title="1">
+                        switch value.(type) </span>{
+                        case int, int64, float64:<span class="cov8" title="1"></span>
+                                // OK
+                        default:<span class="cov8" title="1">
+                                return fmt.Errorf("variable '%s' must be a number", v.Name)</span>
+                        }
+                case "boolean":<span class="cov8" title="1">
+                        if _, ok := value.(bool); !ok </span><span class="cov0" title="0">{
+                                return fmt.Errorf("variable '%s' must be a boolean", v.Name)
+                        }</span>
+                case "array":<span class="cov8" title="1">
+                        if _, ok := value.([]any); !ok </span><span class="cov0" title="0">{
+                                return fmt.Errorf("variable '%s' must be an array", v.Name)
+                        }</span>
+                }
+        }
+
+        <span class="cov8" title="1">return nil</span>
+}
+</pre>
+		
+		</div>
+	</body>
+	<script>
+	(function() {
+		var files = document.getElementById('files');
+		var visible;
+		files.addEventListener('change', onChange, false);
+		function select(part) {
+			if (visible)
+				visible.style.display = 'none';
+			visible = document.getElementById(part);
+			if (!visible)
+				return;
+			files.value = part;
+			visible.style.display = 'block';
+			location.hash = part;
+		}
+		function onChange() {
+			select(files.value);
+			window.scrollTo(0, 0);
+		}
+		if (location.hash != "") {
+			select(location.hash.substr(1));
+		}
+		if (!visible) {
+			select("file0");
+		}
+	})();
+	</script>
+</html>
