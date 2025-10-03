@@ -2,6 +2,16 @@ import { Server, Activity, Shield, TrendingUp } from "lucide-react";
 import { StatsCard } from "@/components/StatsCard";
 import { InstanceCard } from "@/components/InstanceCard";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 const Dashboard = () => {
   // Mock data - в реальном приложении будет из API
@@ -25,9 +35,51 @@ const Dashboard = () => {
         <div className="mb-8">
           <div className="flex items-center justify-between mb-2">
             <h1 className="text-4xl font-bold">Dashboard</h1>
-            <Button className="bg-gradient-primary hover:shadow-glow transition-all">
-              Add Instance
-            </Button>
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button className="bg-gradient-primary hover:shadow-glow transition-all">
+                  Add Instance
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="bg-card border-border">
+                <DialogHeader>
+                  <DialogTitle>Add New Instance</DialogTitle>
+                  <DialogDescription>
+                    Connect a new Caddy instance to manage remotely
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="space-y-4 py-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="name">Instance Name</Label>
+                    <Input
+                      id="name"
+                      placeholder="Production Server"
+                      className="bg-background border-border"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="url">Admin API URL</Label>
+                    <Input
+                      id="url"
+                      placeholder="https://your-server:2019"
+                      className="bg-background border-border"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="auth">Authentication (Optional)</Label>
+                    <Input
+                      id="auth"
+                      type="password"
+                      placeholder="API Key or Bearer Token"
+                      className="bg-background border-border"
+                    />
+                  </div>
+                  <Button className="w-full bg-gradient-primary">
+                    Connect Instance
+                  </Button>
+                </div>
+              </DialogContent>
+            </Dialog>
           </div>
           <p className="text-muted-foreground">
             Monitor and manage your Caddy instances
