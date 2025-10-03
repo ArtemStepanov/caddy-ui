@@ -160,15 +160,14 @@ export function UpstreamDetailsDrawer({ upstream, instanceId, open, onClose, onT
                       </Badge>
                     </div>
                     
-                    {upstream.uptime_percentage !== undefined && (
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between text-sm">
-                          <span className="text-muted-foreground">Uptime (24h)</span>
-                          <span className="font-medium">{upstream.uptime_percentage.toFixed(2)}%</span>
-                        </div>
-                        <Progress value={upstream.uptime_percentage} className="h-2" />
-                      </div>
-                    )}
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-muted-foreground">Current Status</span>
+                      <span className={`font-medium ${
+                        upstream.healthy ? 'text-green-500' : 'text-red-500'
+                      }`}>
+                        {upstream.healthy ? 'Operational' : 'Down'}
+                      </span>
+                    </div>
 
                     {upstream.last_check && (
                       <div className="flex items-center justify-between text-sm">

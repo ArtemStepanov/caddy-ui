@@ -152,9 +152,10 @@ function groupUpstreamsToPools(upstreams: any[]): any[] {
       healthy: u.healthy !== undefined ? u.healthy : true,
       num_requests: u.num_requests || 0,
       fails: u.fails || 0,
-      response_time: Math.floor(Math.random() * 200) + 20, // Mock data
+      response_time: Math.floor(Math.random() * 200) + 20, // Mock data - TODO: Get from Caddy metrics
       last_check: new Date().toISOString(),
-      uptime_percentage: u.healthy ? 99.5 + Math.random() * 0.5 : 0,
+      // Note: Caddy Admin API doesn't provide uptime statistics
+      // We only show current health status, not historical uptime
     })),
   }];
 }

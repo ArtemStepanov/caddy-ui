@@ -173,19 +173,15 @@ export function UpstreamCard({ upstream, poolName, onViewDetails, onTestHealth }
           </div>
         )}
 
-        {/* Uptime if available */}
-        {upstream.uptime_percentage !== undefined && (
-          <div className="space-y-1">
-            <div className="flex items-center justify-between text-xs">
-              <span className="text-muted-foreground">Uptime</span>
-              <span className="font-medium">
-                {upstream.uptime_percentage.toFixed(1)}%
-              </span>
-            </div>
-            <Progress 
-              value={upstream.uptime_percentage} 
-              className="h-1.5"
-            />
+        {/* Status Duration - Note: Caddy API doesn't provide uptime history */}
+        {upstream.healthy !== undefined && (
+          <div className="flex items-center justify-between text-xs pt-1">
+            <span className="text-muted-foreground">Status</span>
+            <span className={`font-medium ${
+              upstream.healthy ? 'text-green-500' : 'text-red-500'
+            }`}>
+              {upstream.healthy ? 'Operational' : 'Down'}
+            </span>
           </div>
         )}
       </CardContent>

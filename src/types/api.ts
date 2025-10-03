@@ -133,7 +133,7 @@ export interface Upstream {
   status?: UpstreamStatus;
   response_time?: number; // in ms
   last_check?: string;
-  uptime_percentage?: number;
+  // Note: uptime_percentage removed - Caddy Admin API doesn't provide historical uptime data
 }
 
 /**
