@@ -11,15 +11,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
-import { CaddyInstance } from "@/lib/api-client";
+import type { DeleteInstanceDialogProps } from "@/types";
 import { mapInstanceStatus } from "@/lib/instance-utils";
-
-interface DeleteInstanceDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  instance: CaddyInstance;
-  onConfirm: (id: string) => Promise<void>;
-}
 
 export function DeleteInstanceDialog({ 
   open, 

@@ -1,10 +1,7 @@
 import { Server, BookOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-
-interface EmptyStateProps {
-  onAddInstance: () => void;
-}
+import type { EmptyStateProps } from "@/types";
 
 export function EmptyState({ onAddInstance }: EmptyStateProps) {
   return (

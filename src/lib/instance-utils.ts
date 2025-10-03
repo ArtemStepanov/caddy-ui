@@ -2,9 +2,7 @@
  * Utility functions for instance management
  */
 
-import { CaddyInstance } from './api-client';
-
-export type InstanceStatus = 'healthy' | 'unhealthy' | 'unreachable' | 'unknown';
+import type { CaddyInstance, InstanceStatus, StatusConfig, InstanceStats } from '@/types';
 
 /**
  * Map backend status to UI status
@@ -25,8 +23,8 @@ export function mapInstanceStatus(status: string): InstanceStatus {
 /**
  * Get status configuration for UI display
  */
-export function getStatusConfig(status: InstanceStatus) {
-  const configs = {
+export function getStatusConfig(status: InstanceStatus): StatusConfig {
+  const configs: Record<InstanceStatus, StatusConfig> = {
     healthy: {
       label: 'Healthy',
       color: 'bg-green-500/20 text-green-500 border-green-500/50',
@@ -82,8 +80,8 @@ export function formatLastSeen(lastSeen?: string | Date): string {
 /**
  * Calculate statistics from instances
  */
-export function calculateStats(instances: CaddyInstance[]) {
-  const stats = {
+export function calculateStats(instances: CaddyInstance[]): InstanceStats {
+  const stats: InstanceStats = {
     total: instances.length,
     healthy: 0,
     unhealthy: 0,

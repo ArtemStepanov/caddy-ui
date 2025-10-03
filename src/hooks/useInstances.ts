@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
-import { apiClient, CaddyInstance, HealthCheckResult } from '@/lib/api-client';
+import { apiClient } from '@/lib/api-client';
+import type { CaddyInstance, HealthCheckResult } from '@/types';
 import { useToast } from '@/hooks/use-toast';
 
 export function useInstances() {

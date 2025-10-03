@@ -22,39 +22,12 @@ import {
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { CaddyInstance } from "@/lib/api-client";
+import type { AddInstanceDialogProps, AuthType, InstanceFormData, InstanceFormErrors } from "@/types";
 import { validateInstanceName, validateAdminUrl, isInstanceNameUnique } from "@/lib/instance-utils";
 import { cn } from "@/lib/utils";
 
-interface AddInstanceDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  onSubmit: (instance: Partial<CaddyInstance>) => Promise<CaddyInstance | undefined>;
-  existingInstances: CaddyInstance[];
-}
-
-type AuthType = 'none' | 'bearer' | 'mtls' | 'basic';
-
-interface FormData {
-  name: string;
-  description: string;
-  admin_url: string;
-  auth_type: AuthType;
-  bearer_token: string;
-  basic_username: string;
-  basic_password: string;
-  timeout: number;
-  skip_tls_verify: boolean;
-}
-
-interface FormErrors {
-  name?: string;
-  admin_url?: string;
-  bearer_token?: string;
-}
-
 export function AddInstanceDialog({ open, onOpenChange, onSubmit, existingInstances }: AddInstanceDialogProps) {
-  const [formData, setFormData] = useState<FormData>({
+  const [formData, setFormData] = useState<InstanceFormData>({
     name: '',
     description: '',
     admin_url: 'http://localhost:2019',
@@ -66,7 +39,7 @@ export function AddInstanceDialog({ open, onOpenChange, onSubmit, existingInstan
     skip_tls_verify: false,
   });
 
-  const [errors, setErrors] = useState<FormErrors>({});
+  const [errors, setErrors] = useState<InstanceFormErrors>({});
   const [touched, setTouched] = useState<Record<string, boolean>>({});
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);

@@ -20,20 +20,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { CaddyInstance } from "@/lib/api-client";
+import type { EditInstanceDialogProps, AuthType, InstanceFormErrors } from "@/types";
 import { validateInstanceName, validateAdminUrl, isInstanceNameUnique } from "@/lib/instance-utils";
 import { cn } from "@/lib/utils";
 
-interface EditInstanceDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  instance: CaddyInstance;
-  onSubmit: (id: string, instance: Partial<CaddyInstance>) => Promise<CaddyInstance | undefined>;
-  existingInstances: CaddyInstance[];
-}
-
-type AuthType = 'none' | 'bearer' | 'mtls' | 'basic';
-
+// Local FormData interface (subset of InstanceFormData for edit dialog)
 interface FormData {
   name: string;
   admin_url: string;
@@ -41,12 +32,6 @@ interface FormData {
   bearer_token: string;
   basic_username: string;
   basic_password: string;
-}
-
-interface FormErrors {
-  name?: string;
-  admin_url?: string;
-  bearer_token?: string;
 }
 
 export function EditInstanceDialog({ 
@@ -65,7 +50,7 @@ export function EditInstanceDialog({
     basic_password: '',
   });
 
-  const [errors, setErrors] = useState<FormErrors>({});
+  const [errors, setErrors] = useState<InstanceFormErrors>({});
   const [touched, setTouched] = useState<Record<string, boolean>>({});
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);

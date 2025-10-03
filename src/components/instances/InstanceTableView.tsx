@@ -16,22 +16,9 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { CaddyInstance } from "@/lib/api-client";
+import type { InstanceTableViewProps } from "@/types";
 import { getStatusConfig, mapInstanceStatus, formatLastSeen } from "@/lib/instance-utils";
 import { cn } from "@/lib/utils";
-
-interface InstanceTableViewProps {
-  instances: CaddyInstance[];
-  selectedIds: string[];
-  onToggleSelection: (id: string) => void;
-  onSelectAll: (checked: boolean) => void;
-  onEdit: (instance: CaddyInstance) => void;
-  onDelete: (instance: CaddyInstance) => void;
-  onTest: (instance: CaddyInstance) => void;
-  sortBy: string;
-  sortOrder: 'asc' | 'desc';
-  onSort: (field: string) => void;
-}
 
 export function InstanceTableView({
   instances,

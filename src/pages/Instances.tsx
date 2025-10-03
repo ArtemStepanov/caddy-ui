@@ -22,7 +22,6 @@ import {
   filterInstancesBySearch,
   filterInstancesByStatus,
   sortInstances,
-  InstanceStatus,
 } from "@/lib/instance-utils";
 import { AddInstanceDialog } from "@/components/instances/AddInstanceDialog";
 import { EditInstanceDialog } from "@/components/instances/EditInstanceDialog";
@@ -31,10 +30,7 @@ import { TestConnectionDialog } from "@/components/instances/TestConnectionDialo
 import { InstanceGridCard } from "@/components/instances/InstanceGridCard";
 import { InstanceTableView } from "@/components/instances/InstanceTableView";
 import { EmptyState } from "@/components/instances/EmptyState";
-import { CaddyInstance } from "@/lib/api-client";
-
-type ViewMode = 'grid' | 'table';
-type FilterStatus = 'all' | InstanceStatus;
+import type { CaddyInstance, ViewMode, FilterStatus, SortField, SortOrder } from "@/types";
 
 const Instances = () => {
   const { instances, loading, createInstance, updateInstance, deleteInstance, testConnection } = useInstances();
@@ -43,8 +39,8 @@ const Instances = () => {
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<FilterStatus>('all');
-  const [sortBy, setSortBy] = useState<'name' | 'status' | 'last_seen'>('name');
-  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
+  const [sortBy, setSortBy] = useState<SortField>('name');
+  const [sortOrder, setSortOrder] = useState<SortOrder>('asc');
   
   // Dialog state
   const [addDialogOpen, setAddDialogOpen] = useState(false);

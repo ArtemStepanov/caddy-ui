@@ -8,16 +8,9 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { CaddyInstance } from "@/lib/api-client";
+import type { InstanceGridCardProps } from "@/types";
 import { getStatusConfig, mapInstanceStatus, formatLastSeen } from "@/lib/instance-utils";
 import { cn } from "@/lib/utils";
-
-interface InstanceGridCardProps {
-  instance: CaddyInstance;
-  onEdit: (instance: CaddyInstance) => void;
-  onDelete: (instance: CaddyInstance) => void;
-  onTest: (instance: CaddyInstance) => void;
-}
 
 export function InstanceGridCard({ instance, onEdit, onDelete, onTest }: InstanceGridCardProps) {
   const status = mapInstanceStatus(instance.status);

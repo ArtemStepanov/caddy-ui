@@ -10,17 +10,8 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { CaddyInstance, HealthCheckResult } from "@/lib/api-client";
+import type { TestConnectionDialogProps, TestStatus, HealthCheckResult } from "@/types";
 import { cn } from "@/lib/utils";
-
-interface TestConnectionDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  instance: CaddyInstance;
-  onTest: (id: string) => Promise<HealthCheckResult | null>;
-}
-
-type TestStatus = 'idle' | 'testing' | 'success' | 'failure';
 
 export function TestConnectionDialog({ 
   open, 
