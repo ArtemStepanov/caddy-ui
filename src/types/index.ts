@@ -11,6 +11,16 @@ export type {
   HealthCheckResult,
   ConfigTemplate,
   TemplateVariable,
+  UpstreamStatus,
+  Upstream,
+  UpstreamPool,
+  UpstreamsData,
+  UpstreamHealthCheckResult,
+  UpstreamMetrics,
+  HealthCheckHistory,
+  ActiveHealthCheck,
+  PassiveHealthCheck,
+  HealthChecks,
 } from './api';
 
 // Instance-specific types
