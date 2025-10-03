@@ -69,15 +69,19 @@ const Config = () => {
       // Check if the instance from query parameter exists
       if (instanceFromQuery && instances.some(i => i.id === instanceFromQuery)) {
         setSelectedInstanceId(instanceFromQuery);
-        // Clear the query parameter after using it
-        searchParams.delete('instance');
-        setSearchParams(searchParams, { replace: true });
-      } else {
-        // Fallback to first instance
+        // Clear the query parameter after successfully setting the instance
+        const newSearchParams = new URLSearchParams(searchParams);
+        newSearchParams.delete('instance');
+        setSearchParams(newSearchParams, { replace: true });
+      } else if (!instanceFromQuery) {
+        // Only auto-select first instance if there's no query parameter
         setSelectedInstanceId(instances[0].id);
       }
+      // If instanceFromQuery exists but doesn't match, don't auto-select
     }
-  }, [instances, selectedInstanceId, searchParams, setSearchParams]);
+    // Only depend on instances.length to avoid re-running when searchParams change
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [instances.length, selectedInstanceId]);
 
   // Fetch config when instance changes
   useEffect(() => {

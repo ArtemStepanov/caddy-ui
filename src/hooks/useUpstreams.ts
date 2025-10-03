@@ -212,11 +212,11 @@ function groupUpstreamsToPools(
                 dial: u.dial,
                 max_requests: u.max_requests,
                 health_checks: u.health_checks,
-                healthy: u.healthy !== undefined ? u.healthy : true,
-                num_requests: u.num_requests || 0,
-                fails: u.fails || 0,
-                response_time: Math.floor(Math.random() * 200) + 20, // Mock data - TODO: Get from Caddy metrics
-                last_check: new Date().toISOString(),
+              healthy: u.healthy !== undefined ? u.healthy : true,
+              num_requests: u.num_requests || 0,
+              fails: u.fails || 0,
+              response_time: 0, // TODO: Get from Caddy metrics or Prometheus
+              last_check: new Date().toISOString(),
               }));
             
             // Always add pool with the extracted name, even if matching failed
@@ -244,7 +244,7 @@ function groupUpstreamsToPools(
       healthy: u.healthy !== undefined ? u.healthy : true,
       num_requests: u.num_requests || 0,
       fails: u.fails || 0,
-      response_time: Math.floor(Math.random() * 200) + 20, // Mock data
+      response_time: 0, // TODO: Get from Caddy metrics or Prometheus
       last_check: new Date().toISOString(),
     }));
 

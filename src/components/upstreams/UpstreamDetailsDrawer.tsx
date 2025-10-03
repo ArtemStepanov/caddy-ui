@@ -13,6 +13,30 @@ import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
 
+/**
+ * Parse a Caddy duration string to milliseconds
+ * Supports: ms, s, m, h
+ * Examples: "2000ms" -> 2000, "5s" -> 5000, "2m" -> 120000
+ */
+function parseDurationToMs(duration: string): number {
+  const match = duration.match(/^(\d+(?:\.\d+)?)(ms|s|m|h)$/);
+  if (!match) {
+    console.warn(`Unable to parse duration: ${duration}`);
+    return parseInt(duration) || 0;
+  }
+  
+  const value = parseFloat(match[1]);
+  const unit = match[2];
+  
+  switch (unit) {
+    case 'ms': return value;
+    case 's': return value * 1000;
+    case 'm': return value * 60000;
+    case 'h': return value * 3600000;
+    default: return value;
+  }
+}
+
 export function UpstreamDetailsDrawer({ upstream, instanceId, open, onClose, onTestHealth }: UpstreamDetailsDrawerProps) {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -469,7 +493,7 @@ export function UpstreamDetailsDrawer({ upstream, instanceId, open, onClose, onT
                       <div className="flex justify-between py-2 border-b">
                         <span className="text-muted-foreground">Current Response Time</span>
                         <span className={`font-mono font-medium ${
-                          (upstream.response_time || 0) < parseInt(upstream.health_checks.passive.unhealthy_latency) 
+                          (upstream.response_time || 0) < parseDurationToMs(upstream.health_checks.passive.unhealthy_latency) 
                             ? 'text-green-500' 
                             : 'text-red-500'
                         }`}>
@@ -478,8 +502,8 @@ export function UpstreamDetailsDrawer({ upstream, instanceId, open, onClose, onT
                       </div>
                       <div className="flex justify-between py-2">
                         <span className="text-muted-foreground">Status</span>
-                        <Badge variant={(upstream.response_time || 0) < parseInt(upstream.health_checks.passive.unhealthy_latency) ? 'default' : 'destructive'}>
-                          {(upstream.response_time || 0) < parseInt(upstream.health_checks.passive.unhealthy_latency) 
+                        <Badge variant={(upstream.response_time || 0) < parseDurationToMs(upstream.health_checks.passive.unhealthy_latency) ? 'default' : 'destructive'}>
+                          {(upstream.response_time || 0) < parseDurationToMs(upstream.health_checks.passive.unhealthy_latency) 
                             ? 'Within Threshold' 
                             : 'Exceeds Threshold'}
                         </Badge>
