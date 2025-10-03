@@ -415,4 +415,3 @@ func TestDeleteInstance_NotFound(t *testing.T) {
 
 	assert.Equal(t, http.StatusInternalServerError, w.Code)
 }
-

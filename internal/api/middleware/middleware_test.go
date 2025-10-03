@@ -12,12 +12,12 @@ import (
 
 func TestCORSMiddleware(t *testing.T) {
 	gin.SetMode(gin.TestMode)
-	
+
 	tests := []struct {
-		name           string
-		origins        []string
-		requestOrigin  string
-		expectAllowed  bool
+		name          string
+		origins       []string
+		requestOrigin string
+		expectAllowed bool
 	}{
 		{
 			name:          "Allow all origins",
@@ -171,15 +171,15 @@ func TestNewRateLimiter(t *testing.T) {
 
 func TestRateLimiter_GetLimiter(t *testing.T) {
 	limiter := NewRateLimiter(rate.Limit(10), 20)
-	
+
 	// Get limiter for IP
 	l1 := limiter.getLimiter("192.168.1.1")
 	assert.NotNil(t, l1)
-	
+
 	// Get same limiter again - should be the same instance
 	l2 := limiter.getLimiter("192.168.1.1")
 	assert.Same(t, l1, l2)
-	
+
 	// Get different limiter for different IP
 	l3 := limiter.getLimiter("192.168.1.2")
 	assert.NotNil(t, l3)

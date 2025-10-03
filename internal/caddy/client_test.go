@@ -65,7 +65,7 @@ func TestGetConfig(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(t, "GET", r.Method)
 		assert.Equal(t, "/config", r.URL.Path)
-		
+
 		w.Header().Set("ETag", "test-etag-123")
 		w.WriteHeader(http.StatusOK)
 		json.NewEncoder(w).Encode(mockConfig)
@@ -89,7 +89,7 @@ func TestGetConfig_WithPath(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(t, "GET", r.Method)
 		assert.Equal(t, "/config/apps/http", r.URL.Path)
-		
+
 		w.WriteHeader(http.StatusOK)
 		json.NewEncoder(w).Encode(map[string]any{"servers": map[string]any{}})
 	}))
@@ -155,7 +155,7 @@ func TestSetConfig(t *testing.T) {
 		assert.Equal(t, "POST", r.Method)
 		assert.Equal(t, "/config", r.URL.Path)
 		assert.Equal(t, "application/json", r.Header.Get("Content-Type"))
-		
+
 		w.WriteHeader(http.StatusOK)
 		json.NewEncoder(w).Encode(newConfig)
 	}))
@@ -278,7 +278,7 @@ example.com {
 		assert.Equal(t, "/adapt", r.URL.Path)
 		assert.Equal(t, "caddyfile", r.URL.Query().Get("adapter"))
 		assert.Equal(t, "text/caddyfile", r.Header.Get("Content-Type"))
-		
+
 		w.WriteHeader(http.StatusOK)
 		json.NewEncoder(w).Encode(adaptedConfig)
 	}))
@@ -327,7 +327,7 @@ func TestGetUpstreams(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(t, "GET", r.Method)
 		assert.Equal(t, "/reverse_proxy/upstreams", r.URL.Path)
-		
+
 		w.WriteHeader(http.StatusOK)
 		json.NewEncoder(w).Encode(upstreams)
 	}))
@@ -353,7 +353,7 @@ func TestGetPKICA(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(t, "GET", r.Method)
 		assert.Equal(t, "/pki/ca/local", r.URL.Path)
-		
+
 		w.WriteHeader(http.StatusOK)
 		json.NewEncoder(w).Encode(caData)
 	}))
@@ -416,7 +416,7 @@ func TestLoadConfig(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(t, "POST", r.Method)
 		assert.Equal(t, "/load", r.URL.Path)
-		
+
 		w.WriteHeader(http.StatusOK)
 		json.NewEncoder(w).Encode(map[string]any{})
 	}))
