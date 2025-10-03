@@ -25,7 +25,7 @@ import {
   TrendingDown,
   XCircle,
 } from "lucide-react";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { HealthCheckModal, PoolSection, UpstreamCard, UpstreamDetailsDrawer, UpstreamsEmptyState } from "@/components/upstreams";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -57,8 +57,7 @@ const Upstreams = () => {
   const [upstreamsToTest, setUpstreamsToTest] = useState<Upstream[]>([]);
 
   // Hooks
-  const { data: instancesData } = useInstances();
-  const instances = instancesData?.data || [];
+  const { instances, loading: instancesLoading } = useInstances();
   
   const { data: upstreamsData, isLoading, error, refresh } = useUpstreams(
     selectedInstanceId,
@@ -68,11 +67,11 @@ const Upstreams = () => {
   const testHealthMutation = useTestUpstreamHealth(selectedInstanceId || '');
 
   // Auto-select first instance if none selected
-  useState(() => {
+  useEffect(() => {
     if (!selectedInstanceId && instances.length > 0) {
       setSelectedInstanceId(instances[0].id);
     }
-  });
+  }, [selectedInstanceId, instances]);
 
   // Filtered and sorted upstreams
   const { filteredPools, allUpstreams } = useMemo(() => {
@@ -261,9 +260,17 @@ const Upstreams = () => {
               <label className="text-sm font-medium whitespace-nowrap">
                 Select Instance:
               </label>
-              <Select value={selectedInstanceId || ''} onValueChange={setSelectedInstanceId}>
+              <Select 
+                value={selectedInstanceId || ''} 
+                onValueChange={setSelectedInstanceId}
+                disabled={instancesLoading || instances.length === 0}
+              >
                 <SelectTrigger className="flex-1 max-w-md">
-                  <SelectValue placeholder="Select a Caddy instance" />
+                  <SelectValue placeholder={
+                    instancesLoading ? "Loading instances..." : 
+                    instances.length === 0 ? "No instances available" :
+                    "Select a Caddy instance"
+                  } />
                 </SelectTrigger>
                 <SelectContent>
                   {instances.map(instance => (
@@ -288,7 +295,7 @@ const Upstreams = () => {
         </Card>
 
         {/* No instance selected */}
-        {!selectedInstanceId && (
+        {!selectedInstanceId && !instancesLoading && (
           <UpstreamsEmptyState type="no-instance" />
         )}
 
