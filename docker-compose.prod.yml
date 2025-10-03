@@ -1,0 +1,55 @@
+version: '3.8'
+
+services:
+  # Single container with both frontend and backend
+  caddy-orchestrator:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: caddy-orchestrator:latest
+    container_name: caddy-orchestrator
+    restart: always
+    ports:
+      - "3000:3000"
+    volumes:
+      # Persistent database storage
+      - caddy-orchestrator-data:/root/data
+      # Optional: Override default config
+      # - ./config/config.yaml:/root/config/config.yaml:ro
+    environment:
+      # Required: Set a strong secret key
+      - JWT_SECRET=${JWT_SECRET:-change-this-in-production}
+      # Optional: Logging level
+      - LOG_LEVEL=${LOG_LEVEL:-info}
+      # Optional: CORS origins (comma-separated)
+      # - CORS_ORIGINS=https://orchestrator.yourdomain.com
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    networks:
+      - caddy-net
+    # Optional: Resource limits
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 128M
+
+networks:
+  caddy-net:
+    driver: bridge
+
+volumes:
+  caddy-orchestrator-data:
+    driver: local
+    # Optional: Specify mount point
+    # driver_opts:
+    #   type: none
+    #   o: bind
+    #   device: /opt/caddy-orchestrator/data
