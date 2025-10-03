@@ -383,7 +383,7 @@ export function UpstreamDetailsDrawer({ upstream, instanceId, open, onClose, onT
                       config={{
                         latency: {
                           label: "Response Time",
-                          color: "hsl(var(--chart-1))",
+                          color: "hsl(var(--primary))",
                         },
                       }}
                       className="h-48"
@@ -407,7 +407,7 @@ export function UpstreamDetailsDrawer({ upstream, instanceId, open, onClose, onT
                           label={{ value: 'ms', angle: -90, position: 'insideLeft' }}
                         />
                         <ChartTooltip content={<ChartTooltipContent />} />
-                        <Bar dataKey="value" fill="hsl(var(--chart-1))" radius={4} />
+                        <Bar dataKey="value" fill="hsl(var(--primary))" radius={4} />
                       </BarChart>
                     </ChartContainer>
                     <p className="text-xs text-muted-foreground text-center mt-2">
