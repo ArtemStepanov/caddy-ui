@@ -1,0 +1,200 @@
+---
+globs: *.tsx
+description: React component development patterns and conventions
+---
+
+# React Component Development Rules
+
+## Component Structure
+
+### Functional Components Only
+Use functional components with hooks. No class components.
+
+### Component Props
+Always define props using types from [src/types/](mdc:src/types/):
+
+```typescript
+import type { InstanceGridCardProps } from '@/types';
+
+export function InstanceGridCard({ instance, onEdit, onDelete }: InstanceGridCardProps) {
+  // Component implementation
+}
+```
+
+### Component Organization
+
+Components are organized by feature domain:
+- [src/components/instances/](mdc:src/components/instances/) - Instance management components
+- [src/components/config/](mdc:src/components/config/) - Configuration editor components
+- [src/components/upstreams/](mdc:src/components/upstreams/) - Upstream monitoring components
+- [src/components/ui/](mdc:src/components/ui/) - shadcn/ui base components
+- [src/components/](mdc:src/components/) - Shared components (StatsCard, InstanceCard, etc.)
+
+### Index Files
+Feature component directories should have an [index.ts](mdc:src/components/instances/index.ts) barrel export:
+
+```typescript
+export { AddInstanceDialog } from './AddInstanceDialog';
+export { EditInstanceDialog } from './EditInstanceDialog';
+// ... other exports
+```
+
+## State Management
+
+### Custom Hooks
+Use domain-specific custom hooks for state management:
+
+```typescript
+import { useInstances } from '@/hooks/useInstances';
+import { useConfig } from '@/hooks/useConfig';
+import { useUpstreams } from '@/hooks/useUpstreams';
+```
+
+### Local State
+For component-local state, use `useState`:
+
+```typescript
+const [isOpen, setIsOpen] = useState(false);
+const [viewMode, setViewMode] = useState<ViewMode>('grid');
+```
+
+## UI Components
+
+### shadcn/ui Components
+All base UI components are in [src/components/ui/](mdc:src/components/ui/):
+- Use these as building blocks
+- Don't modify ui components directly
+- Compose them in feature components
+
+### Styling
+- Use Tailwind CSS classes
+- Component styles in [src/App.css](mdc:src/App.css) if needed
+- Follow existing design system patterns
+
+## API Integration
+
+### Use API Client
+Always use the centralized API client from [src/lib/api-client.ts](mdc:src/lib/api-client.ts):
+
+```typescript
+import { getInstances, addInstance } from '@/lib/api-client';
+```
+
+### Error Handling
+Handle API errors gracefully with toast notifications:
+
+```typescript
+import { useToast } from '@/hooks/use-toast';
+
+const { toast } = useToast();
+
+try {
+  await addInstance(formData);
+  toast({
+    title: "Success",
+    description: "Instance added successfully",
+  });
+} catch (error) {
+  toast({
+    title: "Error",
+    description: error.message,
+    variant: "destructive",
+  });
+}
+```
+
+## Form Handling
+
+### Form Data Types
+Use typed form data from [src/types/](mdc:src/types/):
+
+```typescript
+import type { InstanceFormData, InstanceFormErrors } from '@/types';
+
+const [formData, setFormData] = useState<InstanceFormData>(/* ... */);
+const [errors, setErrors] = useState<InstanceFormErrors>({});
+```
+
+### Validation
+Implement client-side validation before API calls:
+
+```typescript
+function validateForm(data: InstanceFormData): InstanceFormErrors {
+  const errors: InstanceFormErrors = {};
+  // Validation logic
+  return errors;
+}
+```
+
+## Dialog/Modal Patterns
+
+### Controlled Open State
+Dialogs should be controlled components:
+
+```typescript
+interface DialogProps {
+  isOpen: boolean;
+  onClose: () => void;
+  // ... other props
+}
+
+export function MyDialog({ isOpen, onClose }: DialogProps) {
+  return (
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      {/* Dialog content */}
+    </Dialog>
+  );
+}
+```
+
+### Callback Props
+Use callback props for actions:
+- `onClose` - Close dialog
+- `onSave` - Save action
+- `onDelete` - Delete action
+- `onRefresh` - Refresh data
+
+## Performance Best Practices
+
+### Memoization
+Use `useMemo` and `useCallback` for expensive computations:
+
+```typescript
+const sortedInstances = useMemo(
+  () => sortInstances(instances, sortBy, sortOrder),
+  [instances, sortBy, sortOrder]
+);
+
+const handleEdit = useCallback((id: string) => {
+  // Handler logic
+}, [/* dependencies */]);
+```
+
+### Avoid Inline Functions in JSX
+Don't create new functions on every render:
+
+```typescript
+// ❌ DON'T
+<Button onClick={() => handleClick(item.id)}>Click</Button>
+
+// ✅ DO
+const handleClick = useCallback((id: string) => {
+  // Handle click
+}, []);
+
+<Button onClick={() => handleClick(item.id)}>Click</Button>
+```
+
+## Accessibility
+
+- Use semantic HTML elements
+- Include proper ARIA labels for interactive elements
+- Ensure keyboard navigation works
+- Use shadcn/ui components which have built-in accessibility
+
+## Testing
+
+Test files should be colocated with components:
+- Component tests in same directory
+- Use `.test.tsx` extension
+- Follow existing test patterns

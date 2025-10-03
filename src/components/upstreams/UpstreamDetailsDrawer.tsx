@@ -36,7 +36,7 @@ export function UpstreamDetailsDrawer({ upstream, instanceId, open, onClose, onT
         title: 'Copied to Clipboard',
         description: `URL copied: ${url}`,
       });
-    } catch (error) {
+    } catch (_) {
       toast({
         title: 'Error',
         description: 'Failed to copy to clipboard',

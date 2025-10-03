@@ -17,7 +17,6 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useInstances } from "@/hooks/useInstances";
 import {
-  mapInstanceStatus,
   calculateStats,
   filterInstancesBySearch,
   filterInstancesByStatus,
@@ -301,7 +300,7 @@ const Instances = () => {
               if (sortBy === field) {
                 setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
               } else {
-                setSortBy(field as any);
+                setSortBy(field as SortField);
                 setSortOrder('asc');
               }
             }}

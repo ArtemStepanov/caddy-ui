@@ -137,7 +137,7 @@ const Config = () => {
     setShowConflictDialog(false);
     try {
       await updateConfig(config, undefined, false, true);
-    } catch (error) {
+    } catch (_) {
       // Error already handled by updateConfig
     }
   };
@@ -199,7 +199,7 @@ const Config = () => {
 
       handleConfigChange(content);
       setShowImportDialog(false);
-    } catch (error) {
+    } catch (_) {
       // If not JSON, might be Caddyfile
       const adapted = await adaptCaddyfile(content);
       if (adapted) {
@@ -414,7 +414,7 @@ const Config = () => {
 
                   <ConfigEditor
                     value={caddyfileContent}
-                    onChange={setCaddyfileContent}
+                    onChange={value => setCaddyfileContent(value ?? "")}
                     language="caddyfile"
                   />
                 </div>

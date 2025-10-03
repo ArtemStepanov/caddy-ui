@@ -11,8 +11,8 @@ import {
 } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useInstances } from "@/hooks/useInstances";
-import { useUpstreams, useTestUpstreamHealth } from "@/hooks/useUpstreams";
-import type { Upstream, UpstreamPool } from "@/types/api";
+import { useUpstreams } from "@/hooks/useUpstreams";
+import type { Upstream } from "@/types/api";
 import {
   Activity,
   AlertCircle,
@@ -65,8 +65,6 @@ const Upstreams = () => {
     autoRefreshInterval > 0 ? autoRefreshInterval : undefined
   );
   
-  const testHealthMutation = useTestUpstreamHealth(selectedInstanceId || '');
-
   // Auto-select first instance if none selected (only on initial load)
   useEffect(() => {
     if (!selectedInstanceId && instances.length > 0) {
@@ -201,7 +199,6 @@ const Upstreams = () => {
   };
 
   const hasUpstreams = stats.total_upstreams > 0;
-  const selectedInstance = instances.find(i => i.id === selectedInstanceId);
 
   return (
     <div className="min-h-screen bg-gradient-dark p-8">

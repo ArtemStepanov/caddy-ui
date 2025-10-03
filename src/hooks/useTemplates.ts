@@ -79,7 +79,7 @@ export function useTemplates() {
 
   const generateConfig = useCallback(async (
     templateId: string,
-    variables: Record<string, any>
+    variables: Record<string, unknown>
   ) => {
     try {
       const response = await apiClient.generateConfig(templateId, variables);

@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
-import type { UpstreamsData, UpstreamHealthCheckResult } from '@/types/api';
+import type { UpstreamsData } from '@/types/api';
 import type {
   CaddyConfig,
   CaddyUpstreamStatus,
@@ -32,8 +32,8 @@ export function useUpstreams(instanceId: string | null, autoRefreshInterval?: nu
         throw new Error(upstreamsResponse.error?.message || 'Failed to fetch upstreams');
       }
       
-      const config = configResponse.success ? configResponse.data : null;
-      return transformUpstreamsData(upstreamsResponse.data, config);
+      const config = configResponse.success ? configResponse.data as CaddyConfig ?? null : null;
+      return transformUpstreamsData(upstreamsResponse.data as CaddyUpstreamStatus[], config);
     },
     enabled: !!instanceId,
     refetchOnWindowFocus: false,
@@ -74,7 +74,7 @@ export function useTestUpstreamHealth(instanceId: string) {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (upstreamAddress?: string) => {
+    mutationFn: async () => {
       // In a real implementation, this would call a specific health check endpoint
       // For now, we'll trigger a refresh
       const response = await apiClient.getUpstreams(instanceId);

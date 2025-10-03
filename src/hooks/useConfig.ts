@@ -1,12 +1,13 @@
 import { useState, useCallback } from 'react';
 import { apiClient } from '@/lib/api-client';
 import { useToast } from '@/hooks/use-toast';
+import type { CaddyConfigValue } from '@/types';
 
 export function useConfig(instanceId: string) {
-  const [config, setConfig] = useState<Record<string, any> | null>(null);
+  const [config, setConfig] = useState<CaddyConfigValue | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [etag, setETag] = useState<string | undefined>();
+  const [etag] = useState<string | undefined>();
   const { toast } = useToast();
 
   const fetchConfig = useCallback(async (path?: string) => {
@@ -36,7 +37,7 @@ export function useConfig(instanceId: string) {
   }, [instanceId, toast]);
 
   const updateConfig = useCallback(async (
-    newConfig: Record<string, any>,
+    newConfig: CaddyConfigValue,
     path?: string,
     useETag?: boolean
   ) => {
@@ -72,7 +73,7 @@ export function useConfig(instanceId: string) {
   }, [instanceId, etag, toast, fetchConfig]);
 
   const patchConfig = useCallback(async (
-    configPatch: Record<string, any>,
+    configPatch: CaddyConfigValue,
     path?: string
   ) => {
     try {

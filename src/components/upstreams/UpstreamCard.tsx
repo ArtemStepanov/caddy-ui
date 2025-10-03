@@ -4,7 +4,7 @@ import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import type { UpstreamCardProps } from "@/types";
-import { Activity, AlertCircle, CheckCircle, Clock, TrendingDown, TrendingUp, XCircle } from "lucide-react";
+import { Activity, AlertCircle, CheckCircle, Clock, XCircle } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 
 export function UpstreamCard({ upstream, poolName, onViewDetails, onTestHealth }: UpstreamCardProps) {

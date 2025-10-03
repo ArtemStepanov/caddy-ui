@@ -170,3 +170,12 @@ export interface ParsedUpstreamPool {
   avg_response_time?: number;
 }
 
+// === Config API Types ===
+
+export type CaddyConfigValue = CaddyConfig | Partial<CaddyConfig> | Record<string, unknown>;
+
+export interface CaddyConfigResponse {
+  config?: CaddyConfigValue;
+  message?: string;
+}
+

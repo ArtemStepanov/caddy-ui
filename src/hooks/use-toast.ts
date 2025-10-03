@@ -3,7 +3,6 @@ import type {
   ToasterToast,
   ToastState,
   ToastAction,
-  toastActionTypes,
 } from "@/types";
 
 const TOAST_LIMIT = 1;

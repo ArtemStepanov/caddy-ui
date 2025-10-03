@@ -11,7 +11,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -19,7 +18,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Switch } from "@/components/ui/switch";
 import type { EditInstanceDialogProps, AuthType, InstanceFormErrors } from "@/types";
 import { validateInstanceName, validateAdminUrl, isInstanceNameUnique } from "@/lib/instance-utils";
 import { cn } from "@/lib/utils";

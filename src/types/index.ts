@@ -42,6 +42,8 @@ export type {
   CaddyUpstreamStatus,
   ParsedUpstream,
   ParsedUpstreamPool,
+  CaddyConfigValue,
+  CaddyConfigResponse,
 } from './caddy';
 
 // Instance-specific types

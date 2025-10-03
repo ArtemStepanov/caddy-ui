@@ -1,0 +1,128 @@
+---
+globs: *.ts,*.tsx
+description: TypeScript type system conventions and best practices for Caddy Orchestrator
+---
+
+# TypeScript Type System Rules
+
+## Type Import Guidelines
+
+### Always Import from Barrel Export
+
+**DO:** Import all types from the centralized barrel export
+```typescript
+import type { CaddyInstance, InstanceStatus, AddInstanceDialogProps } from '@/types';
+```
+
+**DON'T:** Import from specific type files
+```typescript
+import type { CaddyInstance } from '@/types/api';
+```
+
+### Use `import type` Syntax
+
+Always use the `import type` syntax for type-only imports to ensure proper tree-shaking:
+```typescript
+import type { CaddyInstance } from '@/types';
+```
+
+## Type Organization
+
+### Centralized Type Definitions
+
+All type definitions are located in [src/types/](mdc:src/types/):
+- [api.ts](mdc:src/types/api.ts) - API-related types (requests, responses, data models)
+- [instances.ts](mdc:src/types/instances.ts) - Instance management types (components, forms, UI)
+- [config.ts](mdc:src/types/config.ts) - Configuration-related types
+- [caddy.ts](mdc:src/types/caddy.ts) - Caddy-specific types
+- [upstreams.ts](mdc:src/types/upstreams.ts) - Upstream management types
+- [hooks.ts](mdc:src/types/hooks.ts) - Hook-related types
+- [components.ts](mdc:src/types/components.ts) - Generic component types
+- [index.ts](mdc:src/types/index.ts) - Barrel export (always import from here)
+
+### Type Placement Strategy
+
+When adding new types:
+- **API models, requests, responses** → [api.ts](mdc:src/types/api.ts)
+- **Component props, UI types** → Appropriate category file (instances.ts, config.ts, etc.)
+- **New feature types** → Consider creating a new category file
+
+## Code Quality Rules
+
+### DON'T Define Types Inline
+
+**DON'T:**
+```typescript
+interface Props {
+  instance: CaddyInstance;
+  onEdit: () => void;
+}
+```
+
+**DO:** Define in appropriate types file and import:
+```typescript
+import type { InstanceGridCardProps } from '@/types';
+```
+
+### Avoid `any` Type
+
+**DON'T:**
+```typescript
+function process(data: any) { }
+```
+
+**DO:** Use proper types:
+```typescript
+function process(data: CaddyInstance) { }
+```
+
+### Use Descriptive Names
+
+**DON'T:**
+```typescript
+export type Status = 'healthy' | 'unhealthy';
+```
+
+**DO:**
+```typescript
+export type InstanceStatus = 'healthy' | 'unhealthy' | 'unreachable' | 'unknown';
+```
+
+### Add JSDoc Comments
+
+For complex types, always add JSDoc documentation:
+```typescript
+/**
+ * Configuration for status display
+ * Used to render status indicators with appropriate colors and animations
+ */
+export interface StatusConfig {
+  variant: InstanceStatus;
+  label: string;
+  color: string;
+}
+```
+
+## Frequently Used Types
+
+### Core Data Models
+- `CaddyInstance` - Caddy server instance
+- `HealthCheckResult` - Health check result
+- `ConfigTemplate` - Configuration template
+- `UpstreamServer` - Upstream server details
+
+### Status & Filters
+- `InstanceStatus` - 'healthy' | 'unhealthy' | 'unreachable' | 'unknown'
+- `AuthType` - 'none' | 'bearer' | 'mtls' | 'basic'
+- `ViewMode` - 'grid' | 'table'
+- `FilterStatus` - 'all' | InstanceStatus
+- `SortField` - 'name' | 'status' | 'last_seen'
+- `SortOrder` - 'asc' | 'desc'
+
+### API Types
+- `APIResponse<T>` - Standard API response wrapper
+- `APIError` - Error structure
+
+## Reference Documentation
+
+For complete documentation, see [src/types/README.md](mdc:src/types/README.md)
