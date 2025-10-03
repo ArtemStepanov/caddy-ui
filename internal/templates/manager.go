@@ -25,7 +25,7 @@ func NewManager(storage *storage.SQLiteStorage) *Manager {
 // InitializeBuiltinTemplates loads built-in templates into storage
 func (m *Manager) InitializeBuiltinTemplates() error {
 	templates := GetBuiltinTemplates()
-	
+
 	for _, tmpl := range templates {
 		existing, err := m.storage.GetTemplate(tmpl.ID)
 		if err == nil && existing != nil {
@@ -121,7 +121,7 @@ func (m *Manager) ValidateVariables(templateID string, variables map[string]inte
 
 	for _, v := range tmpl.Variables {
 		value, ok := variables[v.Name]
-		
+
 		if !ok {
 			if v.Required && v.DefaultValue == nil {
 				return fmt.Errorf("required variable '%s' not provided", v.Name)

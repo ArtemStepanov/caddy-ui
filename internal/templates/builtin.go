@@ -231,7 +231,7 @@ func GetBuiltinTemplates() []*storage.ConfigTemplate {
 										},
 										"handle": []map[string]interface{}{
 											{
-												"handler":         "reverse_proxy",
+												"handler": "reverse_proxy",
 												"load_balancing": map[string]interface{}{
 													"selection_policy": map[string]interface{}{
 														"policy": "{{.lb_policy}}",

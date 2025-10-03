@@ -26,7 +26,7 @@ func NewSQLiteStorage(dbPath string) (*SQLiteStorage, error) {
 	}
 
 	storage := &SQLiteStorage{db: db}
-	
+
 	if err := storage.migrate(); err != nil {
 		return nil, fmt.Errorf("failed to migrate database: %w", err)
 	}

@@ -31,7 +31,7 @@ func (i *Integration) DiscoverContainers(ctx context.Context) ([]*ContainerInfo,
 	// - Connect to Docker socket
 	// - List containers with caddy labels
 	// - Parse labels for routing configuration
-	
+
 	return nil, fmt.Errorf("not implemented yet")
 }
 
@@ -57,9 +57,9 @@ func (i *Integration) GenerateConfigFromContainer(container *ContainerInfo) (map
 	// - caddy.tls: internal
 
 	config := make(map[string]interface{})
-	
+
 	// TODO: Implement label parsing and config generation
-	
+
 	return config, nil
 }
 
@@ -74,16 +74,16 @@ func (i *Integration) WatchContainerEvents(ctx context.Context, handler func(*Co
 	// - Connect to Docker events API
 	// - Filter for container start/stop/die events
 	// - Parse events and call handler
-	
+
 	return fmt.Errorf("not implemented yet")
 }
 
 // ContainerEvent represents a Docker container event
 type ContainerEvent struct {
-	Type      string            `json:"type"`
-	Action    string            `json:"action"`
-	Container *ContainerInfo    `json:"container"`
-	Timestamp int64             `json:"timestamp"`
+	Type      string         `json:"type"`
+	Action    string         `json:"action"`
+	Container *ContainerInfo `json:"container"`
+	Timestamp int64          `json:"timestamp"`
 }
 
 // MigrateFromDockerProxy migrates configuration from caddy-docker-proxy
@@ -97,7 +97,7 @@ func (i *Integration) MigrateFromDockerProxy() ([]*storage.CaddyInstance, error)
 	// - Detect existing caddy-docker-proxy setup
 	// - Extract container labels
 	// - Convert to orchestrator instances
-	
+
 	return nil, fmt.Errorf("not implemented yet")
 }
 
@@ -127,12 +127,12 @@ func ValidateLabels(labels map[string]string) error {
 // ParseLabels parses Caddy labels into a structured format
 func ParseLabels(labels map[string]string) map[string]interface{} {
 	result := make(map[string]interface{})
-	
+
 	for key, value := range labels {
 		if len(key) > 6 && key[:6] == "caddy." {
 			// Remove "caddy." prefix
 			configKey := key[6:]
-			
+
 			// Try to parse as JSON for complex values
 			var jsonValue interface{}
 			if err := json.Unmarshal([]byte(value), &jsonValue); err == nil {
@@ -142,7 +142,7 @@ func ParseLabels(labels map[string]string) map[string]interface{} {
 			}
 		}
 	}
-	
+
 	return result
 }
 
