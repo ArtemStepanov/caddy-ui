@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
-import { apiClient, CaddyInstance, HealthCheckResult } from '@/lib/api-client';
+import { apiClient } from '@/lib/api-client';
+import type { CaddyInstance, HealthCheckResult } from '@/types';
 import { useToast } from '@/hooks/use-toast';
 
 export function useInstances() {
@@ -42,11 +43,44 @@ export function useInstances() {
       const response = await apiClient.createInstance(instance);
       
       if (response.success && response.data) {
+        // Show initial success toast
         toast({
           title: 'Success',
-          description: `Instance "${response.data.name}" created successfully`,
+          description: `Instance "${response.data.name}" created successfully. Checking status...`,
         });
+        
+        // Refresh the instances list
         await fetchInstances();
+        
+        // Automatically test connection to get the initial status
+        try {
+          const healthCheck = await apiClient.testConnection(response.data.id);
+          
+          // Refresh again after status check to update the UI
+          await fetchInstances();
+          
+          // Show status update toast
+          if (healthCheck.data?.healthy) {
+            toast({
+              title: 'Instance Ready',
+              description: `"${response.data.name}" is healthy and ready to use (${healthCheck.data.latency_ms}ms)`,
+            });
+          } else {
+            toast({
+              title: 'Instance Created',
+              description: `"${response.data.name}" was created but appears to be unreachable`,
+              variant: 'destructive',
+            });
+          }
+        } catch (err) {
+          // Silent fail - the instance is created, just status might be unknown
+          console.log('Initial health check failed:', err);
+          toast({
+            title: 'Instance Created',
+            description: `"${response.data.name}" was created. Status check will run in background.`,
+          });
+        }
+        
         return response.data;
       } else {
         throw new Error(response.error?.message || 'Failed to create instance');

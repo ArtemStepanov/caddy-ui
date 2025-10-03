@@ -3,64 +3,26 @@
  * Provides type-safe methods to interact with the Go backend
  */
 
+import type {
+  APIResponse,
+  APIError,
+  CaddyInstance,
+  HealthCheckResult,
+  ConfigTemplate,
+  TemplateVariable,
+} from '@/types';
+
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 
-// Types for API responses
-export interface APIResponse<T> {
-  success: boolean;
-  data?: T;
-  error?: APIError;
-  meta?: {
-    timestamp: string;
-    request_id?: string;
-  };
-}
-
-export interface APIError {
-  code: string;
-  message: string;
-  details?: string;
-  rollback?: boolean;
-}
-
-export interface CaddyInstance {
-  id: string;
-  name: string;
-  admin_url: string;
-  auth_type: 'none' | 'bearer' | 'mtls';
-  credentials?: Record<string, string>;
-  status: 'online' | 'offline' | 'unknown' | 'error';
-  last_seen?: string;
-  created_at: string;
-  updated_at: string;
-}
-
-export interface HealthCheckResult {
-  instance_id: string;
-  healthy: boolean;
-  message?: string;
-  timestamp: string;
-  latency_ms: number;
-}
-
-export interface ConfigTemplate {
-  id: string;
-  name: string;
-  description: string;
-  category: string;
-  template: Record<string, any>;
-  variables: TemplateVariable[];
-  created_at: string;
-  updated_at: string;
-}
-
-export interface TemplateVariable {
-  name: string;
-  type: 'string' | 'number' | 'boolean' | 'array';
-  required: boolean;
-  default_value?: any;
-  description: string;
-}
+// Re-export types for backward compatibility
+export type {
+  APIResponse,
+  APIError,
+  CaddyInstance,
+  HealthCheckResult,
+  ConfigTemplate,
+  TemplateVariable,
+};
 
 // API Client Class
 class APIClient {
