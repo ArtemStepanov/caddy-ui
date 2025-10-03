@@ -10,6 +10,8 @@ import {
   Loader2,
   Package,
   Lock,
+  ArrowRight,
+  Info,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -389,18 +391,54 @@ const Config = () => {
 
               <TabsContent value="caddyfile" className="mt-0">
                 <div className="space-y-4">
-                  <div className="bg-muted/50 border border-border rounded-lg p-4">
+                  {/* Caddyfile Instructions */}
+                  <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-4">
                     <div className="flex items-start gap-3">
-                      <AlertCircle className="w-5 h-5 text-warning mt-0.5" />
-                      <div className="flex-1">
-                        <h4 className="font-medium mb-1">Caddyfile Editor</h4>
-                        <p className="text-sm text-muted-foreground">
-                          Paste your Caddyfile here. When you switch back to JSON tab, it will be automatically 
-                          adapted to JSON format using Caddy's adapter.
-                        </p>
+                      <Info className="w-5 h-5 text-blue-500 mt-0.5 flex-shrink-0" />
+                      <div className="flex-1 space-y-3">
+                        <div>
+                          <h4 className="font-semibold text-blue-500 mb-2">How Caddyfile Editor Works</h4>
+                          <p className="text-sm text-muted-foreground mb-3">
+                            Caddyfile is a convenient configuration format for Caddy. It must be adapted to JSON 
+                            before being applied to the server.
+                          </p>
+                        </div>
+
+                        <div className="space-y-2">
+                          <h5 className="text-sm font-medium">Workflow:</h5>
+                          <div className="space-y-2 pl-2">
+                            <div className="flex items-start gap-2 text-sm text-muted-foreground">
+                              <span className="text-blue-500 font-semibold">1.</span>
+                              <span>Paste or write your configuration in Caddyfile format</span>
+                            </div>
+                            <div className="flex items-start gap-2 text-sm text-muted-foreground">
+                              <span className="text-blue-500 font-semibold">2.</span>
+                              <span>Switch to the <span className="font-mono bg-muted px-1 rounded">JSON Config</span> tab</span>
+                            </div>
+                            <div className="flex items-start gap-2 text-sm text-muted-foreground">
+                              <span className="text-blue-500 font-semibold">3.</span>
+                              <span>Caddyfile will be automatically adapted to JSON format</span>
+                            </div>
+                            <div className="flex items-start gap-2 text-sm text-muted-foreground">
+                              <span className="text-blue-500 font-semibold">4.</span>
+                              <span>Review the adapted JSON and click <span className="font-semibold">Apply Changes</span></span>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="bg-yellow-500/10 border border-yellow-500/30 rounded p-3 mt-3">
+                          <div className="flex items-start gap-2">
+                            <AlertCircle className="w-4 h-4 text-yellow-500 mt-0.5 flex-shrink-0" />
+                            <div className="text-sm text-muted-foreground">
+                              <span className="font-medium text-yellow-500">Important:</span> Caddyfile is not applied directly. 
+                              It is converted to JSON which is then sent to the Caddy server.
+                            </div>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>
+
                   <ConfigEditor
                     value={caddyfileContent}
                     onChange={setCaddyfileContent}

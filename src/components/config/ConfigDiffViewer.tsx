@@ -9,7 +9,8 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { useState } from 'react';
+import { useState, useRef } from 'react';
+import type * as Monaco from 'monaco-editor';
 
 interface ConfigDiffViewerProps {
   open: boolean;
@@ -33,10 +34,10 @@ export function ConfigDiffViewer({
   description = 'Compare the server version with your local changes',
 }: ConfigDiffViewerProps) {
   const [currentDiff, setCurrentDiff] = useState(0);
-  const diffEditorRef = useState<unknown>(null);
+  const diffEditorRef = useRef<Monaco.editor.IStandaloneDiffEditor | null>(null);
 
-  function handleEditorDidMount(editor: unknown) {
-    diffEditorRef[0] = editor;
+  function handleEditorDidMount(editor: Monaco.editor.IStandaloneDiffEditor) {
+    diffEditorRef.current = editor;
     
     // Configure diff editor
     editor.updateOptions({
