@@ -66,12 +66,13 @@ const Upstreams = () => {
   
   const testHealthMutation = useTestUpstreamHealth(selectedInstanceId || '');
 
-  // Auto-select first instance if none selected
+  // Auto-select first instance if none selected (only on initial load)
   useEffect(() => {
     if (!selectedInstanceId && instances.length > 0) {
       setSelectedInstanceId(instances[0].id);
     }
-  }, [selectedInstanceId, instances]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [instances.length]); // Only re-run when number of instances changes
 
   // Filtered and sorted upstreams
   const { filteredPools, allUpstreams } = useMemo(() => {
@@ -130,13 +131,11 @@ const Upstreams = () => {
 
   // Handlers
   const handleViewDetails = (upstream: Upstream) => {
-    console.log('handleViewDetails called with:', upstream);
     setSelectedUpstream(upstream);
     setDetailsDrawerOpen(true);
   };
 
   const handleTestHealth = (upstream?: Upstream) => {
-    console.log('handleTestHealth called with:', upstream);
     if (upstream) {
       setUpstreamsToTest([upstream]);
     } else if (upstreamsData) {
@@ -297,7 +296,7 @@ const Upstreams = () => {
         </Card>
 
         {/* No instance selected */}
-        {!selectedInstanceId && !instancesLoading && (
+        {!selectedInstanceId && !instancesLoading && instances.length === 0 && (
           <UpstreamsEmptyState type="no-instance" />
         )}
 

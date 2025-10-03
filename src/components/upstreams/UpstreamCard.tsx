@@ -197,7 +197,6 @@ export function UpstreamCard({ upstream, poolName, onViewDetails, onTestHealth }
           className="flex-1"
           onClick={(e) => {
             e.stopPropagation();
-            console.log('Test Now button clicked for:', upstream.address);
             onTestHealth(upstream);
           }}
         >
@@ -209,7 +208,6 @@ export function UpstreamCard({ upstream, poolName, onViewDetails, onTestHealth }
           className="flex-1"
           onClick={(e) => {
             e.stopPropagation();
-            console.log('View Details button clicked for:', upstream.address);
             onViewDetails(upstream);
           }}
         >
