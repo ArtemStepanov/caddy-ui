@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"time"
 
@@ -73,7 +74,7 @@ func LoadConfig(path string) (*Config, error) {
 			Path: "./data/orchestrator.db",
 		},
 		Security: SecurityConfig{
-			JWTSecret:   "change-me-in-production",
+			JWTSecret:   "", // Must be set via JWT_SECRET environment variable
 			CORSOrigins: []string{"*"},
 		},
 		Caddy: CaddyConfig{
@@ -107,6 +108,11 @@ func LoadConfig(path string) (*Config, error) {
 	// Override with environment variables
 	if jwtSecret := os.Getenv("JWT_SECRET"); jwtSecret != "" {
 		config.Security.JWTSecret = jwtSecret
+	} else if config.Security.JWTSecret == "" {
+		// Generate a warning if JWT_SECRET is not set
+		log.Println("WARNING: JWT_SECRET not set. Using insecure default for development only.")
+		log.Println("Set JWT_SECRET environment variable for production use.")
+		config.Security.JWTSecret = "insecure-dev-secret-change-immediately"
 	}
 
 	if logLevel := os.Getenv("LOG_LEVEL"); logLevel != "" {

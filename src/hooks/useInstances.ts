@@ -14,19 +14,24 @@ export function useInstances() {
       setError(null);
       const response = await apiClient.listInstances();
       
-      if (response.success && response.data) {
-        setInstances(response.data);
-      } else {
-        throw new Error(response.error?.message || 'Failed to fetch instances');
+      if (response.success) {
+        // Empty array is a valid response - means no instances yet
+        setInstances(response.data || []);
+      } else if (response.error) {
+        // Only throw error if there's an actual error, not for empty results
+        throw new Error(response.error.message || 'Failed to fetch instances');
       }
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to fetch instances';
       setError(message);
-      toast({
-        title: 'Error',
-        description: message,
-        variant: 'destructive',
-      });
+      // Only show toast for actual errors, not for empty lists
+      if (!message.includes('not found') && !message.includes('empty')) {
+        toast({
+          title: 'Error',
+          description: message,
+          variant: 'destructive',
+        });
+      }
     } finally {
       setLoading(false);
     }

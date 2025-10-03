@@ -32,7 +32,7 @@ services:
       - "8443:443"
       - "2019:2019"
     volumes:
-      - ./Caddyfile.test:/etc/caddy/Caddyfile:ro
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
       - caddy_data:/data
       - caddy_config:/config
     networks:
