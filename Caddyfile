@@ -1,0 +1,30 @@
+# Development Caddyfile for local testing
+
+{
+	# Enable admin API
+	admin :2019
+	
+	# Disable automatic HTTPS for local development
+	auto_https off
+}
+
+# Main orchestrator frontend and API
+:2015 {
+	# Proxy API requests to backend
+	handle /api/* {
+		reverse_proxy localhost:3000
+	}
+
+	# Serve frontend SPA
+	handle {
+		root * ./dist
+		try_files {path} /index.html
+		file_server
+	}
+
+	# Enable logging
+	log {
+		output file ./logs/access.log
+		format json
+	}
+}
