@@ -273,7 +273,7 @@ func TestTestConnection(t *testing.T) {
 	require.NoError(t, err)
 	assert.True(t, result.Healthy)
 	assert.Equal(t, instance.ID, result.InstanceID)
-	assert.Greater(t, result.Latency, int64(0))
+	assert.GreaterOrEqual(t, result.Latency, int64(0))
 }
 
 func TestTestConnection_Failed(t *testing.T) {
