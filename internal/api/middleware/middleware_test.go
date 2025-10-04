@@ -1,9 +1,11 @@
 package middleware
 
 import (
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
@@ -184,4 +186,34 @@ func TestRateLimiter_GetLimiter(t *testing.T) {
 	l3 := limiter.getLimiter("192.168.1.2")
 	assert.NotNil(t, l3)
 	assert.NotSame(t, l1, l3)
+}
+
+func TestRateLimiter_Cleanup(t *testing.T) {
+	limiter := NewRateLimiter(rate.Limit(10), 20)
+
+	// Add many limiters to trigger cleanup threshold
+	limiter.mu.Lock()
+	for i := 0; i < 10001; i++ {
+		key := fmt.Sprintf("192.168.%d.%d", i/256, i%256)
+		limiter.limiters[key] = rate.NewLimiter(rate.Limit(10), 20)
+	}
+	initialCount := len(limiter.limiters)
+	limiter.mu.Unlock()
+
+	assert.Equal(t, 10001, initialCount)
+
+	// Start cleanup - this starts a goroutine
+	// We can't easily test the full cleanup cycle without waiting 1 minute
+	// Just verify it starts without panic
+	limiter.Cleanup()
+
+	// Give the goroutine time to start
+	time.Sleep(10 * time.Millisecond)
+
+	// Verify limiters are still there (cleanup hasn't run yet)
+	limiter.mu.Lock()
+	count := len(limiter.limiters)
+	limiter.mu.Unlock()
+
+	assert.Equal(t, 10001, count)
 }

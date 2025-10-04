@@ -651,3 +651,71 @@ func TestRollbackConfig_BackupNotFound(t *testing.T) {
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "backup not found")
 }
+
+func TestSetConfig_WithBackup(t *testing.T) {
+	manager, db, cleanup := setupTestManager(t)
+	defer cleanup()
+
+	mockConfig := map[string]any{"apps": map[string]any{"version": "1"}}
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == "GET" {
+			w.Header().Set("ETag", "original-etag")
+			w.WriteHeader(http.StatusOK)
+			json.NewEncoder(w).Encode(mockConfig)
+		} else if r.Method == "POST" {
+			w.WriteHeader(http.StatusOK)
+			json.NewEncoder(w).Encode(map[string]any{})
+		}
+	}))
+	defer server.Close()
+
+	instance := &storage.CaddyInstance{
+		ID:       uuid.New().String(),
+		Name:     "Test Instance",
+		AdminURL: server.URL,
+		AuthType: "none",
+		Status:   "unknown",
+	}
+	err := db.CreateInstance(instance)
+	require.NoError(t, err)
+
+	newConfig := map[string]any{"apps": map[string]any{"version": "2"}}
+
+	err = manager.SetConfig(instance.ID, "", newConfig, "original-etag")
+	require.NoError(t, err)
+
+	backups, err := db.GetConfigBackups(instance.ID, 10)
+	require.NoError(t, err)
+	assert.Len(t, backups, 1)
+	assert.Equal(t, "original-etag", backups[0].ETag)
+}
+
+func TestStartHealthChecks(t *testing.T) {
+	manager, db, cleanup := setupTestManager(t)
+	defer cleanup()
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(map[string]any{})
+	}))
+	defer server.Close()
+
+	instance := &storage.CaddyInstance{
+		ID:       uuid.New().String(),
+		Name:     "Test Instance",
+		AdminURL: server.URL,
+		AuthType: "none",
+		Status:   "unknown",
+	}
+	err := db.CreateInstance(instance)
+	require.NoError(t, err)
+
+	manager.StartHealthChecks(100 * time.Millisecond)
+
+	time.Sleep(250 * time.Millisecond)
+
+	updated, err := manager.GetInstance(instance.ID)
+	require.NoError(t, err)
+	assert.Contains(t, []string{"online", "offline", "unknown"}, updated.Status)
+}

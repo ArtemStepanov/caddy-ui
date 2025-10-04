@@ -471,3 +471,157 @@ func TestDoRequest_WithBearerAuth(t *testing.T) {
 	_, _, err = client.GetConfig("")
 	require.NoError(t, err)
 }
+
+func TestNewClient_MTLSError(t *testing.T) {
+	config := ClientConfig{
+		BaseURL:  "http://localhost:2019",
+		AuthType: "mtls",
+		Credentials: map[string]string{
+			"key_file": "key.pem",
+		},
+	}
+
+	client, err := NewClient(config)
+	assert.Error(t, err)
+	assert.Nil(t, client)
+	assert.Contains(t, err.Error(), "failed to configure mTLS")
+}
+
+func TestConfigureMTLS_MissingCertFile(t *testing.T) {
+	credentials := map[string]string{
+		"key_file": "key.pem",
+	}
+
+	_, err := configureMTLS(credentials)
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "cert_file not provided")
+}
+
+func TestConfigureMTLS_MissingKeyFile(t *testing.T) {
+	credentials := map[string]string{
+		"cert_file": "cert.pem",
+	}
+
+	_, err := configureMTLS(credentials)
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "key_file not provided")
+}
+
+func TestConfigureMTLS_InvalidCertificate(t *testing.T) {
+	credentials := map[string]string{
+		"cert_file": "/nonexistent/cert.pem",
+		"key_file":  "/nonexistent/key.pem",
+	}
+
+	_, err := configureMTLS(credentials)
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "failed to load client certificate")
+}
+
+func TestStop_Error(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte("stop failed"))
+	}))
+	defer server.Close()
+
+	client, err := NewClient(ClientConfig{
+		BaseURL:  server.URL,
+		AuthType: "none",
+	})
+	require.NoError(t, err)
+
+	err = client.Stop()
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "failed to stop server")
+}
+
+func TestGetUpstreams_Error(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusNotFound)
+		w.Write([]byte("not found"))
+	}))
+	defer server.Close()
+
+	client, err := NewClient(ClientConfig{
+		BaseURL:  server.URL,
+		AuthType: "none",
+	})
+	require.NoError(t, err)
+
+	_, err = client.GetUpstreams()
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "failed to get upstreams")
+}
+
+func TestGetPKICA_Error(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusNotFound)
+		w.Write([]byte("not found"))
+	}))
+	defer server.Close()
+
+	client, err := NewClient(ClientConfig{
+		BaseURL:  server.URL,
+		AuthType: "none",
+	})
+	require.NoError(t, err)
+
+	_, err = client.GetPKICA("nonexistent")
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "failed to get PKI CA")
+}
+
+func TestDeleteConfig_Error(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("invalid path"))
+	}))
+	defer server.Close()
+
+	client, err := NewClient(ClientConfig{
+		BaseURL:  server.URL,
+		AuthType: "none",
+	})
+	require.NoError(t, err)
+
+	err = client.DeleteConfig("invalid/path")
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "failed to delete config")
+}
+
+func TestPatchConfig_Error(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("invalid config"))
+	}))
+	defer server.Close()
+
+	client, err := NewClient(ClientConfig{
+		BaseURL:  server.URL,
+		AuthType: "none",
+	})
+	require.NoError(t, err)
+
+	err = client.PatchConfig("apps", map[string]any{"test": "value"})
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "failed to patch config")
+}
+
+func TestLoadConfig_Error(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("invalid config"))
+	}))
+	defer server.Close()
+
+	client, err := NewClient(ClientConfig{
+		BaseURL:  server.URL,
+		AuthType: "none",
+	})
+	require.NoError(t, err)
+
+	err = client.LoadConfig(map[string]any{"invalid": "config"})
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "failed to load config")
+}
