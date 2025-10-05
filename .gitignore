@@ -13,6 +13,7 @@ server
 *.out
 coverage.html
 coverage.txt
+coverage/
 
 # Database files
 *.db
