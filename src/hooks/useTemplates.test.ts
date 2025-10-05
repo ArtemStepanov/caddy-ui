@@ -5,8 +5,10 @@ import { apiClient } from '@/lib/api-client';
 import type { ConfigTemplate } from '@/types';
 
 vi.mock('@/lib/api-client');
+
+const mockToast = vi.fn();
 vi.mock('./use-toast', () => ({
-  useToast: () => ({ toast: vi.fn() }),
+  useToast: () => ({ toast: mockToast }),
 }));
 
 describe('useTemplates', () => {
@@ -24,6 +26,7 @@ describe('useTemplates', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    mockToast.mockClear();
   });
 
   it('should fetch templates on mount', async () => {
