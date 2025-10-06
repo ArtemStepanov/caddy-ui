@@ -31,7 +31,7 @@ export const UnsavedChangesBar = ({
       <div className="container max-w-7xl mx-auto px-4 py-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2 text-sm">
-            <AlertCircle className="h-4 w-4 text-orange-500" />
+            <AlertCircle className="h-4 w-4 text-primary" />
             <span>
               You have unsaved changes in {changedSectionsCount}{' '}
               {changedSectionsCount === 1 ? 'section' : 'sections'}
@@ -41,7 +41,7 @@ export const UnsavedChangesBar = ({
             <Button variant="outline" onClick={onDiscard} disabled={isSaving}>
               Discard Changes
             </Button>
-            <Button onClick={onSave} disabled={isSaving}>
+            <Button onClick={onSave} disabled={isSaving} className="bg-gradient-primary">
               {isSaving ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />

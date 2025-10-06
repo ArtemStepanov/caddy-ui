@@ -103,8 +103,8 @@ export const SettingsSidebar = ({
                 onClick={() => onSectionChange(section.id)}
                 className={cn(
                   'w-full text-left px-3 py-2.5 rounded-lg transition-all',
-                  'hover:bg-accent/50 group relative',
-                  isActive && 'bg-accent text-accent-foreground font-medium'
+                  'hover:bg-muted/50 group relative',
+                  isActive && 'bg-primary/10 text-primary font-medium'
                 )}
               >
                 <div className="flex items-center gap-3">
@@ -113,7 +113,7 @@ export const SettingsSidebar = ({
                   {hasChanges && (
                     <Badge
                       variant="secondary"
-                      className="h-2 w-2 p-0 rounded-full bg-orange-500"
+                      className="h-2 w-2 p-0 rounded-full bg-primary/60"
                     />
                   )}
                 </div>

@@ -18,7 +18,9 @@ export const SettingsHeader = ({ onExport, onReset }: SettingsHeaderProps) => {
     <div className="flex items-start justify-between mb-8">
       <div>
         <div className="flex items-center gap-3 mb-2">
-          <Settings className="w-8 h-8" />
+          <div className="w-10 h-10 rounded-lg bg-gradient-primary flex items-center justify-center">
+            <Settings className="w-6 h-6 text-primary-foreground" />
+          </div>
           <h1 className="text-4xl font-bold">Settings</h1>
         </div>
         <p className="text-muted-foreground">
