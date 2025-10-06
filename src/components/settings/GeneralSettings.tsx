@@ -12,6 +12,7 @@ import {
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import type { AppearanceSettings, DashboardPreferences } from '@/types';
 import { Monitor, Sun, Moon } from 'lucide-react';
+import { WIPSection } from './WIPSection';
 
 interface GeneralSettingsProps {
   appearance: AppearanceSettings;
@@ -27,7 +28,8 @@ export const GeneralSettings = ({
   onDashboardChange,
 }: GeneralSettingsProps) => {
   return (
-    <div className="space-y-6">
+    <WIPSection isWIP={false}>
+      <div className="space-y-6">
       <div>
         <h2 className="text-2xl font-bold mb-1">General</h2>
         <p className="text-muted-foreground">
@@ -290,5 +292,6 @@ export const GeneralSettings = ({
         </CardContent>
       </Card>
     </div>
+    </WIPSection>
   );
 };

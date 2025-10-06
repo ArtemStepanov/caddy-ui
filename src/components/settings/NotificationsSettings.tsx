@@ -14,6 +14,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import type { NotificationSettings } from '@/types';
 import { CheckCircle2, XCircle, Volume2 } from 'lucide-react';
+import { WIPSection } from './WIPSection';
 
 interface NotificationsSettingsProps {
   settings: NotificationSettings;
@@ -35,7 +36,8 @@ export const NotificationsSettings = ({
     typeof Notification !== 'undefined' ? Notification.permission : 'default';
 
   return (
-    <div className="space-y-6">
+    <WIPSection isWIP={true}>
+      <div className="space-y-6">
       <div>
         <h2 className="text-2xl font-bold mb-1">Notifications</h2>
         <p className="text-muted-foreground">
@@ -289,5 +291,6 @@ export const NotificationsSettings = ({
         </CardContent>
       </Card>
     </div>
+    </WIPSection>
   );
 };

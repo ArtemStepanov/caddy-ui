@@ -8,13 +8,14 @@ import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import type { AdvancedSettings } from '@/types';
 import { AlertTriangle, Code, Database, Download, Upload } from 'lucide-react';
+import { WIPSection } from './WIPSection';
 
 interface AdvancedSettingsProps {
   settings: AdvancedSettings;
   onChange: (updates: Partial<AdvancedSettings>) => void;
 }
 
-export const AdvancedSettings = ({
+export const AdvancedSettingsPanel = ({
   settings,
   onChange,
 }: AdvancedSettingsProps) => {
@@ -28,7 +29,8 @@ export const AdvancedSettings = ({
   };
 
   return (
-    <div className="space-y-6">
+    <WIPSection isWIP={true}>
+      <div className="space-y-6">
       <div>
         <h2 className="text-2xl font-bold mb-1">Advanced</h2>
         <p className="text-muted-foreground">
@@ -341,5 +343,6 @@ export const AdvancedSettings = ({
         </CardContent>
       </Card>
     </div>
+    </WIPSection>
   );
 };

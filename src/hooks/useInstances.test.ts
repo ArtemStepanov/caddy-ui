@@ -1,8 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { renderHook, waitFor } from '@testing-library/react';
+import { renderHook } from '@testing-library/react';
 import { useInstances } from './useInstances';
 import { apiClient } from '@/lib/api-client';
-import type { CaddyInstance, HealthCheckResult } from '@/types';
+import type { CaddyInstance } from '@/types';
 
 vi.mock('@/lib/api-client');
 vi.mock('./use-toast', () => ({
@@ -19,6 +19,7 @@ describe('useInstances', () => {
       last_seen: new Date().toISOString(),
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
+      auth_type: 'none',
     },
   ];
 

@@ -4,12 +4,12 @@ import type { SettingsSection } from '@/types';
 import {
   SettingsSidebar,
   GeneralSettings,
-  OrchestratorSettings,
-  InstancesSettings,
-  EditorSettings,
+  OrchestratorSettingsPanel,
+  InstancesSettingsPanel,
+  EditorSettingsPanel,
   NotificationsSettings,
-  SecuritySettings,
-  AdvancedSettings,
+  SecuritySettingsPanel,
+  AdvancedSettingsPanel,
   AboutSection,
 } from '@/components/settings';
 import { SettingsHeader } from '@/components/settings/SettingsHeader';
@@ -142,21 +142,21 @@ const Settings = () => {
             )}
 
             {activeSection === 'orchestrator' && (
-              <OrchestratorSettings
+              <OrchestratorSettingsPanel
                 settings={settings.orchestrator}
                 onChange={(updates) => updateSettings('orchestrator', updates)}
               />
             )}
 
             {activeSection === 'instances' && (
-              <InstancesSettings
+              <InstancesSettingsPanel
                 settings={settings.instances}
                 onChange={(updates) => updateSettings('instances', updates)}
               />
             )}
 
             {activeSection === 'editor' && (
-              <EditorSettings
+              <EditorSettingsPanel
                 settings={settings.editor}
                 onChange={(updates) => updateSettings('editor', updates)}
               />
@@ -170,14 +170,14 @@ const Settings = () => {
             )}
 
             {activeSection === 'security' && (
-              <SecuritySettings
+              <SecuritySettingsPanel
                 settings={settings.security}
                 onChange={(updates) => updateSettings('security', updates)}
               />
             )}
 
             {activeSection === 'advanced' && (
-              <AdvancedSettings
+              <AdvancedSettingsPanel
                 settings={settings.advanced}
                 onChange={(updates) => updateSettings('advanced', updates)}
               />

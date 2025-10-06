@@ -12,15 +12,17 @@ import {
 } from '@/components/ui/select';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import type { EditorSettings } from '@/types';
+import { WIPSection } from './WIPSection';
 
 interface EditorSettingsProps {
   settings: EditorSettings;
   onChange: (updates: Partial<EditorSettings>) => void;
 }
 
-export const EditorSettings = ({ settings, onChange }: EditorSettingsProps) => {
+export const EditorSettingsPanel = ({ settings, onChange }: EditorSettingsProps) => {
   return (
-    <div className="space-y-6">
+    <WIPSection isWIP={true}>
+      <div className="space-y-6">
       <div>
         <h2 className="text-2xl font-bold mb-1">Editor</h2>
         <p className="text-muted-foreground">
@@ -300,5 +302,6 @@ export const EditorSettings = ({ settings, onChange }: EditorSettingsProps) => {
         </CardContent>
       </Card>
     </div>
+    </WIPSection>
   );
 };

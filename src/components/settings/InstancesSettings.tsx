@@ -10,18 +10,20 @@ import {
 } from '@/components/ui/select';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import type { InstancesSettings } from '@/types';
+import { WIPSection } from './WIPSection';
 
 interface InstancesSettingsProps {
   settings: InstancesSettings;
   onChange: (updates: Partial<InstancesSettings>) => void;
 }
 
-export const InstancesSettings = ({
+export const InstancesSettingsPanel = ({
   settings,
   onChange,
 }: InstancesSettingsProps) => {
   return (
-    <div className="space-y-6">
+    <WIPSection isWIP={true}>
+      <div className="space-y-6">
       <div>
         <h2 className="text-2xl font-bold mb-1">Instances</h2>
         <p className="text-muted-foreground">
@@ -186,5 +188,6 @@ export const InstancesSettings = ({
         </CardContent>
       </Card>
     </div>
+    </WIPSection>
   );
 };

@@ -7,18 +7,20 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import type { SecuritySettings } from '@/types';
 import { Key, Link as LinkIcon, Clock } from 'lucide-react';
+import { WIPSection } from './WIPSection';
 
 interface SecuritySettingsProps {
   settings: SecuritySettings;
   onChange: (updates: Partial<SecuritySettings>) => void;
 }
 
-export const SecuritySettings = ({
+export const SecuritySettingsPanel = ({
   settings,
   onChange,
 }: SecuritySettingsProps) => {
   return (
-    <div className="space-y-6">
+    <WIPSection isWIP={true}>
+      <div className="space-y-6">
       <div>
         <h2 className="text-2xl font-bold mb-1">Security</h2>
         <p className="text-muted-foreground">
@@ -171,5 +173,6 @@ export const SecuritySettings = ({
         </CardContent>
       </Card>
     </div>
+    </WIPSection>
   );
 };

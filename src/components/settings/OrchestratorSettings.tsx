@@ -9,13 +9,14 @@ import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import type { OrchestratorSettings } from '@/types';
 import { CheckCircle2, XCircle, Loader2, Wifi, Radio } from 'lucide-react';
+import { WIPSection } from './WIPSection';
 
 interface OrchestratorSettingsProps {
   settings: OrchestratorSettings;
   onChange: (updates: Partial<OrchestratorSettings>) => void;
 }
 
-export const OrchestratorSettings = ({
+export const OrchestratorSettingsPanel = ({
   settings,
   onChange,
 }: OrchestratorSettingsProps) => {
@@ -43,7 +44,8 @@ export const OrchestratorSettings = ({
   };
 
   return (
-    <div className="space-y-6">
+    <WIPSection isWIP={true}>
+      <div className="space-y-6">
       <div>
         <h2 className="text-2xl font-bold mb-1">Orchestrator</h2>
         <p className="text-muted-foreground">
@@ -241,5 +243,6 @@ export const OrchestratorSettings = ({
         </CardContent>
       </Card>
     </div>
+    </WIPSection>
   );
 };

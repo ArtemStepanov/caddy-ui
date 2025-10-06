@@ -1,9 +1,10 @@
 export { SettingsSidebar } from './SettingsSidebar';
 export { GeneralSettings } from './GeneralSettings';
-export { OrchestratorSettings } from './OrchestratorSettings';
-export { InstancesSettings } from './InstancesSettings';
-export { EditorSettings } from './EditorSettings';
+export { OrchestratorSettingsPanel } from './OrchestratorSettings';
+export { InstancesSettingsPanel } from './InstancesSettings';
+export { EditorSettingsPanel } from './EditorSettings';
 export { NotificationsSettings } from './NotificationsSettings';
-export { SecuritySettings } from './SecuritySettings';
-export { AdvancedSettings } from './AdvancedSettings';
+export { SecuritySettingsPanel } from './SecuritySettings';
+export { AdvancedSettingsPanel } from './AdvancedSettings';
 export { AboutSection } from './AboutSection';
+export { WIPSection } from './WIPSection';

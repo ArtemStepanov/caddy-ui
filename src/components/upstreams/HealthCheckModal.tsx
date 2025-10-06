@@ -22,6 +22,7 @@ export function HealthCheckModal({ open, onClose, upstreams, onTestComplete }: H
     if (open && upstreams.length > 0) {
       startHealthCheck();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, upstreams]);
 
   const startHealthCheck = async () => {
