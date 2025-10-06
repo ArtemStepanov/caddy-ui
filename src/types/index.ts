@@ -106,3 +106,30 @@ export type {
   ToastActionElement,
 } from './hooks';
 export { toastActionTypes } from './hooks';
+
+// Settings types
+export type {
+  ThemeMode,
+  DateFormat,
+  TimeFormat,
+  DensityMode,
+  DefaultView,
+  PollingStrategy,
+  CacheStrategy,
+  ConfigFormat,
+  ExportFormat,
+  UpdateChannel,
+  AppearanceSettings,
+  DashboardPreferences,
+  OrchestratorSettings,
+  InstancesSettings,
+  EditorSettings,
+  NotificationSettings,
+  SecuritySettings,
+  AdvancedSettings,
+  AboutInfo,
+  Settings,
+  SettingsSection,
+  SettingsSectionInfo,
+  UnsavedChange,
+} from './settings';
