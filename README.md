@@ -162,6 +162,19 @@ docker-compose -f docker-compose.prod.yml up -d
 
 The application can be configured via `config/config.yaml` or environment variables:
 
+**First time setup:**
+```bash
+# Copy the example configuration
+cp config/config.yaml.example config/config.yaml
+
+# Generate a secure JWT secret
+openssl rand -base64 32
+
+# Edit config.yaml and update the jwt_secret
+```
+
+**Configuration options:**
+
 ```yaml
 server:
   host: "0.0.0.0"

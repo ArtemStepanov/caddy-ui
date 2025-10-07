@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
@@ -25,6 +26,7 @@ export const NotificationsSettings = ({
   settings,
   onChange,
 }: NotificationsSettingsProps) => {
+  const [localSoundVolume, setLocalSoundVolume] = useState(settings.soundVolume);
   const handleRequestPermission = async () => {
     if ('Notification' in window) {
       const permission = await Notification.requestPermission();
@@ -220,12 +222,13 @@ export const NotificationsSettings = ({
               <div className="flex items-center justify-between">
                 <Label>Volume</Label>
                 <span className="text-sm text-muted-foreground">
-                  {settings.soundVolume}%
+                  {localSoundVolume}%
                 </span>
               </div>
               <Slider
-                value={[settings.soundVolume]}
-                onValueChange={([value]) => onChange({ soundVolume: value })}
+                value={[localSoundVolume]}
+                onValueChange={([value]) => setLocalSoundVolume(value)}
+                onValueCommit={([value]) => onChange({ soundVolume: value })}
                 min={0}
                 max={100}
                 step={10}

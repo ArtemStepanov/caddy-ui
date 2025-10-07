@@ -11,7 +11,6 @@ import {
   Wrench,
   Info,
 } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
 const SECTIONS: SettingsSectionInfo[] = [
@@ -80,13 +79,11 @@ const ICON_MAP = {
 interface SettingsSidebarProps {
   activeSection: SettingsSection;
   onSectionChange: (section: SettingsSection) => void;
-  changedSections: SettingsSection[];
 }
 
 export const SettingsSidebar = ({
   activeSection,
   onSectionChange,
-  changedSections,
 }: SettingsSidebarProps) => {
   return (
     <div className="w-64 border-r border-border bg-card/30 backdrop-blur">
@@ -95,7 +92,6 @@ export const SettingsSidebar = ({
           {SECTIONS.map((section) => {
             const Icon = ICON_MAP[section.icon as keyof typeof ICON_MAP];
             const isActive = activeSection === section.id;
-            const hasChanges = changedSections.includes(section.id);
 
             return (
               <button
@@ -110,12 +106,6 @@ export const SettingsSidebar = ({
                 <div className="flex items-center gap-3">
                   <Icon className={cn('w-4 h-4', isActive && 'text-primary')} />
                   <span className="flex-1 text-sm">{section.label}</span>
-                  {hasChanges && (
-                    <Badge
-                      variant="secondary"
-                      className="h-2 w-2 p-0 rounded-full bg-primary/60"
-                    />
-                  )}
                 </div>
               </button>
             );

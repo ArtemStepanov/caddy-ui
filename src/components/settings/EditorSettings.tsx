@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
@@ -20,6 +21,7 @@ interface EditorSettingsProps {
 }
 
 export const EditorSettingsPanel = ({ settings, onChange }: EditorSettingsProps) => {
+  const [localFontSize, setLocalFontSize] = useState(settings.fontSize);
   return (
     <WIPSection isWIP={true}>
       <div className="space-y-6">
@@ -60,11 +62,12 @@ export const EditorSettingsPanel = ({ settings, onChange }: EditorSettingsProps)
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <Label>Font Size</Label>
-              <span className="text-sm text-muted-foreground">{settings.fontSize}px</span>
+              <span className="text-sm text-muted-foreground">{localFontSize}px</span>
             </div>
             <Slider
-              value={[settings.fontSize]}
-              onValueChange={([value]) => onChange({ fontSize: value })}
+              value={[localFontSize]}
+              onValueChange={([value]) => setLocalFontSize(value)}
+              onValueCommit={([value]) => onChange({ fontSize: value })}
               min={10}
               max={24}
               step={1}

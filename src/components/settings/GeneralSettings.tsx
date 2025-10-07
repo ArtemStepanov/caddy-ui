@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Switch } from '@/components/ui/switch';
@@ -27,6 +28,8 @@ export const GeneralSettings = ({
   onAppearanceChange,
   onDashboardChange,
 }: GeneralSettingsProps) => {
+  const [localRefreshInterval, setLocalRefreshInterval] = useState(dashboard.refreshInterval);
+
   return (
     <WIPSection isWIP={false}>
       <div className="space-y-6">
@@ -207,14 +210,13 @@ export const GeneralSettings = ({
             <div className="flex items-center justify-between">
               <Label>Refresh Interval</Label>
               <span className="text-sm text-muted-foreground">
-                {dashboard.refreshInterval}s
+                {localRefreshInterval}s
               </span>
             </div>
             <Slider
-              value={[dashboard.refreshInterval]}
-              onValueChange={([value]) =>
-                onDashboardChange({ refreshInterval: value })
-              }
+              value={[localRefreshInterval]}
+              onValueChange={([value]) => setLocalRefreshInterval(value)}
+              onValueCommit={([value]) => onDashboardChange({ refreshInterval: value })}
               min={10}
               max={300}
               step={10}

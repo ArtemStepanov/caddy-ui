@@ -36,6 +36,9 @@ logs/
 .env
 .env.local
 
+# Configuration (use config.yaml.example as template)
+config/config.yaml
+
 # OS
 .DS_Store
 Thumbs.db

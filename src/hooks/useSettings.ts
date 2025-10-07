@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
-import type { Settings, SettingsSection, UnsavedChange } from '@/types';
+import type { Settings } from '@/types';
 import { apiClient } from '@/lib/api-client';
+import { toast } from 'sonner';
 
 const DEFAULT_SETTINGS: Settings = {
   appearance: {
@@ -90,11 +91,9 @@ const DEFAULT_SETTINGS: Settings = {
 };
 
 const STORAGE_KEY = 'caddy-orchestrator-settings';
-const UNSAVED_STORAGE_KEY = 'caddy-orchestrator-unsaved-settings';
 
 export const useSettings = () => {
   const [settings, setSettings] = useState<Settings>(DEFAULT_SETTINGS);
-  const [unsavedChanges, setUnsavedChanges] = useState<UnsavedChange[]>([]);
   const [isSaving, setIsSaving] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -123,12 +122,10 @@ export const useSettings = () => {
             },
           };
           setSettings(backendSettings);
-          // Also save to localStorage as cache
           localStorage.setItem(STORAGE_KEY, JSON.stringify(backendSettings));
         }
       } catch (error) {
         console.error('Failed to load settings from backend:', error);
-        // Fall back to localStorage
         const saved = localStorage.getItem(STORAGE_KEY);
         if (saved) {
           try {
@@ -145,26 +142,54 @@ export const useSettings = () => {
     loadSettings();
   }, []);
 
-  // Load unsaved changes from localStorage on mount
-  useEffect(() => {
-    const savedUnsaved = localStorage.getItem(UNSAVED_STORAGE_KEY);
-    if (savedUnsaved && settings.orchestrator.restoreUnsavedChanges) {
-      try {
-        setUnsavedChanges(JSON.parse(savedUnsaved));
-      } catch {
-        // Ignore errors
-      }
-    }
-  }, [settings.orchestrator.restoreUnsavedChanges]);
+  const saveSettings = useCallback(async (settingsToSave: Settings) => {
+    setIsSaving(true);
+    try {
+      const response = await apiClient.updateSettings({
+        appearance: {
+          theme: settingsToSave.appearance.theme,
+          language: settingsToSave.appearance.language,
+          dateFormat: settingsToSave.appearance.dateFormat,
+          timeFormat: settingsToSave.appearance.timeFormat,
+          showRelativeTimestamps: settingsToSave.appearance.showRelativeTimestamps,
+        },
+        dashboard: {
+          defaultView: settingsToSave.dashboard.defaultView,
+          refreshInterval: settingsToSave.dashboard.refreshInterval,
+          pauseRefreshOnInactive: settingsToSave.dashboard.pauseRefreshOnInactive,
+          density: settingsToSave.dashboard.density,
+        },
+      });
 
-  // Save unsaved changes to localStorage
-  useEffect(() => {
-    if (unsavedChanges.length > 0) {
-      localStorage.setItem(UNSAVED_STORAGE_KEY, JSON.stringify(unsavedChanges));
-    } else {
-      localStorage.removeItem(UNSAVED_STORAGE_KEY);
+      if (response.success) {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(settingsToSave));
+        setLastSaved(new Date());
+        toast.success('Settings saved', {
+          description: 'Your changes have been applied successfully',
+          duration: 2000,
+        });
+        return true;
+      } else {
+        console.error('Failed to save settings:', response.error);
+        const errorMessage = typeof response.error === 'string' 
+          ? response.error 
+          : response.error?.message || 'Please try again';
+        toast.error('Failed to save settings', {
+          description: errorMessage,
+        });
+        return false;
+      }
+    } catch (error) {
+      console.error('Failed to save settings:', error);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(settingsToSave));
+      toast.error('Failed to save settings', {
+        description: 'Changes saved locally only',
+      });
+      return false;
+    } finally {
+      setIsSaving(false);
     }
-  }, [unsavedChanges]);
+  }, []);
 
   const updateSettings = useCallback(<K extends keyof Settings>(
     section: K,
@@ -179,98 +204,15 @@ export const useSettings = () => {
         },
       };
 
-      // Track unsaved changes
-      const changes: UnsavedChange[] = [];
-      Object.keys(updates).forEach((key) => {
-        const oldValue = prev[section][key as keyof Settings[K]];
-        const newValue = updates[key as keyof Settings[K]];
-        if (oldValue !== newValue) {
-          changes.push({
-            section: section as SettingsSection,
-            field: key,
-            oldValue,
-            newValue,
-          });
-        }
-      });
-
-      if (changes.length > 0) {
-        setUnsavedChanges((prev) => {
-          // Remove old changes for the same fields
-          const filtered = prev.filter(
-            (change) =>
-              !(
-                change.section === section &&
-                changes.some((c) => c.field === change.field)
-              )
-          );
-          return [...filtered, ...changes];
-        });
-      }
+      saveSettings(newSettings);
 
       return newSettings;
     });
-  }, []);
-
-  const saveSettings = useCallback(async () => {
-    setIsSaving(true);
-    try {
-      // Save to backend API
-      const response = await apiClient.updateSettings({
-        appearance: {
-          theme: settings.appearance.theme,
-          language: settings.appearance.language,
-          dateFormat: settings.appearance.dateFormat,
-          timeFormat: settings.appearance.timeFormat,
-          showRelativeTimestamps: settings.appearance.showRelativeTimestamps,
-        },
-        dashboard: {
-          defaultView: settings.dashboard.defaultView,
-          refreshInterval: settings.dashboard.refreshInterval,
-          pauseRefreshOnInactive: settings.dashboard.pauseRefreshOnInactive,
-          density: settings.dashboard.density,
-        },
-      });
-
-      if (response.success) {
-        // Also save to localStorage as cache
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
-        setLastSaved(new Date());
-        setUnsavedChanges([]);
-        localStorage.removeItem(UNSAVED_STORAGE_KEY);
-        return true;
-      } else {
-        console.error('Failed to save settings:', response.error);
-        return false;
-      }
-    } catch (error) {
-      console.error('Failed to save settings:', error);
-      // Fall back to localStorage only
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
-      return false;
-    } finally {
-      setIsSaving(false);
-    }
-  }, [settings]);
+  }, [saveSettings]);
 
   const resetSettings = useCallback(() => {
     setSettings(DEFAULT_SETTINGS);
-    setUnsavedChanges([]);
     localStorage.removeItem(STORAGE_KEY);
-    localStorage.removeItem(UNSAVED_STORAGE_KEY);
-  }, []);
-
-  const discardChanges = useCallback(() => {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    if (saved) {
-      try {
-        setSettings({ ...DEFAULT_SETTINGS, ...JSON.parse(saved) });
-      } catch {
-        setSettings(DEFAULT_SETTINGS);
-      }
-    }
-    setUnsavedChanges([]);
-    localStorage.removeItem(UNSAVED_STORAGE_KEY);
   }, []);
 
   const exportSettings = useCallback((format: 'json' | 'yaml' = 'json') => {
@@ -300,27 +242,14 @@ export const useSettings = () => {
     }
   }, []);
 
-  const hasUnsavedChanges = unsavedChanges.length > 0;
-
-  const getChangedSections = useCallback(() => {
-    const sections = new Set<SettingsSection>();
-    unsavedChanges.forEach((change) => sections.add(change.section));
-    return Array.from(sections);
-  }, [unsavedChanges]);
-
   return {
     settings,
     updateSettings,
-    saveSettings,
     resetSettings,
-    discardChanges,
     exportSettings,
     importSettings,
     isSaving,
     isLoading,
     lastSaved,
-    hasUnsavedChanges,
-    unsavedChanges,
-    getChangedSections,
   };
 };

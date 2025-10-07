@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useSettings } from '@/hooks/useSettingsContext';
 import type { SettingsSection } from '@/types';
 import {
@@ -13,7 +13,6 @@ import {
   AboutSection,
 } from '@/components/settings';
 import { SettingsHeader } from '@/components/settings/SettingsHeader';
-import { UnsavedChangesBar } from '@/components/settings/UnsavedChangesBar';
 import { ResetConfirmDialog } from '@/components/settings/ResetConfirmDialog';
 import { SettingsSearch } from '@/components/settings/SettingsSearch';
 import { Breadcrumb, BreadcrumbItem, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from '@/components/ui/breadcrumb';
@@ -23,48 +22,14 @@ const Settings = () => {
   const {
     settings,
     updateSettings,
-    saveSettings,
     resetSettings,
-    discardChanges,
     exportSettings,
     isSaving,
-    hasUnsavedChanges,
-    getChangedSections,
+    lastSaved,
   } = useSettings();
 
   const [activeSection, setActiveSection] = useState<SettingsSection>('general');
   const [showResetDialog, setShowResetDialog] = useState(false);
-
-  // Auto-save functionality
-  useEffect(() => {
-    if (!hasUnsavedChanges || !settings.orchestrator.enableAutoSave) {
-      return;
-    }
-
-    const timeout = setTimeout(() => {
-      saveSettings().then((success) => {
-        if (success) {
-          toast.success('Settings saved automatically');
-        }
-      });
-    }, settings.orchestrator.autoSaveInterval * 1000);
-
-    return () => clearTimeout(timeout);
-  }, [hasUnsavedChanges, settings.orchestrator.enableAutoSave, settings.orchestrator.autoSaveInterval, saveSettings]);
-
-  const handleSave = async () => {
-    const success = await saveSettings();
-    if (success) {
-      toast.success('All settings saved successfully');
-    } else {
-      toast.error('Failed to save settings');
-    }
-  };
-
-  const handleDiscard = () => {
-    discardChanges();
-    toast.info('Changes discarded');
-  };
 
   const handleReset = () => {
     setShowResetDialog(true);
@@ -80,8 +45,6 @@ const Settings = () => {
     exportSettings('json');
     toast.success('Settings exported successfully');
   };
-
-  const changedSections = getChangedSections();
 
   const getSectionTitle = (section: SettingsSection): string => {
     const titles: Record<SettingsSection, string> = {
@@ -107,14 +70,18 @@ const Settings = () => {
         <SettingsSidebar
           activeSection={activeSection}
           onSectionChange={setActiveSection}
-          changedSections={changedSections}
         />
 
         {/* Main Content */}
         <div className="flex-1 overflow-y-auto">
           <div className="max-w-4xl mx-auto p-8 pb-24">
             {/* Header */}
-            <SettingsHeader onExport={handleExport} onReset={handleReset} />
+            <SettingsHeader 
+              onExport={handleExport} 
+              onReset={handleReset}
+              isSaving={isSaving}
+              lastSaved={lastSaved}
+            />
 
             {/* Breadcrumbs */}
             <div className="mb-6">
@@ -187,15 +154,6 @@ const Settings = () => {
           </div>
         </div>
       </div>
-
-      {/* Unsaved Changes Bar */}
-      <UnsavedChangesBar
-        show={hasUnsavedChanges}
-        changedSectionsCount={changedSections.length}
-        isSaving={isSaving}
-        onSave={handleSave}
-        onDiscard={handleDiscard}
-      />
 
       {/* Reset Confirmation Dialog */}
       <ResetConfirmDialog

@@ -6,6 +6,7 @@ import (
 	"os"
 	"testing"
 
+	"github.com/ArtemStepanov/caddy-orchestrator/config"
 	"github.com/ArtemStepanov/caddy-orchestrator/internal/caddy"
 	"github.com/ArtemStepanov/caddy-orchestrator/internal/storage"
 	"github.com/ArtemStepanov/caddy-orchestrator/internal/templates"
@@ -30,7 +31,8 @@ func TestSetupRoutes(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	router := gin.New()
 
-	SetupRoutes(router, caddyManager, templateManager, []string{"*"})
+	cfg := &config.Config{}
+	SetupRoutes(router, caddyManager, templateManager, cfg, "", []string{"*"})
 
 	// Test health endpoint
 	req, _ := http.NewRequest("GET", "/api/health", nil)
@@ -57,7 +59,8 @@ func TestSetupRoutes_Instances(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	router := gin.New()
 
-	SetupRoutes(router, caddyManager, templateManager, []string{"*"})
+	cfg := &config.Config{}
+	SetupRoutes(router, caddyManager, templateManager, cfg, "", []string{"*"})
 
 	// Test instances endpoint
 	req, _ := http.NewRequest("GET", "/api/instances", nil)
@@ -83,7 +86,8 @@ func TestSetupRoutes_Templates(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	router := gin.New()
 
-	SetupRoutes(router, caddyManager, templateManager, []string{"*"})
+	cfg := &config.Config{}
+	SetupRoutes(router, caddyManager, templateManager, cfg, "", []string{"*"})
 
 	// Test templates endpoint
 	req, _ := http.NewRequest("GET", "/api/templates", nil)

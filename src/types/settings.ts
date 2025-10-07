@@ -132,9 +132,3 @@ export interface SettingsSectionInfo {
   description: string;
 }
 
-export interface UnsavedChange {
-  section: SettingsSection;
-  field: string;
-  oldValue: unknown;
-  newValue: unknown;
-}

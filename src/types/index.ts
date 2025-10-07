@@ -131,5 +131,4 @@ export type {
   Settings,
   SettingsSection,
   SettingsSectionInfo,
-  UnsavedChange,
 } from './settings';

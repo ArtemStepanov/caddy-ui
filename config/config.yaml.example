@@ -7,7 +7,7 @@ storage:
     type: sqlite
     path: ./data/orchestrator.db
 security:
-    jwt_secret: dev-secret-key-change-in-production
+    jwt_secret: change-me-to-a-secure-random-string
     cors_origins:
         - http://localhost:5173
         - http://localhost:3000
@@ -24,13 +24,14 @@ logging:
     format: json
     audit_enabled: true
 ui:
-    theme: light
+    theme: auto
     language: en
     date_format: YYYY-MM-DD
     time_format: 24h
     show_relative_timestamps: true
 dashboard:
     default_view: dashboard
-    refresh_interval: 30
+    refresh_interval: 60
     pause_refresh_on_inactive: true
     density: comfortable
+
