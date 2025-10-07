@@ -41,6 +41,14 @@ if [ ! -f .env ]; then
     echo "⚠️  Please update .env with your configuration"
 fi
 
+# Copy config file if it doesn't exist
+if [ ! -f config/config.yaml ]; then
+    echo "📝 Creating config.yaml from example..."
+    cp config/config.yaml.example config/config.yaml
+    echo "⚠️  Please update config/config.yaml with your configuration"
+    echo "⚠️  Important: Generate a secure JWT secret!"
+fi
+
 # Build frontend
 echo "🔨 Building frontend..."
 npm run build

@@ -74,7 +74,8 @@ func main() {
 	router := gin.New()
 
 	// Setup routes
-	api.SetupRoutes(router, caddyManager, templateManager, cfg.Security.CORSOrigins)
+	configPath := "./config/config.yaml"
+	api.SetupRoutes(router, caddyManager, templateManager, cfg, configPath, cfg.Security.CORSOrigins)
 
 	// Serve static files from web directory
 	if _, err := os.Stat("./web"); err == nil {

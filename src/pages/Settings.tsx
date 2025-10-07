@@ -1,191 +1,166 @@
-import { Settings as SettingsIcon, Bell, Shield, Database } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
-import { Switch } from "@/components/ui/switch";
-import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
+import { useState } from 'react';
+import { useSettings } from '@/hooks/useSettingsContext';
+import type { SettingsSection } from '@/types';
+import {
+  SettingsSidebar,
+  GeneralSettings,
+  OrchestratorSettingsPanel,
+  InstancesSettingsPanel,
+  EditorSettingsPanel,
+  NotificationsSettings,
+  SecuritySettingsPanel,
+  AdvancedSettingsPanel,
+  AboutSection,
+} from '@/components/settings';
+import { SettingsHeader } from '@/components/settings/SettingsHeader';
+import { ResetConfirmDialog } from '@/components/settings/ResetConfirmDialog';
+import { SettingsSearch } from '@/components/settings/SettingsSearch';
+import { Breadcrumb, BreadcrumbItem, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from '@/components/ui/breadcrumb';
+import { toast } from 'sonner';
 
 const Settings = () => {
+  const {
+    settings,
+    updateSettings,
+    resetSettings,
+    exportSettings,
+    isSaving,
+    lastSaved,
+  } = useSettings();
+
+  const [activeSection, setActiveSection] = useState<SettingsSection>('general');
+  const [showResetDialog, setShowResetDialog] = useState(false);
+
+  const handleReset = () => {
+    setShowResetDialog(true);
+  };
+
+  const handleResetConfirm = () => {
+    resetSettings();
+    setShowResetDialog(false);
+    toast.success('Settings reset to defaults');
+  };
+
+  const handleExport = () => {
+    exportSettings('json');
+    toast.success('Settings exported successfully');
+  };
+
+  const getSectionTitle = (section: SettingsSection): string => {
+    const titles: Record<SettingsSection, string> = {
+      general: 'General',
+      orchestrator: 'Orchestrator',
+      instances: 'Instances',
+      editor: 'Editor',
+      notifications: 'Notifications',
+      security: 'Security',
+      advanced: 'Advanced',
+      about: 'About',
+    };
+    return titles[section];
+  };
+
   return (
-    <div className="min-h-screen bg-gradient-dark p-8">
-      <div className="max-w-4xl mx-auto">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold mb-2">Settings</h1>
-          <p className="text-muted-foreground">
-            Configure your Caddy UI preferences
-          </p>
-        </div>
+    <div className="min-h-screen bg-background">
+      {/* Settings Search (Cmd/Ctrl+K) */}
+      <SettingsSearch onNavigate={setActiveSection} />
 
-        {/* General Settings */}
-        <Card className="mb-6 bg-card/50 backdrop-blur border-border">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <SettingsIcon className="w-5 h-5" />
-              General
-            </CardTitle>
-            <CardDescription>
-              Manage your general application settings
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="space-y-2">
-              <Label htmlFor="refresh">Auto-refresh interval (seconds)</Label>
-              <Input
-                id="refresh"
-                type="number"
-                defaultValue={30}
-                className="bg-background border-border max-w-xs"
+      <div className="flex">
+        {/* Sidebar Navigation */}
+        <SettingsSidebar
+          activeSection={activeSection}
+          onSectionChange={setActiveSection}
+        />
+
+        {/* Main Content */}
+        <div className="flex-1 overflow-y-auto">
+          <div className="max-w-4xl mx-auto p-8 pb-24">
+            {/* Header */}
+            <SettingsHeader 
+              onExport={handleExport} 
+              onReset={handleReset}
+              isSaving={isSaving}
+              lastSaved={lastSaved}
+            />
+
+            {/* Breadcrumbs */}
+            <div className="mb-6">
+              <Breadcrumb>
+                <BreadcrumbList>
+                  <BreadcrumbItem>
+                    <BreadcrumbPage>Settings</BreadcrumbPage>
+                  </BreadcrumbItem>
+                  <BreadcrumbSeparator />
+                  <BreadcrumbItem>
+                    <BreadcrumbPage>{getSectionTitle(activeSection)}</BreadcrumbPage>
+                  </BreadcrumbItem>
+                </BreadcrumbList>
+              </Breadcrumb>
+            </div>
+
+            {/* Section Content */}
+            {activeSection === 'general' && (
+              <GeneralSettings
+                appearance={settings.appearance}
+                dashboard={settings.dashboard}
+                onAppearanceChange={(updates) => updateSettings('appearance', updates)}
+                onDashboardChange={(updates) => updateSettings('dashboard', updates)}
               />
-            </div>
-            <Separator />
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <Label>Show instance health in sidebar</Label>
-                <p className="text-sm text-muted-foreground">
-                  Display status indicators next to instance names
-                </p>
-              </div>
-              <Switch defaultChecked />
-            </div>
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <Label>Compact view</Label>
-                <p className="text-sm text-muted-foreground">
-                  Use a more condensed layout for tables
-                </p>
-              </div>
-              <Switch />
-            </div>
-          </CardContent>
-        </Card>
+            )}
 
-        {/* Notifications */}
-        <Card className="mb-6 bg-card/50 backdrop-blur border-border">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Bell className="w-5 h-5" />
-              Notifications
-            </CardTitle>
-            <CardDescription>
-              Configure alerts and notifications
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <Label>Instance offline alerts</Label>
-                <p className="text-sm text-muted-foreground">
-                  Get notified when an instance goes offline
-                </p>
-              </div>
-              <Switch defaultChecked />
-            </div>
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <Label>Certificate expiration warnings</Label>
-                <p className="text-sm text-muted-foreground">
-                  Alert when certificates are expiring soon
-                </p>
-              </div>
-              <Switch defaultChecked />
-            </div>
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <Label>Configuration change notifications</Label>
-                <p className="text-sm text-muted-foreground">
-                  Notify on successful config updates
-                </p>
-              </div>
-              <Switch />
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Security */}
-        <Card className="mb-6 bg-card/50 backdrop-blur border-border">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Shield className="w-5 h-5" />
-              Security
-            </CardTitle>
-            <CardDescription>
-              Manage authentication and security settings
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <Label>Require authentication</Label>
-                <p className="text-sm text-muted-foreground">
-                  Enable login for accessing the UI
-                </p>
-              </div>
-              <Switch />
-            </div>
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <Label>Audit logging</Label>
-                <p className="text-sm text-muted-foreground">
-                  Log all configuration changes
-                </p>
-              </div>
-              <Switch defaultChecked />
-            </div>
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <Label>mTLS for remote instances</Label>
-                <p className="text-sm text-muted-foreground">
-                  Use mutual TLS for secure remote connections
-                </p>
-              </div>
-              <Switch defaultChecked />
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Storage */}
-        <Card className="mb-6 bg-card/50 backdrop-blur border-border">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Database className="w-5 h-5" />
-              Storage
-            </CardTitle>
-            <CardDescription>
-              Manage data and backup settings
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="space-y-2">
-              <Label htmlFor="backup">Backup interval (hours)</Label>
-              <Input
-                id="backup"
-                type="number"
-                defaultValue={24}
-                className="bg-background border-border max-w-xs"
+            {activeSection === 'orchestrator' && (
+              <OrchestratorSettingsPanel
+                settings={settings.orchestrator}
+                onChange={(updates) => updateSettings('orchestrator', updates)}
               />
-            </div>
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <Label>Keep backup history</Label>
-                <p className="text-sm text-muted-foreground">
-                  Retain configuration backups
-                </p>
-              </div>
-              <Switch defaultChecked />
-            </div>
-          </CardContent>
-        </Card>
+            )}
 
-        {/* Actions */}
-        <div className="flex justify-end gap-4">
-          <Button variant="outline">Reset to Defaults</Button>
-          <Button className="bg-gradient-primary hover:shadow-glow transition-all">
-            Save Changes
-          </Button>
+            {activeSection === 'instances' && (
+              <InstancesSettingsPanel
+                settings={settings.instances}
+                onChange={(updates) => updateSettings('instances', updates)}
+              />
+            )}
+
+            {activeSection === 'editor' && (
+              <EditorSettingsPanel
+                settings={settings.editor}
+                onChange={(updates) => updateSettings('editor', updates)}
+              />
+            )}
+
+            {activeSection === 'notifications' && (
+              <NotificationsSettings
+                settings={settings.notifications}
+                onChange={(updates) => updateSettings('notifications', updates)}
+              />
+            )}
+
+            {activeSection === 'security' && (
+              <SecuritySettingsPanel
+                settings={settings.security}
+                onChange={(updates) => updateSettings('security', updates)}
+              />
+            )}
+
+            {activeSection === 'advanced' && (
+              <AdvancedSettingsPanel
+                settings={settings.advanced}
+                onChange={(updates) => updateSettings('advanced', updates)}
+              />
+            )}
+
+            {activeSection === 'about' && <AboutSection />}
+          </div>
         </div>
       </div>
+
+      {/* Reset Confirmation Dialog */}
+      <ResetConfirmDialog
+        open={showResetDialog}
+        onOpenChange={setShowResetDialog}
+        onConfirm={handleResetConfirm}
+      />
     </div>
   );
 };
