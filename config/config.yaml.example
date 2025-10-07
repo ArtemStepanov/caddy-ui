@@ -32,6 +32,4 @@ ui:
 dashboard:
     default_view: dashboard
     refresh_interval: 60
-    pause_refresh_on_inactive: true
-    density: comfortable
 

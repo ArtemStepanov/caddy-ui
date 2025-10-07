@@ -41,10 +41,8 @@ type AppearanceSettings struct {
 
 // DashboardSettings represents dashboard preferences
 type DashboardSettings struct {
-	DefaultView            string `json:"defaultView"`
-	RefreshInterval        int    `json:"refreshInterval"`
-	PauseRefreshOnInactive bool   `json:"pauseRefreshOnInactive"`
-	Density                string `json:"density"`
+	DefaultView     string `json:"defaultView"`
+	RefreshInterval int    `json:"refreshInterval"`
 }
 
 // UpdateSettingsRequest represents the request to update settings
@@ -67,10 +65,8 @@ func (h *SettingsHandler) GetSettings(c *gin.Context) {
 			ShowRelativeTimestamps: h.config.UI.ShowRelativeTimestamps,
 		},
 		Dashboard: DashboardSettings{
-			DefaultView:            h.config.Dashboard.DefaultView,
-			RefreshInterval:        h.config.Dashboard.RefreshInterval,
-			PauseRefreshOnInactive: h.config.Dashboard.PauseRefreshOnInactive,
-			Density:                h.config.Dashboard.Density,
+			DefaultView:     h.config.Dashboard.DefaultView,
+			RefreshInterval: h.config.Dashboard.RefreshInterval,
 		},
 	}
 
@@ -123,10 +119,6 @@ func (h *SettingsHandler) UpdateSettings(c *gin.Context) {
 		if req.Dashboard.RefreshInterval > 0 {
 			h.config.Dashboard.RefreshInterval = req.Dashboard.RefreshInterval
 		}
-		h.config.Dashboard.PauseRefreshOnInactive = req.Dashboard.PauseRefreshOnInactive
-		if req.Dashboard.Density != "" {
-			h.config.Dashboard.Density = req.Dashboard.Density
-		}
 	}
 
 	// Save config to file
@@ -152,10 +144,8 @@ func (h *SettingsHandler) UpdateSettings(c *gin.Context) {
 			ShowRelativeTimestamps: h.config.UI.ShowRelativeTimestamps,
 		},
 		Dashboard: DashboardSettings{
-			DefaultView:            h.config.Dashboard.DefaultView,
-			RefreshInterval:        h.config.Dashboard.RefreshInterval,
-			PauseRefreshOnInactive: h.config.Dashboard.PauseRefreshOnInactive,
-			Density:                h.config.Dashboard.Density,
+			DefaultView:     h.config.Dashboard.DefaultView,
+			RefreshInterval: h.config.Dashboard.RefreshInterval,
 		},
 	}
 

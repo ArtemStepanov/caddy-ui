@@ -60,9 +60,9 @@ const SEARCHABLE_ITEMS: SearchableItem[] = [
   {
     section: 'general',
     category: 'General',
-    label: 'Display Density',
-    description: 'Compact, comfortable, or spacious',
-    keywords: ['density', 'spacing', 'compact', 'layout'],
+    label: 'Default View',
+    description: 'Starting page when opening the app',
+    keywords: ['default', 'view', 'home', 'start', 'landing'],
   },
 
   // Orchestrator

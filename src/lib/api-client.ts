@@ -225,8 +225,6 @@ class APIClient {
     dashboard: {
       defaultView: string;
       refreshInterval: number;
-      pauseRefreshOnInactive: boolean;
-      density: string;
     };
   }>> {
     return this.request('/settings');
@@ -243,8 +241,6 @@ class APIClient {
     dashboard?: Partial<{
       defaultView: string;
       refreshInterval: number;
-      pauseRefreshOnInactive: boolean;
-      density: string;
     }>;
   }): Promise<APIResponse<{
     appearance: {
@@ -257,8 +253,6 @@ class APIClient {
     dashboard: {
       defaultView: string;
       refreshInterval: number;
-      pauseRefreshOnInactive: boolean;
-      density: string;
     };
   }>> {
     return this.request('/settings', {

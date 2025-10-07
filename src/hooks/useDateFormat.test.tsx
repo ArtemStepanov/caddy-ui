@@ -17,8 +17,6 @@ const mockSettings: Settings = {
   dashboard: {
     defaultView: 'dashboard',
     refreshInterval: 30,
-    pauseRefreshOnInactive: true,
-    density: 'comfortable',
   },
   orchestrator: {
     backendUrl: 'http://localhost:3000',
