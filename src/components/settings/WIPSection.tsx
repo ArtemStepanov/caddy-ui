@@ -13,18 +13,17 @@ export const WIPSection = ({ isWIP = false, children }: WIPSectionProps) => {
 
   return (
     <div className="relative">
-      <div className="opacity-60 pointer-events-none">
+      <div className="opacity-60 pointer-events-none select-none">
         {children}
       </div>
       
-      <div className="absolute inset-0 flex items-center justify-center pointer-events-none bg-background/20 backdrop-blur-[2px]">
-        <div className="flex flex-col items-center gap-3 text-muted-foreground/60">
-          <Construction className="w-12 h-12" />
-          <div className="text-lg font-medium">Work in Progress</div>
-          <div className="text-sm">This section is under development</div>
+      <div className="absolute inset-0 flex items-start justify-center bg-background/20 backdrop-blur-[2px]">
+        <div className="flex flex-col items-center gap-3">
+          <Construction className="w-12 h-12 text-muted-foreground" />
+          <div className="text-lg font-medium text-muted-foreground">Work in Progress</div>
+          <div className="text-sm text-muted-foreground">This section is under development</div>
         </div>
       </div>
     </div>
   );
 };
-
