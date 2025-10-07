@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useSettings } from '@/hooks/useSettings';
+import { useSettings } from '@/hooks/useSettingsContext';
 import type { SettingsSection } from '@/types';
 import {
   SettingsSidebar,

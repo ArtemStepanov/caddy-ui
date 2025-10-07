@@ -212,6 +212,60 @@ class APIClient {
   async healthCheck(): Promise<APIResponse<{ status: string; service: string }>> {
     return this.request<{ status: string; service: string }>('/health');
   }
+
+  // Settings Management
+  async getSettings(): Promise<APIResponse<{
+    appearance: {
+      theme: string;
+      language: string;
+      dateFormat: string;
+      timeFormat: string;
+      showRelativeTimestamps: boolean;
+    };
+    dashboard: {
+      defaultView: string;
+      refreshInterval: number;
+      pauseRefreshOnInactive: boolean;
+      density: string;
+    };
+  }>> {
+    return this.request('/settings');
+  }
+
+  async updateSettings(settings: {
+    appearance?: Partial<{
+      theme: string;
+      language: string;
+      dateFormat: string;
+      timeFormat: string;
+      showRelativeTimestamps: boolean;
+    }>;
+    dashboard?: Partial<{
+      defaultView: string;
+      refreshInterval: number;
+      pauseRefreshOnInactive: boolean;
+      density: string;
+    }>;
+  }): Promise<APIResponse<{
+    appearance: {
+      theme: string;
+      language: string;
+      dateFormat: string;
+      timeFormat: string;
+      showRelativeTimestamps: boolean;
+    };
+    dashboard: {
+      defaultView: string;
+      refreshInterval: number;
+      pauseRefreshOnInactive: boolean;
+      density: string;
+    };
+  }>> {
+    return this.request('/settings', {
+      method: 'PUT',
+      body: JSON.stringify(settings),
+    });
+  }
 }
 
 // Export singleton instance

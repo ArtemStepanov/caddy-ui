@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import type { Settings, SettingsSection, UnsavedChange } from '@/types';
+import { apiClient } from '@/lib/api-client';
 
 const DEFAULT_SETTINGS: Settings = {
   appearance: {
@@ -92,21 +93,57 @@ const STORAGE_KEY = 'caddy-orchestrator-settings';
 const UNSAVED_STORAGE_KEY = 'caddy-orchestrator-unsaved-settings';
 
 export const useSettings = () => {
-  const [settings, setSettings] = useState<Settings>(() => {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    if (saved) {
-      try {
-        return { ...DEFAULT_SETTINGS, ...JSON.parse(saved) };
-      } catch {
-        return DEFAULT_SETTINGS;
-      }
-    }
-    return DEFAULT_SETTINGS;
-  });
-
+  const [settings, setSettings] = useState<Settings>(DEFAULT_SETTINGS);
   const [unsavedChanges, setUnsavedChanges] = useState<UnsavedChange[]>([]);
   const [isSaving, setIsSaving] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Load settings from backend on mount
+  useEffect(() => {
+    const loadSettings = async () => {
+      try {
+        const response = await apiClient.getSettings();
+        if (response.success && response.data) {
+          const backendSettings: Settings = {
+            ...DEFAULT_SETTINGS,
+            appearance: {
+              theme: response.data.appearance.theme as Settings['appearance']['theme'],
+              useSystemTheme: response.data.appearance.theme === 'auto',
+              language: response.data.appearance.language,
+              dateFormat: response.data.appearance.dateFormat as Settings['appearance']['dateFormat'],
+              timeFormat: response.data.appearance.timeFormat as Settings['appearance']['timeFormat'],
+              showRelativeTimestamps: response.data.appearance.showRelativeTimestamps,
+            },
+            dashboard: {
+              defaultView: response.data.dashboard.defaultView as Settings['dashboard']['defaultView'],
+              refreshInterval: response.data.dashboard.refreshInterval,
+              pauseRefreshOnInactive: response.data.dashboard.pauseRefreshOnInactive,
+              density: response.data.dashboard.density as Settings['dashboard']['density'],
+            },
+          };
+          setSettings(backendSettings);
+          // Also save to localStorage as cache
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(backendSettings));
+        }
+      } catch (error) {
+        console.error('Failed to load settings from backend:', error);
+        // Fall back to localStorage
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (saved) {
+          try {
+            setSettings({ ...DEFAULT_SETTINGS, ...JSON.parse(saved) });
+          } catch {
+            setSettings(DEFAULT_SETTINGS);
+          }
+        }
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadSettings();
+  }, []);
 
   // Load unsaved changes from localStorage on mount
   useEffect(() => {
@@ -178,14 +215,38 @@ export const useSettings = () => {
   const saveSettings = useCallback(async () => {
     setIsSaving(true);
     try {
-      // Save to localStorage (in real app, this would be an API call)
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
-      setLastSaved(new Date());
-      setUnsavedChanges([]);
-      localStorage.removeItem(UNSAVED_STORAGE_KEY);
-      return true;
+      // Save to backend API
+      const response = await apiClient.updateSettings({
+        appearance: {
+          theme: settings.appearance.theme,
+          language: settings.appearance.language,
+          dateFormat: settings.appearance.dateFormat,
+          timeFormat: settings.appearance.timeFormat,
+          showRelativeTimestamps: settings.appearance.showRelativeTimestamps,
+        },
+        dashboard: {
+          defaultView: settings.dashboard.defaultView,
+          refreshInterval: settings.dashboard.refreshInterval,
+          pauseRefreshOnInactive: settings.dashboard.pauseRefreshOnInactive,
+          density: settings.dashboard.density,
+        },
+      });
+
+      if (response.success) {
+        // Also save to localStorage as cache
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
+        setLastSaved(new Date());
+        setUnsavedChanges([]);
+        localStorage.removeItem(UNSAVED_STORAGE_KEY);
+        return true;
+      } else {
+        console.error('Failed to save settings:', response.error);
+        return false;
+      }
     } catch (error) {
       console.error('Failed to save settings:', error);
+      // Fall back to localStorage only
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
       return false;
     } finally {
       setIsSaving(false);
@@ -256,6 +317,7 @@ export const useSettings = () => {
     exportSettings,
     importSettings,
     isSaving,
+    isLoading,
     lastSaved,
     hasUnsavedChanges,
     unsavedChanges,

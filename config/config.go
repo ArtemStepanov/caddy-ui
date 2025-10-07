@@ -11,12 +11,14 @@ import (
 
 // Config represents the application configuration
 type Config struct {
-	Server    ServerConfig    `yaml:"server"`
-	Storage   StorageConfig   `yaml:"storage"`
-	Security  SecurityConfig  `yaml:"security"`
-	Caddy     CaddyConfig     `yaml:"caddy"`
-	Templates TemplatesConfig `yaml:"templates"`
-	Logging   LoggingConfig   `yaml:"logging"`
+	Server    ServerConfig      `yaml:"server"`
+	Storage   StorageConfig     `yaml:"storage"`
+	Security  SecurityConfig    `yaml:"security"`
+	Caddy     CaddyConfig       `yaml:"caddy"`
+	Templates TemplatesConfig   `yaml:"templates"`
+	Logging   LoggingConfig     `yaml:"logging"`
+	UI        UISettings        `yaml:"ui"`
+	Dashboard DashboardSettings `yaml:"dashboard"`
 }
 
 // ServerConfig represents server configuration
@@ -59,6 +61,23 @@ type LoggingConfig struct {
 	AuditEnabled bool   `yaml:"audit_enabled"`
 }
 
+// UISettings represents user interface settings
+type UISettings struct {
+	Theme                  string `yaml:"theme"`
+	Language               string `yaml:"language"`
+	DateFormat             string `yaml:"date_format"`
+	TimeFormat             string `yaml:"time_format"`
+	ShowRelativeTimestamps bool   `yaml:"show_relative_timestamps"`
+}
+
+// DashboardSettings represents dashboard preferences
+type DashboardSettings struct {
+	DefaultView            string `yaml:"default_view"`
+	RefreshInterval        int    `yaml:"refresh_interval"`
+	PauseRefreshOnInactive bool   `yaml:"pause_refresh_on_inactive"`
+	Density                string `yaml:"density"`
+}
+
 // LoadConfig loads configuration from a YAML file
 func LoadConfig(path string) (*Config, error) {
 	// Set defaults
@@ -90,6 +109,19 @@ func LoadConfig(path string) (*Config, error) {
 			Level:        "info",
 			Format:       "json",
 			AuditEnabled: true,
+		},
+		UI: UISettings{
+			Theme:                  "dark",
+			Language:               "en",
+			DateFormat:             "YYYY-MM-DD",
+			TimeFormat:             "24h",
+			ShowRelativeTimestamps: true,
+		},
+		Dashboard: DashboardSettings{
+			DefaultView:            "dashboard",
+			RefreshInterval:        30,
+			PauseRefreshOnInactive: true,
+			Density:                "comfortable",
 		},
 	}
 
@@ -124,4 +156,34 @@ func LoadConfig(path string) (*Config, error) {
 	}
 
 	return config, nil
+}
+
+// SaveConfig saves configuration to a YAML file
+func SaveConfig(cfg *Config, path string) error {
+	data, err := yaml.Marshal(cfg)
+	if err != nil {
+		return fmt.Errorf("failed to marshal config: %w", err)
+	}
+
+	// On Windows, direct overwrite works better than rename
+	// Write to a temporary file first
+	tmpPath := path + ".tmp"
+	if err := os.WriteFile(tmpPath, data, 0644); err != nil {
+		return fmt.Errorf("failed to write config file: %w", err)
+	}
+
+	// Try to rename (atomic on Unix/Linux)
+	err = os.Rename(tmpPath, path)
+	if err != nil {
+		// If rename fails (common on Windows), try direct write
+		// Remove the temp file first
+		os.Remove(tmpPath)
+
+		// Write directly to the target file
+		if err := os.WriteFile(path, data, 0644); err != nil {
+			return fmt.Errorf("failed to write config file: %w", err)
+		}
+	}
+
+	return nil
 }

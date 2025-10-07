@@ -17,7 +17,7 @@ export const WIPSection = ({ isWIP = false, children }: WIPSectionProps) => {
         {children}
       </div>
       
-      <div className="absolute inset-0 flex items-start justify-center bg-background/20 backdrop-blur-[2px]">
+      <div className="absolute inset-0 flex items-start justify-center bg-background/20 backdrop-blur-[2px] pt-8">
         <div className="flex flex-col items-center gap-3">
           <Construction className="w-12 h-12 text-muted-foreground" />
           <div className="text-lg font-medium text-muted-foreground">Work in Progress</div>

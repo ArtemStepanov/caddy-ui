@@ -1,6 +1,7 @@
 package api
 
 import (
+	"github.com/ArtemStepanov/caddy-orchestrator/config"
 	"github.com/ArtemStepanov/caddy-orchestrator/internal/api/handlers"
 	"github.com/ArtemStepanov/caddy-orchestrator/internal/api/middleware"
 	"github.com/ArtemStepanov/caddy-orchestrator/internal/caddy"
@@ -14,6 +15,8 @@ func SetupRoutes(
 	router *gin.Engine,
 	caddyManager *caddy.Manager,
 	templateManager *templates.Manager,
+	cfg *config.Config,
+	configPath string,
 	corsOrigins []string,
 ) {
 	// Create handlers
@@ -21,6 +24,7 @@ func SetupRoutes(
 	configHandler := handlers.NewConfigHandler(caddyManager)
 	templateHandler := handlers.NewTemplateHandler(templateManager)
 	bulkHandler := handlers.NewBulkHandler(caddyManager)
+	settingsHandler := handlers.NewSettingsHandler(cfg, configPath)
 
 	// Setup middleware
 	router.Use(middleware.RecoveryMiddleware())
@@ -76,6 +80,10 @@ func SetupRoutes(
 			bulk.POST("/config-update", bulkHandler.BulkConfigUpdate)
 			bulk.POST("/template-apply", bulkHandler.BulkTemplateApply)
 		}
+
+		// Settings management
+		api.GET("/settings", settingsHandler.GetSettings)
+		api.PUT("/settings", settingsHandler.UpdateSettings)
 
 		// Health check
 		api.GET("/health", func(c *gin.Context) {

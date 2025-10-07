@@ -3,6 +3,7 @@ import Editor, { OnMount } from '@monaco-editor/react';
 import { Loader2 } from 'lucide-react';
 import type * as Monaco from 'monaco-editor';
 import type { ConfigEditorProps } from '@/types';
+import { useSettings } from '@/hooks/useSettingsContext';
 
 export function ConfigEditor({
   value,
@@ -13,6 +14,11 @@ export function ConfigEditor({
 }: ConfigEditorProps) {
   const editorRef = useRef<Monaco.editor.IStandaloneCodeEditor | null>(null);
   const [isEditorReady, setIsEditorReady] = useState(false);
+  const { settings } = useSettings();
+  
+  const isDarkTheme = settings.appearance.theme === 'dark' || 
+    (settings.appearance.theme === 'auto' && 
+     window.matchMedia('(prefers-color-scheme: dark)').matches);
 
   const handleEditorDidMount: OnMount = (editor, monaco) => {
     editorRef.current = editor;
@@ -59,13 +65,13 @@ export function ConfigEditor({
   }, [language]);
 
   return (
-    <div className="relative w-full h-full min-h-[600px] border border-border rounded-lg overflow-hidden bg-[#1e1e1e]">
+    <div className="relative w-full h-full min-h-[600px] border border-border rounded-lg overflow-hidden bg-background">
       <Editor
         height="600px"
         defaultLanguage={language === 'caddyfile' ? 'plaintext' : language}
         language={language === 'caddyfile' ? 'plaintext' : language}
         value={value}
-        theme="vs-dark"
+        theme={isDarkTheme ? 'vs-dark' : 'light'}
         onChange={handleEditorChange}
         onMount={handleEditorDidMount}
         loading={
@@ -94,7 +100,7 @@ export function ConfigEditor({
         }}
       />
       {!isEditorReady && (
-        <div className="absolute inset-0 flex items-center justify-center bg-[#1e1e1e]">
+        <div className="absolute inset-0 flex items-center justify-center bg-background">
           <Loader2 className="w-8 h-8 animate-spin text-primary" />
         </div>
       )}
