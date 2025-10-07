@@ -6,13 +6,14 @@ import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { UpstreamDetailsDrawerProps } from "@/types";
 import { Activity, AlertCircle, CheckCircle, Code, Copy, XCircle } from "lucide-react";
-import { formatDistanceToNow } from "date-fns";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
+import { useDateFormat } from "@/hooks/useDateFormat";
 
 export function UpstreamDetailsDrawer({ upstream, instanceId, open, onClose, onTestHealth }: UpstreamDetailsDrawerProps) {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { formatLastSeen, showRelativeTimestamps, formatDateTime } = useDateFormat();
   
   if (!upstream) return null;
 
@@ -162,7 +163,7 @@ export function UpstreamDetailsDrawer({ upstream, instanceId, open, onClose, onT
                       <div className="flex items-center justify-between text-sm">
                         <span className="text-muted-foreground">Last Check</span>
                         <span className="font-medium">
-                          {formatDistanceToNow(new Date(upstream.last_check), { addSuffix: true })}
+                          {showRelativeTimestamps ? formatLastSeen(upstream.last_check) : formatDateTime(upstream.last_check)}
                         </span>
                       </div>
                     )}

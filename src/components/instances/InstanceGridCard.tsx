@@ -9,12 +9,14 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import type { InstanceGridCardProps } from "@/types";
-import { getStatusConfig, mapInstanceStatus, formatLastSeen } from "@/lib/instance-utils";
+import { getStatusConfig, mapInstanceStatus } from "@/lib/instance-utils";
 import { cn } from "@/lib/utils";
+import { useDateFormat } from "@/hooks/useDateFormat";
 
 export function InstanceGridCard({ instance, onEdit, onDelete, onTest }: InstanceGridCardProps) {
   const status = mapInstanceStatus(instance.status);
   const statusConfig = getStatusConfig(status);
+  const { formatLastSeen } = useDateFormat();
 
   return (
     <Card className="bg-card/50 backdrop-blur border-border hover:border-primary/50 transition-all hover:shadow-lg group">

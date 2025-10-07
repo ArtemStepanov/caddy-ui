@@ -3,6 +3,7 @@
  */
 
 import type { CaddyInstance, InstanceStatus, StatusConfig, InstanceStats } from '@/types';
+import { formatLastSeen as formatLastSeenUtil } from '@/lib/date-utils';
 
 /**
  * Map backend status to UI status
@@ -56,25 +57,10 @@ export function getStatusConfig(status: InstanceStatus): StatusConfig {
 
 /**
  * Format last seen time in human-readable format
+ * @deprecated Use useDateFormat hook for component-level formatting
  */
 export function formatLastSeen(lastSeen?: string | Date): string {
-  if (!lastSeen) return 'Never';
-  
-  const date = typeof lastSeen === 'string' ? new Date(lastSeen) : lastSeen;
-  const now = new Date();
-  const diffMs = now.getTime() - date.getTime();
-  const diffSecs = Math.floor(diffMs / 1000);
-  const diffMins = Math.floor(diffSecs / 60);
-  const diffHours = Math.floor(diffMins / 60);
-  const diffDays = Math.floor(diffHours / 24);
-  
-  if (diffSecs < 30) return 'Just now';
-  if (diffSecs < 60) return `${diffSecs} seconds ago`;
-  if (diffMins < 60) return `${diffMins} minute${diffMins > 1 ? 's' : ''} ago`;
-  if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
-  if (diffDays < 7) return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
-  
-  return date.toLocaleDateString();
+  return formatLastSeenUtil(lastSeen);
 }
 
 /**
