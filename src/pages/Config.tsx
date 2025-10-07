@@ -29,9 +29,10 @@ import {
   UnsavedChangesDialog,
 } from '@/components/config';
 import { InstanceSelector } from '@/components/instances';
-import { formatDistanceToNow } from 'date-fns';
+import { useDateFormat } from '@/hooks/useDateFormat';
 
 const Config = () => {
+  const { formatRelativeTime } = useDateFormat();
   const [searchParams, setSearchParams] = useSearchParams();
   const { instances, loading: instancesLoading } = useInstances();
   const [selectedInstanceId, setSelectedInstanceId] = useState<string>('');
@@ -425,7 +426,7 @@ const Config = () => {
             <div className="mt-4 flex justify-between items-center">
               <p className="text-sm text-muted-foreground">
                 Last updated:{' '}
-                {lastUpdated ? formatDistanceToNow(lastUpdated, { addSuffix: true }) : 'Never'}
+                {lastUpdated ? formatRelativeTime(lastUpdated) : 'Never'}
               </p>
               <div className="flex gap-2">
                 <Button variant="outline" size="sm" onClick={handleValidate} disabled={loading}>

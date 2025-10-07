@@ -5,9 +5,10 @@ import { Progress } from "@/components/ui/progress";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import type { UpstreamCardProps } from "@/types";
 import { Activity, AlertCircle, CheckCircle, Clock, XCircle } from "lucide-react";
-import { formatDistanceToNow } from "date-fns";
+import { useDateFormat } from "@/hooks/useDateFormat";
 
 export function UpstreamCard({ upstream, poolName, onViewDetails, onTestHealth }: UpstreamCardProps) {
+  const { formatLastSeen, showRelativeTimestamps, formatDateTime } = useDateFormat();
   const status = upstream.status || 'unknown';
   const responseTime = upstream.response_time || 0;
   const maxFails = upstream.health_checks?.passive?.max_fails || 100;
@@ -161,7 +162,7 @@ export function UpstreamCard({ upstream, poolName, onViewDetails, onTestHealth }
           <div className="flex items-center justify-between text-xs text-muted-foreground pt-1">
             <span>Last Check</span>
             <span className="font-medium">
-              {formatDistanceToNow(new Date(upstream.last_check), { addSuffix: true })}
+              {showRelativeTimestamps ? formatLastSeen(upstream.last_check) : formatDateTime(upstream.last_check)}
             </span>
           </div>
         )}

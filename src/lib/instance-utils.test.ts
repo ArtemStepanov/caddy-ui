@@ -89,7 +89,7 @@ describe('formatLastSeen', () => {
 
   it('should format date for older times', () => {
     const date = new Date(Date.now() - 604800000);
-    expect(formatLastSeen(date)).toMatch(/\d{1,2}\/\d{1,2}\/\d{4}/);
+    expect(formatLastSeen(date)).toMatch(/\d{4}-\d{2}-\d{2}/);
   });
 
   it('should handle string dates', () => {

@@ -17,8 +17,9 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import type { InstanceTableViewProps } from "@/types";
-import { getStatusConfig, mapInstanceStatus, formatLastSeen } from "@/lib/instance-utils";
+import { getStatusConfig, mapInstanceStatus } from "@/lib/instance-utils";
 import { cn } from "@/lib/utils";
+import { useDateFormat } from "@/hooks/useDateFormat";
 
 export function InstanceTableView({
   instances,
@@ -33,6 +34,7 @@ export function InstanceTableView({
 }: InstanceTableViewProps) {
   const allSelected = instances.length > 0 && selectedIds.length === instances.length;
   const someSelected = selectedIds.length > 0 && !allSelected;
+  const { formatLastSeen } = useDateFormat();
 
   const SortButton = ({ field, children }: { field: string; children: React.ReactNode }) => (
     <Button

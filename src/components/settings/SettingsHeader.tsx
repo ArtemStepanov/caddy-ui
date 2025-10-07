@@ -7,6 +7,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Badge } from '@/components/ui/badge';
+import { useDateFormat } from '@/hooks/useDateFormat';
 
 interface SettingsHeaderProps {
   onExport: () => void;
@@ -16,17 +17,18 @@ interface SettingsHeaderProps {
 }
 
 export const SettingsHeader = ({ onExport, onReset, isSaving, lastSaved }: SettingsHeaderProps) => {
+  const { formatShortRelativeTime, formatTime } = useDateFormat();
+  
   const formatLastSaved = (date: Date | null | undefined) => {
     if (!date) return null;
     const now = new Date();
     const diffMs = now.getTime() - date.getTime();
-    const diffSecs = Math.floor(diffMs / 1000);
-    const diffMins = Math.floor(diffSecs / 60);
+    const diffMins = Math.floor(diffMs / 60000);
     
-    if (diffSecs < 10) return 'just now';
-    if (diffSecs < 60) return `${diffSecs}s ago`;
-    if (diffMins < 60) return `${diffMins}m ago`;
-    return date.toLocaleTimeString();
+    if (diffMins < 60) {
+      return formatShortRelativeTime(date);
+    }
+    return formatTime(date);
   };
   return (
     <div className="flex items-start justify-between mb-8">
