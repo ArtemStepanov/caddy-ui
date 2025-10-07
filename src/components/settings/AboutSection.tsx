@@ -12,8 +12,10 @@ import {
   Star,
   Coffee,
 } from 'lucide-react';
+import { useDateFormat } from '@/hooks/useDateFormat';
 
 export const AboutSection = () => {
+  const { formatDate } = useDateFormat();
   const version = '1.2.3';
   const buildDate = '2025-10-01';
   const commitHash = 'abc123d';
@@ -42,7 +44,7 @@ export const AboutSection = () => {
             </div>
             <div className="flex items-center justify-between">
               <span className="text-sm font-medium">Build Date</span>
-              <span className="text-sm text-muted-foreground">{buildDate}</span>
+              <span className="text-sm text-muted-foreground">{formatDate(buildDate)}</span>
             </div>
             <div className="flex items-center justify-between">
               <span className="text-sm font-medium">Commit Hash</span>

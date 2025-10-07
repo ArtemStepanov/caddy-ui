@@ -10,8 +10,10 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { useDateFormat } from "@/hooks/useDateFormat";
 
 const Certificates = () => {
+  const { formatDate } = useDateFormat();
   const certificates = [
     {
       id: "1",
@@ -156,7 +158,7 @@ const Certificates = () => {
                       <TableCell>{cert.issuer}</TableCell>
                       <TableCell>
                         <div className="flex flex-col">
-                          <span>{cert.expires}</span>
+                          <span>{formatDate(cert.expires)}</span>
                           <span className="text-xs text-muted-foreground">
                             {cert.daysLeft > 0
                               ? `${cert.daysLeft} days left`
