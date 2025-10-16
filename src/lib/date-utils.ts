@@ -10,9 +10,9 @@ export function formatDate(
   
   if (isNaN(d.getTime())) return '';
   
-  const year = d.getFullYear();
-  const month = String(d.getMonth() + 1).padStart(2, '0');
-  const day = String(d.getDate()).padStart(2, '0');
+  const year = d.getUTCFullYear();
+  const month = String(d.getUTCMonth() + 1).padStart(2, '0');
+  const day = String(d.getUTCDate()).padStart(2, '0');
   
   switch (format) {
     case 'YYYY-MM-DD':
@@ -36,9 +36,9 @@ export function formatTime(
   
   if (isNaN(d.getTime())) return '';
   
-  const hours = d.getHours();
-  const minutes = String(d.getMinutes()).padStart(2, '0');
-  const seconds = String(d.getSeconds()).padStart(2, '0');
+  const hours = d.getUTCHours();
+  const minutes = String(d.getUTCMinutes()).padStart(2, '0');
+  const seconds = String(d.getUTCSeconds()).padStart(2, '0');
   
   if (format === '24h') {
     return `${String(hours).padStart(2, '0')}:${minutes}:${seconds}`;

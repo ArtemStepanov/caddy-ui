@@ -16,6 +16,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useInstances } from "@/hooks/useInstances";
+import { useAutoRefresh } from "@/hooks/useAutoRefresh";
 import {
   calculateStats,
   filterInstancesBySearch,
@@ -32,7 +33,13 @@ import { EmptyState } from "@/components/instances/EmptyState";
 import type { CaddyInstance, ViewMode, FilterStatus, SortField, SortOrder } from "@/types";
 
 const Instances = () => {
-  const { instances, loading, createInstance, updateInstance, deleteInstance, testConnection } = useInstances();
+  const { instances, loading, createInstance, updateInstance, deleteInstance, testConnection, fetchInstances } = useInstances();
+  
+  // Auto-refresh based on settings
+  useAutoRefresh({
+    onRefresh: fetchInstances,
+    enabled: true,
+  });
   
   // View state
   const [viewMode, setViewMode] = useState<ViewMode>('grid');

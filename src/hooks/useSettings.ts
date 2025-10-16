@@ -13,7 +13,6 @@ const DEFAULT_SETTINGS: Settings = {
     showRelativeTimestamps: true,
   },
   dashboard: {
-    defaultView: 'dashboard',
     refreshInterval: 30,
   },
   orchestrator: {
@@ -113,7 +112,6 @@ export const useSettings = () => {
               showRelativeTimestamps: response.data.appearance.showRelativeTimestamps,
             },
             dashboard: {
-              defaultView: response.data.dashboard.defaultView as Settings['dashboard']['defaultView'],
               refreshInterval: response.data.dashboard.refreshInterval,
             },
           };
@@ -150,7 +148,6 @@ export const useSettings = () => {
           showRelativeTimestamps: settingsToSave.appearance.showRelativeTimestamps,
         },
         dashboard: {
-          defaultView: settingsToSave.dashboard.defaultView,
           refreshInterval: settingsToSave.dashboard.refreshInterval,
         },
       });

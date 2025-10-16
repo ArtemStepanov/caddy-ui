@@ -30,6 +30,5 @@ ui:
     time_format: 24h
     show_relative_timestamps: true
 dashboard:
-    default_view: dashboard
     refresh_interval: 60
 

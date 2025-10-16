@@ -33,7 +33,6 @@ describe('useSettings', () => {
       expect(result.current.isLoading).toBe(false);
     });
 
-    expect(result.current.settings.dashboard.defaultView).toBe('dashboard');
     expect(result.current.settings.dashboard.refreshInterval).toBe(30);
   });
 
@@ -74,7 +73,6 @@ describe('useSettings', () => {
             showRelativeTimestamps: false,
           },
           dashboard: {
-            defaultView: 'instances',
             refreshInterval: 60,
           },
         },
@@ -88,7 +86,6 @@ describe('useSettings', () => {
         expect(result.current.isLoading).toBe(false);
       });
 
-      expect(result.current.settings.dashboard.defaultView).toBe('instances');
       expect(result.current.settings.dashboard.refreshInterval).toBe(60);
     });
 
@@ -104,7 +101,6 @@ describe('useSettings', () => {
             showRelativeTimestamps: true,
           },
           dashboard: {
-            defaultView: 'last-visited',
             refreshInterval: 120,
           },
         },
@@ -119,7 +115,6 @@ describe('useSettings', () => {
       });
 
       expect(result.current.settings.dashboard).toEqual({
-        defaultView: 'last-visited',
         refreshInterval: 120,
       });
     });
@@ -135,7 +130,6 @@ describe('useSettings', () => {
           showRelativeTimestamps: true,
         },
         dashboard: {
-          defaultView: 'instances',
           refreshInterval: 90,
         },
         orchestrator: {
@@ -213,59 +207,11 @@ describe('useSettings', () => {
         expect(result.current.isLoading).toBe(false);
       });
 
-      expect(result.current.settings.dashboard.defaultView).toBe('instances');
       expect(result.current.settings.dashboard.refreshInterval).toBe(90);
     });
   });
 
   describe('Update Dashboard Settings', () => {
-    it('should update defaultView setting', async () => {
-      const mockGetResponse = {
-        success: true,
-        data: {
-          appearance: {
-            theme: 'dark',
-            language: 'en',
-            dateFormat: 'YYYY-MM-DD',
-            timeFormat: '24h',
-            showRelativeTimestamps: true,
-          },
-          dashboard: {
-            defaultView: 'dashboard',
-            refreshInterval: 30,
-          },
-        },
-      };
-
-      const mockUpdateResponse = {
-        success: true,
-        data: mockGetResponse.data,
-      };
-
-      vi.mocked(apiClient.getSettings).mockResolvedValue(mockGetResponse);
-      vi.mocked(apiClient.updateSettings).mockResolvedValue(mockUpdateResponse);
-
-      const { result } = renderHook(() => useSettings());
-
-      await waitFor(() => {
-        expect(result.current.isLoading).toBe(false);
-      });
-
-      result.current.updateSettings('dashboard', { defaultView: 'instances' });
-
-      await waitFor(() => {
-        expect(result.current.settings.dashboard.defaultView).toBe('instances');
-      });
-
-      expect(apiClient.updateSettings).toHaveBeenCalledWith({
-        appearance: expect.any(Object),
-        dashboard: {
-          defaultView: 'instances',
-          refreshInterval: 30,
-        },
-      });
-    });
-
     it('should update refreshInterval setting', async () => {
       const mockGetResponse = {
         success: true,
@@ -278,7 +224,6 @@ describe('useSettings', () => {
             showRelativeTimestamps: true,
           },
           dashboard: {
-            defaultView: 'dashboard',
             refreshInterval: 30,
           },
         },
@@ -307,7 +252,6 @@ describe('useSettings', () => {
       expect(apiClient.updateSettings).toHaveBeenCalledWith({
         appearance: expect.any(Object),
         dashboard: {
-          defaultView: 'dashboard',
           refreshInterval: 120,
         },
       });
@@ -325,7 +269,6 @@ describe('useSettings', () => {
             showRelativeTimestamps: true,
           },
           dashboard: {
-            defaultView: 'dashboard',
             refreshInterval: 30,
           },
         },
@@ -345,7 +288,7 @@ describe('useSettings', () => {
         expect(result.current.isLoading).toBe(false);
       });
 
-      result.current.updateSettings('dashboard', { defaultView: 'instances' });
+      result.current.updateSettings('dashboard', { refreshInterval: 60 });
 
       await waitFor(() => {
         expect(apiClient.updateSettings).toHaveBeenCalled();
@@ -368,7 +311,6 @@ describe('useSettings', () => {
             showRelativeTimestamps: true,
           },
           dashboard: {
-            defaultView: 'dashboard',
             refreshInterval: 30,
           },
         },
@@ -414,7 +356,6 @@ describe('useSettings', () => {
             showRelativeTimestamps: true,
           },
           dashboard: {
-            defaultView: 'dashboard',
             refreshInterval: 30,
           },
         },
@@ -429,19 +370,17 @@ describe('useSettings', () => {
         expect(result.current.isLoading).toBe(false);
       });
 
-      result.current.updateSettings('dashboard', { defaultView: 'instances', refreshInterval: 120 });
+      result.current.updateSettings('dashboard', { refreshInterval: 120 });
 
       await waitFor(() => {
-        expect(result.current.settings.dashboard.defaultView).toBe('instances');
+        expect(result.current.settings.dashboard.refreshInterval).toBe(120);
       });
 
       result.current.resetSettings();
 
       await waitFor(() => {
-        expect(result.current.settings.dashboard.defaultView).toBe('dashboard');
+        expect(result.current.settings.dashboard.refreshInterval).toBe(30);
       });
-      
-      expect(result.current.settings.dashboard.refreshInterval).toBe(30);
     });
 
     it('should clear localStorage on reset', async () => {

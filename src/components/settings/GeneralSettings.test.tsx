@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { GeneralSettings } from './GeneralSettings';
 import type { AppearanceSettings, DashboardPreferences } from '@/types';
@@ -14,7 +14,6 @@ describe('GeneralSettings', () => {
   };
 
   const mockDashboard: DashboardPreferences = {
-    defaultView: 'dashboard',
     refreshInterval: 30,
   };
 
@@ -48,80 +47,6 @@ describe('GeneralSettings', () => {
         />
       );
       expect(screen.getByText('Dashboard Preferences')).toBeInTheDocument();
-    });
-
-    describe('Default View', () => {
-      it('should display default view radio options', () => {
-        render(
-          <GeneralSettings
-            appearance={mockAppearance}
-            dashboard={mockDashboard}
-            onAppearanceChange={mockOnAppearanceChange}
-            onDashboardChange={mockOnDashboardChange}
-          />
-        );
-        expect(screen.getByLabelText('Dashboard (overview)')).toBeInTheDocument();
-        expect(screen.getByLabelText('Instances (list)')).toBeInTheDocument();
-        expect(screen.getByLabelText('Last visited page')).toBeInTheDocument();
-      });
-
-      it('should have dashboard selected by default', () => {
-        render(
-          <GeneralSettings
-            appearance={mockAppearance}
-            dashboard={mockDashboard}
-            onAppearanceChange={mockOnAppearanceChange}
-            onDashboardChange={mockOnDashboardChange}
-          />
-        );
-        const dashboardRadio = screen.getByRole('radio', { name: /dashboard \(overview\)/i });
-        expect(dashboardRadio).toBeChecked();
-      });
-
-      it('should call onDashboardChange when default view is changed to instances', () => {
-        render(
-          <GeneralSettings
-            appearance={mockAppearance}
-            dashboard={mockDashboard}
-            onAppearanceChange={mockOnAppearanceChange}
-            onDashboardChange={mockOnDashboardChange}
-          />
-        );
-        const instancesRadio = screen.getByRole('radio', { name: /instances \(list\)/i });
-        fireEvent.click(instancesRadio);
-        expect(mockOnDashboardChange).toHaveBeenCalledWith({ defaultView: 'instances' });
-      });
-
-      it('should call onDashboardChange when default view is changed to last-visited', () => {
-        render(
-          <GeneralSettings
-            appearance={mockAppearance}
-            dashboard={mockDashboard}
-            onAppearanceChange={mockOnAppearanceChange}
-            onDashboardChange={mockOnDashboardChange}
-          />
-        );
-        const lastVisitedRadio = screen.getByRole('radio', { name: /last visited page/i });
-        fireEvent.click(lastVisitedRadio);
-        expect(mockOnDashboardChange).toHaveBeenCalledWith({ defaultView: 'last-visited' });
-      });
-
-      it('should reflect selected default view from props', () => {
-        const dashboardWithInstances: DashboardPreferences = {
-          ...mockDashboard,
-          defaultView: 'instances',
-        };
-        render(
-          <GeneralSettings
-            appearance={mockAppearance}
-            dashboard={dashboardWithInstances}
-            onAppearanceChange={mockOnAppearanceChange}
-            onDashboardChange={mockOnDashboardChange}
-          />
-        );
-        const instancesRadio = screen.getByRole('radio', { name: /instances \(list\)/i });
-        expect(instancesRadio).toBeChecked();
-      });
     });
 
     describe('Refresh Interval', () => {

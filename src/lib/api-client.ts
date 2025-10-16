@@ -223,7 +223,6 @@ class APIClient {
       showRelativeTimestamps: boolean;
     };
     dashboard: {
-      defaultView: string;
       refreshInterval: number;
     };
   }>> {
@@ -239,7 +238,6 @@ class APIClient {
       showRelativeTimestamps: boolean;
     }>;
     dashboard?: Partial<{
-      defaultView: string;
       refreshInterval: number;
     }>;
   }): Promise<APIResponse<{
@@ -251,7 +249,6 @@ class APIClient {
       showRelativeTimestamps: boolean;
     };
     dashboard: {
-      defaultView: string;
       refreshInterval: number;
     };
   }>> {

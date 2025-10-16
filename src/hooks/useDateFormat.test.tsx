@@ -1,9 +1,10 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { renderHook } from '@testing-library/react';
 import type { ReactNode } from 'react';
 import { useDateFormat } from './useDateFormat';
 import { SettingsContext } from '@/contexts/SettingsContext';
-import type { Settings, SettingsContextType } from '@/types';
+import type { SettingsContextType } from '@/contexts/SettingsContext';
+import type { Settings } from '@/types';
 
 const mockSettings: Settings = {
   appearance: {
@@ -15,7 +16,6 @@ const mockSettings: Settings = {
     showRelativeTimestamps: true,
   },
   dashboard: {
-    defaultView: 'dashboard',
     refreshInterval: 30,
   },
   orchestrator: {

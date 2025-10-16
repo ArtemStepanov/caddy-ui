@@ -72,8 +72,7 @@ type UISettings struct {
 
 // DashboardSettings represents dashboard preferences
 type DashboardSettings struct {
-	DefaultView     string `yaml:"default_view"`
-	RefreshInterval int    `yaml:"refresh_interval"`
+	RefreshInterval int `yaml:"refresh_interval"`
 }
 
 // LoadConfig loads configuration from a YAML file
@@ -116,7 +115,6 @@ func LoadConfig(path string) (*Config, error) {
 			ShowRelativeTimestamps: true,
 		},
 		Dashboard: DashboardSettings{
-			DefaultView:     "dashboard",
 			RefreshInterval: 30,
 		},
 	}

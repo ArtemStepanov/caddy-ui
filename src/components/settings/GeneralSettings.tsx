@@ -175,36 +175,6 @@ export const GeneralSettings = ({
           <CardDescription>Customize your dashboard experience</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-          {/* Default View */}
-          <div className="space-y-3">
-            <Label>Default View</Label>
-            <RadioGroup
-              value={dashboard.defaultView}
-              onValueChange={(value) =>
-                onDashboardChange({ defaultView: value as DashboardPreferences['defaultView'] })
-              }
-            >
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="dashboard" id="view-dashboard" />
-                <Label htmlFor="view-dashboard" className="font-normal cursor-pointer">
-                  Dashboard (overview)
-                </Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="instances" id="view-instances" />
-                <Label htmlFor="view-instances" className="font-normal cursor-pointer">
-                  Instances (list)
-                </Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="last-visited" id="view-last" />
-                <Label htmlFor="view-last" className="font-normal cursor-pointer">
-                  Last visited page
-                </Label>
-              </div>
-            </RadioGroup>
-          </div>
-
           {/* Refresh Interval */}
           <div className="space-y-3">
             <div className="flex items-center justify-between">
