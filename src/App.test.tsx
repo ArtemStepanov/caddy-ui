@@ -1,17 +1,46 @@
-import { describe, it, expect } from 'vitest';
-import { render } from '@testing-library/react';
+import { describe, it, expect, vi } from 'vitest';
+import { render, screen, waitFor } from '@testing-library/react';
 import App from './App';
 
-describe('App', () => {
-  it('should render without crashing', () => {
-    const { container } = render(<App />);
-    expect(container).toBeInTheDocument();
-  });
+// Mock the settings API
+vi.mock('@/lib/api-client', () => ({
+  getSettings: vi.fn().mockResolvedValue({
+    appearance: { theme: 'system' },
+    display: {
+      dateFormat: 'YYYY-MM-DD',
+      timeFormat: '24h',
+      defaultView: 'dashboard',
+      itemsPerPage: 25,
+    },
+    notifications: {
+      enabled: true,
+      instanceDown: true,
+      certificateExpiry: true,
+      configChanges: true,
+    },
+    autoRefresh: {
+      enabled: false,
+      interval: 30,
+    },
+  }),
+  updateSettings: vi.fn().mockResolvedValue({}),
+}));
 
-  it('should render main layout elements', () => {
+describe('App', () => {
+  it('should render without crashing', async () => {
     const { container } = render(<App />);
     
-    const main = container.querySelector('main');
-    expect(main).toBeInTheDocument();
+    await waitFor(() => {
+      expect(container).toBeInTheDocument();
+    });
+  });
+
+  it('should render main layout elements', async () => {
+    render(<App />);
+    
+    await waitFor(() => {
+      const main = screen.queryByRole('main');
+      expect(main).toBeInTheDocument();
+    });
   });
 });

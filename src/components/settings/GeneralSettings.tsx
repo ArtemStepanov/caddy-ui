@@ -175,36 +175,6 @@ export const GeneralSettings = ({
           <CardDescription>Customize your dashboard experience</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-          {/* Default View */}
-          <div className="space-y-3">
-            <Label>Default View</Label>
-            <RadioGroup
-              value={dashboard.defaultView}
-              onValueChange={(value) =>
-                onDashboardChange({ defaultView: value as DashboardPreferences['defaultView'] })
-              }
-            >
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="dashboard" id="view-dashboard" />
-                <Label htmlFor="view-dashboard" className="font-normal cursor-pointer">
-                  Dashboard (overview)
-                </Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="instances" id="view-instances" />
-                <Label htmlFor="view-instances" className="font-normal cursor-pointer">
-                  Instances (list)
-                </Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="last-visited" id="view-last" />
-                <Label htmlFor="view-last" className="font-normal cursor-pointer">
-                  Last visited page
-                </Label>
-              </div>
-            </RadioGroup>
-          </div>
-
           {/* Refresh Interval */}
           <div className="space-y-3">
             <div className="flex items-center justify-between">
@@ -225,71 +195,6 @@ export const GeneralSettings = ({
             <p className="text-sm text-muted-foreground">
               How often to refresh data (10s - 5min)
             </p>
-          </div>
-
-          {/* Pause on Inactive */}
-          <div className="flex items-center justify-between">
-            <div className="space-y-0.5">
-              <Label>Pause refresh when tab is inactive</Label>
-              <p className="text-sm text-muted-foreground">
-                Save resources when not actively viewing
-              </p>
-            </div>
-            <Switch
-              checked={dashboard.pauseRefreshOnInactive}
-              onCheckedChange={(checked) =>
-                onDashboardChange({ pauseRefreshOnInactive: checked })
-              }
-            />
-          </div>
-
-          {/* Density */}
-          <div className="space-y-3">
-            <Label>Display Density</Label>
-            <RadioGroup
-              value={dashboard.density}
-              onValueChange={(value) =>
-                onDashboardChange({ density: value as DashboardPreferences['density'] })
-              }
-              className="grid grid-cols-3 gap-4"
-            >
-              <div>
-                <RadioGroupItem value="compact" id="density-compact" className="peer sr-only" />
-                <Label
-                  htmlFor="density-compact"
-                  className="flex flex-col items-start rounded-lg border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary cursor-pointer"
-                >
-                  <span className="text-sm font-medium mb-1">Compact</span>
-                  <span className="text-xs text-muted-foreground">
-                    More data, less space
-                  </span>
-                </Label>
-              </div>
-              <div>
-                <RadioGroupItem
-                  value="comfortable"
-                  id="density-comfortable"
-                  className="peer sr-only"
-                />
-                <Label
-                  htmlFor="density-comfortable"
-                  className="flex flex-col items-start rounded-lg border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary cursor-pointer"
-                >
-                  <span className="text-sm font-medium mb-1">Comfortable</span>
-                  <span className="text-xs text-muted-foreground">Balanced</span>
-                </Label>
-              </div>
-              <div>
-                <RadioGroupItem value="spacious" id="density-spacious" className="peer sr-only" />
-                <Label
-                  htmlFor="density-spacious"
-                  className="flex flex-col items-start rounded-lg border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary cursor-pointer"
-                >
-                  <span className="text-sm font-medium mb-1">Spacious</span>
-                  <span className="text-xs text-muted-foreground">Easier to read</span>
-                </Label>
-              </div>
-            </RadioGroup>
           </div>
         </CardContent>
       </Card>

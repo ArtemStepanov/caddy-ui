@@ -1,8 +1,6 @@
 export type ThemeMode = 'light' | 'dark' | 'auto';
 export type DateFormat = 'YYYY-MM-DD' | 'DD/MM/YYYY' | 'MM/DD/YYYY';
 export type TimeFormat = '24h' | '12h';
-export type DensityMode = 'compact' | 'comfortable' | 'spacious';
-export type DefaultView = 'dashboard' | 'instances' | 'last-visited';
 export type PollingStrategy = 'websocket' | 'http-polling';
 export type CacheStrategy = 'aggressive' | 'balanced' | 'minimal';
 export type ConfigFormat = 'json' | 'caddyfile';
@@ -19,10 +17,7 @@ export interface AppearanceSettings {
 }
 
 export interface DashboardPreferences {
-  defaultView: DefaultView;
   refreshInterval: number;
-  pauseRefreshOnInactive: boolean;
-  density: DensityMode;
 }
 
 export interface OrchestratorSettings {

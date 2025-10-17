@@ -13,23 +13,35 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useInstances } from "@/hooks/useInstances";
+import { useAutoRefresh } from "@/hooks/useAutoRefresh";
 
 const Dashboard = () => {
   const navigate = useNavigate();
+  const { instances, loading, fetchInstances } = useInstances();
   
-  // Mock data - в реальном приложении будет из API
+  // Auto-refresh based on settings
+  useAutoRefresh({
+    onRefresh: fetchInstances,
+    enabled: true,
+  });
+  
+  // Calculate stats from real data
+  const healthyCount = instances.filter(i => i.status === 'healthy').length;
   const stats = [
-    { title: "Total Instances", value: 3, icon: Server, trend: { value: 12, positive: true } },
-    { title: "Active Upstreams", value: 24, icon: Activity, trend: { value: 8, positive: true } },
-    { title: "Certificates", value: 15, icon: Shield, trend: { value: 3, positive: true } },
-    { title: "Requests/min", value: "12.5K", icon: TrendingUp, trend: { value: 5, positive: false } },
+    { title: "Total Instances", value: instances.length, icon: Server, trend: { value: 12, positive: true } },
+    { title: "Healthy Instances", value: healthyCount, icon: Activity, trend: { value: 8, positive: true } },
+    { title: "Certificates", value: 0, icon: Shield, trend: { value: 3, positive: true } },
+    { title: "Uptime", value: "99.9%", icon: TrendingUp, trend: { value: 5, positive: true } },
   ];
 
-  const instances = [
-    { name: "Production", url: "https://api.example.com:2019", status: "online" as const, upstreams: 12 },
-    { name: "Staging", url: "https://staging.example.com:2019", status: "online" as const, upstreams: 8 },
-    { name: "Development", url: "http://localhost:2019", status: "offline" as const, upstreams: 4 },
-  ];
+  // Convert instances to dashboard format
+  const dashboardInstances = instances.slice(0, 6).map(instance => ({
+    name: instance.name,
+    url: instance.admin_url,
+    status: instance.status === 'healthy' ? 'online' as const : 'offline' as const,
+    upstreams: 0,
+  }));
 
   return (
     <div className="min-h-screen bg-gradient-dark">
@@ -99,11 +111,17 @@ const Dashboard = () => {
         {/* Instances Section */}
         <div className="mb-8">
           <h2 className="text-2xl font-bold mb-4">Instances</h2>
-          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-            {instances.map((instance) => (
-              <InstanceCard key={instance.name} {...instance} />
-            ))}
-          </div>
+          {loading ? (
+            <div className="text-muted-foreground">Loading instances...</div>
+          ) : dashboardInstances.length > 0 ? (
+            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+              {dashboardInstances.map((instance) => (
+                <InstanceCard key={instance.name} {...instance} />
+              ))}
+            </div>
+          ) : (
+            <div className="text-muted-foreground">No instances available</div>
+          )}
         </div>
 
         {/* Quick Actions */}

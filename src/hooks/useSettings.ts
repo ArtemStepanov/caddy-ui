@@ -13,10 +13,7 @@ const DEFAULT_SETTINGS: Settings = {
     showRelativeTimestamps: true,
   },
   dashboard: {
-    defaultView: 'dashboard',
     refreshInterval: 30,
-    pauseRefreshOnInactive: true,
-    density: 'comfortable',
   },
   orchestrator: {
     backendUrl: 'http://localhost:3000',
@@ -115,10 +112,7 @@ export const useSettings = () => {
               showRelativeTimestamps: response.data.appearance.showRelativeTimestamps,
             },
             dashboard: {
-              defaultView: response.data.dashboard.defaultView as Settings['dashboard']['defaultView'],
               refreshInterval: response.data.dashboard.refreshInterval,
-              pauseRefreshOnInactive: response.data.dashboard.pauseRefreshOnInactive,
-              density: response.data.dashboard.density as Settings['dashboard']['density'],
             },
           };
           setSettings(backendSettings);
@@ -154,10 +148,7 @@ export const useSettings = () => {
           showRelativeTimestamps: settingsToSave.appearance.showRelativeTimestamps,
         },
         dashboard: {
-          defaultView: settingsToSave.dashboard.defaultView,
           refreshInterval: settingsToSave.dashboard.refreshInterval,
-          pauseRefreshOnInactive: settingsToSave.dashboard.pauseRefreshOnInactive,
-          density: settingsToSave.dashboard.density,
         },
       });
 

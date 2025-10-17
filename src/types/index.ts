@@ -112,8 +112,6 @@ export type {
   ThemeMode,
   DateFormat,
   TimeFormat,
-  DensityMode,
-  DefaultView,
   PollingStrategy,
   CacheStrategy,
   ConfigFormat,
