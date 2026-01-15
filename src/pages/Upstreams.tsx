@@ -274,7 +274,7 @@ const Upstreams = () => {
         {/* Stats Cards */}
         {selectedInstanceId && hasUpstreams && (
           <>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
               <StatsCard
                 title="Total Upstreams"
                 value={stats.total_upstreams}
@@ -294,6 +294,13 @@ const Upstreams = () => {
                 icon={<XCircle className="w-8 h-8 text-red-500" />}
                 subtitle={`${Math.round((stats.unhealthy / stats.total_upstreams) * 100)}%`}
                 valueColor="text-red-500"
+              />
+              <StatsCard
+                title="Active Requests"
+                value={(upstreamsData as { total_requests_in_flight?: number })?.total_requests_in_flight ?? 0}
+                icon={<Activity className="w-8 h-8 text-purple-500" />}
+                subtitle={(upstreamsData as { metrics_available?: boolean })?.metrics_available ? 'from metrics' : 'no metrics'}
+                valueColor="text-purple-500"
               />
               <StatsCard
                 title="Avg Response Time"

@@ -27,7 +27,8 @@ const Dashboard = () => {
   });
   
   // Calculate stats from real data
-  const healthyCount = instances.filter(i => i.status === 'healthy').length;
+  // Backend returns 'online'/'offline'/'unknown'/'error' status values
+  const healthyCount = instances.filter(i => i.status === 'online').length;
   const stats = [
     { title: "Total Instances", value: instances.length, icon: Server, trend: { value: 12, positive: true } },
     { title: "Healthy Instances", value: healthyCount, icon: Activity, trend: { value: 8, positive: true } },
@@ -36,10 +37,11 @@ const Dashboard = () => {
   ];
 
   // Convert instances to dashboard format
+  // Backend status 'online' maps to UI status 'online', all others are 'offline'
   const dashboardInstances = instances.slice(0, 6).map(instance => ({
     name: instance.name,
     url: instance.admin_url,
-    status: instance.status === 'healthy' ? 'online' as const : 'offline' as const,
+    status: instance.status === 'online' ? 'online' as const : 'offline' as const,
     upstreams: 0,
   }));
 
@@ -50,51 +52,6 @@ const Dashboard = () => {
         <div className="mb-8">
           <div className="flex items-center justify-between mb-2">
             <h1 className="text-4xl font-bold">Dashboard</h1>
-            <Dialog>
-              <DialogTrigger asChild>
-                <Button className="bg-gradient-primary hover:shadow-glow transition-all">
-                  Add Instance
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="bg-card border-border">
-                <DialogHeader>
-                  <DialogTitle>Add New Instance</DialogTitle>
-                  <DialogDescription>
-                    Connect a new Caddy instance to manage remotely
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="space-y-4 py-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="name">Instance Name</Label>
-                    <Input
-                      id="name"
-                      placeholder="Production Server"
-                      className="bg-background border-border"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="url">Admin API URL</Label>
-                    <Input
-                      id="url"
-                      placeholder="https://your-server:2019"
-                      className="bg-background border-border"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="auth">Authentication (Optional)</Label>
-                    <Input
-                      id="auth"
-                      type="password"
-                      placeholder="API Key or Bearer Token"
-                      className="bg-background border-border"
-                    />
-                  </div>
-                  <Button className="w-full bg-gradient-primary">
-                    Connect Instance
-                  </Button>
-                </div>
-              </DialogContent>
-            </Dialog>
           </div>
           <p className="text-muted-foreground">
             Monitor and manage your Caddy instances

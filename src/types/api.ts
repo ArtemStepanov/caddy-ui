@@ -33,9 +33,9 @@ export interface CaddyInstance {
   id: string;
   name: string;
   admin_url: string;
-  auth_type: 'none' | 'bearer' | 'mtls' | 'basic';
+  auth_type: "none" | "bearer" | "mtls" | "basic";
   credentials?: Record<string, string>;
-  status: 'online' | 'offline' | 'unknown' | 'error';
+  status: "online" | "offline" | "unknown" | "error";
   last_seen?: string;
   created_at: string;
   updated_at: string;
@@ -71,7 +71,7 @@ export interface ConfigTemplate {
  */
 export interface TemplateVariable {
   name: string;
-  type: 'string' | 'number' | 'boolean' | 'array';
+  type: "string" | "number" | "boolean" | "array";
   required: boolean;
   default_value?: string | number | boolean | unknown[];
   description: string;
@@ -80,7 +80,7 @@ export interface TemplateVariable {
 /**
  * Upstream health status
  */
-export type UpstreamStatus = 'healthy' | 'unhealthy' | 'degraded' | 'unknown';
+export type UpstreamStatus = "healthy" | "unhealthy" | "degraded" | "unknown";
 
 /**
  * Health check configuration (active)
@@ -123,12 +123,12 @@ export interface Upstream {
   dial?: string;
   max_requests?: number;
   health_checks?: HealthChecks;
-  
+
   // Runtime metrics (from Caddy API)
   healthy?: boolean;
   num_requests?: number;
   fails?: number;
-  
+
   // Calculated/derived fields
   status?: UpstreamStatus;
   response_time?: number; // in ms
@@ -147,7 +147,7 @@ export interface UpstreamPool {
   lb_try_duration?: string;
   lb_try_interval?: string;
   health_checks?: HealthChecks;
-  
+
   // Aggregate stats
   total_upstreams?: number;
   healthy_count?: number;
@@ -194,8 +194,41 @@ export interface UpstreamMetrics {
  */
 export interface HealthCheckHistory {
   timestamp: string;
-  result: 'success' | 'failed';
+  result: "success" | "failed";
   response_time?: number;
   status_code?: number;
   error?: string;
+}
+
+/**
+ * Prometheus metrics from Caddy's /metrics endpoint
+ */
+export interface PrometheusUpstreamMetrics {
+  address: string;
+  healthy: boolean;
+}
+
+export interface PrometheusHandlerMetrics {
+  server: string;
+  handler: string;
+  requests_total: number;
+  errors_total: number;
+  requests_in_flight: number;
+  duration_sum_seconds: number;
+  duration_count: number;
+  avg_duration_ms: number;
+  duration_buckets?: Record<string, number>;
+}
+
+export interface PrometheusMetricsData {
+  upstreams: Record<string, PrometheusUpstreamMetrics>;
+  handlers: Record<string, PrometheusHandlerMetrics>;
+  total_requests_in_flight: number;
+  timestamp: string;
+}
+
+export interface MetricsResponse {
+  metrics_available: boolean;
+  reason?: string;
+  metrics?: PrometheusMetricsData;
 }

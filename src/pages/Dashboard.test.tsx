@@ -40,24 +40,6 @@ describe('Dashboard', () => {
     expect(loadingText || noInstancesText).toBeTruthy();
   });
 
-  it('should render add instance button', () => {
-    render(<Dashboard />);
-
-    const addButton = screen.getByRole('button', { name: /add instance/i });
-    expect(addButton).toBeInTheDocument();
-  });
-
-  it('should open add instance dialog', async () => {
-    const user = userEvent.setup();
-    render(<Dashboard />);
-
-    const addButton = screen.getByRole('button', { name: /add instance/i });
-    await user.click(addButton);
-
-    expect(screen.getByText('Add New Instance')).toBeInTheDocument();
-    expect(screen.getByPlaceholderText('Production Server')).toBeInTheDocument();
-  });
-
   it('should render quick actions', () => {
     render(<Dashboard />);
 
