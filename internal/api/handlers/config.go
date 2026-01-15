@@ -291,3 +291,32 @@ func (h *ConfigHandler) GetPKICA(c *gin.Context) {
 		Data:    ca,
 	})
 }
+
+// GetMetrics retrieves Prometheus metrics from a Caddy instance
+func (h *ConfigHandler) GetMetrics(c *gin.Context) {
+	instanceID := c.Param("id")
+
+	metrics, err := h.manager.GetMetrics(instanceID)
+	if err != nil {
+		// Return response indicating metrics are not available
+		// This allows graceful degradation when metrics are disabled
+		c.JSON(http.StatusOK, storage.APIResponse{
+			Success: true,
+			Data: map[string]any{
+				"metrics_available": false,
+				"reason":            err.Error(),
+				"metrics":           nil,
+			},
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, storage.APIResponse{
+		Success: true,
+		Data: map[string]any{
+			"metrics_available": true,
+			"metrics":           metrics,
+		},
+	})
+}
+

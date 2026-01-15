@@ -8,8 +8,6 @@ updates:
       day: "monday"
       time: "09:00"
     open-pull-requests-limit: 10
-    reviewers:
-      - "ArtemStepanov"
     labels:
       - "dependencies"
       - "go"
@@ -25,8 +23,6 @@ updates:
       day: "monday"
       time: "09:00"
     open-pull-requests-limit: 10
-    reviewers:
-      - "ArtemStepanov"
     labels:
       - "dependencies"
       - "npm"
@@ -53,8 +49,6 @@ updates:
       day: "monday"
       time: "09:00"
     open-pull-requests-limit: 5
-    reviewers:
-      - "ArtemStepanov"
     labels:
       - "dependencies"
       - "github-actions"
@@ -70,8 +64,6 @@ updates:
       day: "monday"
       time: "09:00"
     open-pull-requests-limit: 5
-    reviewers:
-      - "ArtemStepanov"
     labels:
       - "dependencies"
       - "docker"

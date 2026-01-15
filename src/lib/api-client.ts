@@ -11,9 +11,10 @@ import type {
   ConfigTemplate,
   TemplateVariable,
   CaddyConfigValue,
-} from '@/types';
+} from "@/types";
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+const API_BASE_URL =
+  import.meta.env.VITE_API_URL || "http://localhost:3000/api";
 
 // Re-export types for backward compatibility
 export type {
@@ -38,9 +39,9 @@ class APIClient {
     options: RequestInit = {}
   ): Promise<APIResponse<T>> {
     const url = `${this.baseURL}${endpoint}`;
-    
+
     const defaultHeaders: HeadersInit = {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
     };
 
     try {
@@ -55,54 +56,62 @@ class APIClient {
       const data = await response.json();
 
       if (!response.ok && !data.success) {
-        throw new Error(data.error?.message || 'Request failed');
+        throw new Error(data.error?.message || "Request failed");
       }
 
       return data;
     } catch (error) {
-      console.error('API request failed:', error);
+      console.error("API request failed:", error);
       throw error;
     }
   }
 
   // Instance Management
   async listInstances(): Promise<APIResponse<CaddyInstance[]>> {
-    return this.request<CaddyInstance[]>('/instances');
+    return this.request<CaddyInstance[]>("/instances");
   }
 
   async getInstance(id: string): Promise<APIResponse<CaddyInstance>> {
     return this.request<CaddyInstance>(`/instances/${id}`);
   }
 
-  async createInstance(instance: Partial<CaddyInstance>): Promise<APIResponse<CaddyInstance>> {
-    return this.request<CaddyInstance>('/instances', {
-      method: 'POST',
+  async createInstance(
+    instance: Partial<CaddyInstance>
+  ): Promise<APIResponse<CaddyInstance>> {
+    return this.request<CaddyInstance>("/instances", {
+      method: "POST",
       body: JSON.stringify(instance),
     });
   }
 
-  async updateInstance(id: string, instance: Partial<CaddyInstance>): Promise<APIResponse<CaddyInstance>> {
+  async updateInstance(
+    id: string,
+    instance: Partial<CaddyInstance>
+  ): Promise<APIResponse<CaddyInstance>> {
     return this.request<CaddyInstance>(`/instances/${id}`, {
-      method: 'PUT',
+      method: "PUT",
       body: JSON.stringify(instance),
     });
   }
 
   async deleteInstance(id: string): Promise<APIResponse<{ message: string }>> {
     return this.request<{ message: string }>(`/instances/${id}`, {
-      method: 'DELETE',
+      method: "DELETE",
     });
   }
 
   async testConnection(id: string): Promise<APIResponse<HealthCheckResult>> {
     return this.request<HealthCheckResult>(`/instances/${id}/test-connection`, {
-      method: 'POST',
+      method: "POST",
     });
   }
 
   // Configuration Management
-  async getConfig(instanceId: string, path?: string): Promise<APIResponse<CaddyConfigValue>> {
-    const endpoint = path 
+  async getConfig(
+    instanceId: string,
+    path?: string
+  ): Promise<APIResponse<CaddyConfigValue>> {
+    const endpoint = path
       ? `/instances/${instanceId}/config/${path}`
       : `/instances/${instanceId}/config`;
     return this.request<CaddyConfigValue>(endpoint);
@@ -117,14 +126,14 @@ class APIClient {
     const endpoint = path
       ? `/instances/${instanceId}/config/${path}`
       : `/instances/${instanceId}/config`;
-    
+
     const headers: HeadersInit = {};
     if (etag) {
-      headers['If-Match'] = etag;
+      headers["If-Match"] = etag;
     }
 
     return this.request<{ message: string }>(endpoint, {
-      method: 'POST',
+      method: "POST",
       headers,
       body: JSON.stringify(config),
     });
@@ -138,17 +147,23 @@ class APIClient {
     const endpoint = path
       ? `/instances/${instanceId}/config/${path}`
       : `/instances/${instanceId}/config`;
-    
+
     return this.request<{ message: string }>(endpoint, {
-      method: 'PATCH',
+      method: "PATCH",
       body: JSON.stringify(config),
     });
   }
 
-  async deleteConfig(instanceId: string, path: string): Promise<APIResponse<{ message: string }>> {
-    return this.request<{ message: string }>(`/instances/${instanceId}/config/${path}`, {
-      method: 'DELETE',
-    });
+  async deleteConfig(
+    instanceId: string,
+    path: string
+  ): Promise<APIResponse<{ message: string }>> {
+    return this.request<{ message: string }>(
+      `/instances/${instanceId}/config/${path}`,
+      {
+        method: "DELETE",
+      }
+    );
   }
 
   async adaptConfig(
@@ -157,7 +172,7 @@ class APIClient {
     adapter?: string
   ): Promise<APIResponse<CaddyConfigValue>> {
     return this.request<CaddyConfigValue>(`/instances/${instanceId}/adapt`, {
-      method: 'POST',
+      method: "POST",
       body: JSON.stringify({ caddyfile, adapter }),
     });
   }
@@ -166,22 +181,56 @@ class APIClient {
     return this.request<unknown[]>(`/instances/${instanceId}/upstreams`);
   }
 
-  async getPKICA(instanceId: string, caId: string): Promise<APIResponse<Record<string, unknown>>> {
-    return this.request<Record<string, unknown>>(`/instances/${instanceId}/pki/ca/${caId}`);
+  async getMetrics(instanceId: string): Promise<
+    APIResponse<{
+      metrics_available: boolean;
+      reason?: string;
+      metrics?: {
+        upstreams: Record<string, { address: string; healthy: boolean }>;
+        handlers: Record<
+          string,
+          {
+            server: string;
+            handler: string;
+            requests_total: number;
+            errors_total: number;
+            requests_in_flight: number;
+            duration_sum_seconds: number;
+            duration_count: number;
+            avg_duration_ms: number;
+          }
+        >;
+        total_requests_in_flight: number;
+        timestamp: string;
+      };
+    }>
+  > {
+    return this.request(`/instances/${instanceId}/metrics`);
+  }
+
+  async getPKICA(
+    instanceId: string,
+    caId: string
+  ): Promise<APIResponse<Record<string, unknown>>> {
+    return this.request<Record<string, unknown>>(
+      `/instances/${instanceId}/pki/ca/${caId}`
+    );
   }
 
   // Template Management
   async listTemplates(): Promise<APIResponse<ConfigTemplate[]>> {
-    return this.request<ConfigTemplate[]>('/templates');
+    return this.request<ConfigTemplate[]>("/templates");
   }
 
   async getTemplate(id: string): Promise<APIResponse<ConfigTemplate>> {
     return this.request<ConfigTemplate>(`/templates/${id}`);
   }
 
-  async createTemplate(template: Partial<ConfigTemplate>): Promise<APIResponse<ConfigTemplate>> {
-    return this.request<ConfigTemplate>('/templates', {
-      method: 'POST',
+  async createTemplate(
+    template: Partial<ConfigTemplate>
+  ): Promise<APIResponse<ConfigTemplate>> {
+    return this.request<ConfigTemplate>("/templates", {
+      method: "POST",
       body: JSON.stringify(template),
     });
   }
@@ -191,7 +240,7 @@ class APIClient {
     variables: Record<string, unknown>
   ): Promise<APIResponse<CaddyConfigValue>> {
     return this.request<CaddyConfigValue>(`/templates/${templateId}/generate`, {
-      method: 'POST',
+      method: "POST",
       body: JSON.stringify({ variables }),
     });
   }
@@ -202,31 +251,35 @@ class APIClient {
     path: string,
     config: CaddyConfigValue
   ): Promise<APIResponse<Record<string, unknown>>> {
-    return this.request<Record<string, unknown>>('/bulk/config-update', {
-      method: 'POST',
+    return this.request<Record<string, unknown>>("/bulk/config-update", {
+      method: "POST",
       body: JSON.stringify({ instance_ids: instanceIds, path, config }),
     });
   }
 
   // Health Check
-  async healthCheck(): Promise<APIResponse<{ status: string; service: string }>> {
-    return this.request<{ status: string; service: string }>('/health');
+  async healthCheck(): Promise<
+    APIResponse<{ status: string; service: string }>
+  > {
+    return this.request<{ status: string; service: string }>("/health");
   }
 
   // Settings Management
-  async getSettings(): Promise<APIResponse<{
-    appearance: {
-      theme: string;
-      language: string;
-      dateFormat: string;
-      timeFormat: string;
-      showRelativeTimestamps: boolean;
-    };
-    dashboard: {
-      refreshInterval: number;
-    };
-  }>> {
-    return this.request('/settings');
+  async getSettings(): Promise<
+    APIResponse<{
+      appearance: {
+        theme: string;
+        language: string;
+        dateFormat: string;
+        timeFormat: string;
+        showRelativeTimestamps: boolean;
+      };
+      dashboard: {
+        refreshInterval: number;
+      };
+    }>
+  > {
+    return this.request("/settings");
   }
 
   async updateSettings(settings: {
@@ -240,20 +293,22 @@ class APIClient {
     dashboard?: Partial<{
       refreshInterval: number;
     }>;
-  }): Promise<APIResponse<{
-    appearance: {
-      theme: string;
-      language: string;
-      dateFormat: string;
-      timeFormat: string;
-      showRelativeTimestamps: boolean;
-    };
-    dashboard: {
-      refreshInterval: number;
-    };
-  }>> {
-    return this.request('/settings', {
-      method: 'PUT',
+  }): Promise<
+    APIResponse<{
+      appearance: {
+        theme: string;
+        language: string;
+        dateFormat: string;
+        timeFormat: string;
+        showRelativeTimestamps: boolean;
+      };
+      dashboard: {
+        refreshInterval: number;
+      };
+    }>
+  > {
+    return this.request("/settings", {
+      method: "PUT",
       body: JSON.stringify(settings),
     });
   }

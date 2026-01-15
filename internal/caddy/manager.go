@@ -315,6 +315,16 @@ func (m *Manager) GetPKICA(instanceID string, caID string) (map[string]any, erro
 	return client.GetPKICA(caID)
 }
 
+// GetMetrics retrieves Prometheus metrics from a Caddy instance
+func (m *Manager) GetMetrics(instanceID string) (*MetricsData, error) {
+	client, err := m.GetClient(instanceID)
+	if err != nil {
+		return nil, err
+	}
+
+	return client.GetMetrics()
+}
+
 // RollbackConfig rolls back to a previous configuration
 func (m *Manager) RollbackConfig(instanceID string, backupID string) error {
 	backups, err := m.storage.GetConfigBackups(instanceID, 100)

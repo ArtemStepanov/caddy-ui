@@ -62,6 +62,7 @@ func SetupRoutes(
 			// Utilities
 			instances.POST("/:id/adapt", configHandler.AdaptConfig)
 			instances.GET("/:id/upstreams", configHandler.GetUpstreams)
+			instances.GET("/:id/metrics", configHandler.GetMetrics)
 			instances.GET("/:id/pki/ca/:ca_id", configHandler.GetPKICA)
 		}
 
