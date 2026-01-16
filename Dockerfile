@@ -19,7 +19,7 @@ COPY config/ ./config/
 RUN CGO_ENABLED=1 GOOS=linux go build -o caddy-orchestrator ./cmd/server
 
 # Build stage for frontend
-FROM node:20-alpine AS frontend-builder
+FROM node:25-alpine AS frontend-builder
 
 WORKDIR /app
 
