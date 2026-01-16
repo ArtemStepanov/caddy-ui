@@ -3,16 +3,6 @@ import { useNavigate } from "react-router-dom";
 import { StatsCard } from "@/components/StatsCard";
 import { InstanceCard } from "@/components/InstanceCard";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { useInstances } from "@/hooks/useInstances";
 import { useAutoRefresh } from "@/hooks/useAutoRefresh";
 

@@ -127,8 +127,6 @@ export function useConfigEditor(instanceId: string) {
           throw new Error("Invalid JSON configuration");
         }
 
-        const configToSend = JSON.stringify(configObj);
-
         const headers: HeadersInit = {
           "Content-Type": "application/json",
         };
