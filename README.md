@@ -26,6 +26,8 @@ A modern, web-based management interface for multiple Caddy server instances. Bu
 - **CORS Configuration**: Configurable cross-origin resource sharing
 
 ### 📊 Management Features
+- **Metrics Monitoring**: View Prometheus metrics from Caddy instances (requests, errors, duration, upstream health)
+- **Application Settings**: Customize UI appearance (theme, language, time formats) and dashboard preferences
 - **Upstream Monitoring**: View reverse proxy upstream status
 - **PKI/Certificate Management**: Access PKI CA information
 - **Caddyfile Adapter**: Convert Caddyfile format to JSON configuration
@@ -219,15 +221,24 @@ POST   /api/instances/:id/test-connection  # Test connection
 ```http
 GET    /api/instances/:id/config[/*path]   # Get configuration
 POST   /api/instances/:id/config[/*path]   # Set configuration
+POST   /api/instances/:id/load             # Load configuration (Caddy native)
 PATCH  /api/instances/:id/config[/*path]   # Patch configuration
 DELETE /api/instances/:id/config/*path     # Delete configuration
+```
+
+### Application Settings
+```http
+GET    /api/settings              # Get application settings
+PUT    /api/settings              # Update application settings
 ```
 
 ### Utilities
 ```http
 POST   /api/instances/:id/adapt        # Adapt Caddyfile to JSON
 GET    /api/instances/:id/upstreams    # Get upstream status
+GET    /api/instances/:id/metrics      # Get instance metrics
 GET    /api/instances/:id/pki/ca/:ca_id  # Get PKI CA info
+GET    /api/health                     # Health check
 ```
 
 ### Templates
@@ -267,7 +278,9 @@ caddy-orchestrator/
 │   │   └── routes.go           # Route definitions
 │   ├── caddy/
 │   │   ├── client.go           # Caddy Admin API client
-│   │   └── manager.go          # Instance manager
+│   │   ├── manager.go          # Instance manager
+│   │   └── metrics.go          # Metrics collection & parsing
+│   ├── docker/                 # Docker integration (upcoming)
 │   ├── storage/
 │   │   ├── models.go           # Data models
 │   │   └── sqlite.go           # SQLite storage implementation
@@ -293,9 +306,8 @@ npm run dev
 
 # Build frontend for production
 npm run build
-
-# Run linting
-npm run lint
+# Note: Builds to 'dist/' directory
+# Docker build copies 'dist/' to 'web/' for the backend to serve.
 ```
 
 ### Backend Development
@@ -322,6 +334,9 @@ npm run build
 
 # Build backend
 CGO_ENABLED=1 go build -o caddy-orchestrator ./cmd/server
+
+# To run locally without Docker, ensure 'dist' is moved/linked to 'web':
+ln -s dist web
 
 # Run
 ./caddy-orchestrator
@@ -375,12 +390,13 @@ curl -X POST http://localhost:3000/api/instances \
 - [x] Configuration proxy with ETag support
 - [x] Built-in templates
 - [x] Health monitoring
+- [x] Metrics collection
 
-### Phase 2 (Upcoming)
+### Phase 2 (In Progress)
 - [ ] User authentication and authorization
 - [ ] Role-based access control
+- [ ] Docker container discovery (Initial integration structure added)
 - [ ] Enhanced templates with wizards
-- [ ] Docker container discovery
 - [ ] Metrics and monitoring dashboard
 
 ### Phase 3 (Future)
