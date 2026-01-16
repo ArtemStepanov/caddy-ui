@@ -263,9 +263,8 @@ func (c *Client) AdaptConfig(caddyfile string, adapter string) (map[string]any, 
 	}
 	defer resp.Body.Close()
 
-	body, _ := io.ReadAll(resp.Body)
-
 	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
 		var errResponse map[string]any
 		if json.Unmarshal(body, &errResponse) == nil {
 			if errMsg, ok := errResponse["error"].(string); ok {
@@ -276,7 +275,7 @@ func (c *Client) AdaptConfig(caddyfile string, adapter string) (map[string]any, 
 	}
 
 	var config map[string]any
-	if err := json.Unmarshal(body, &config); err != nil {
+	if err := json.NewDecoder(resp.Body).Decode(&config); err != nil {
 		return nil, fmt.Errorf("failed to decode adapted config: %w", err)
 	}
 
