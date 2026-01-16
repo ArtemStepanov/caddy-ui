@@ -1,16 +1,18 @@
-import { useState, useCallback, useEffect, useRef } from 'react';
-import { apiClient } from '@/lib/api-client';
-import { useToast } from '@/hooks/use-toast';
-import type { ValidationError } from '@/types';
+import { useState, useCallback, useEffect, useRef } from "react";
+import { apiClient } from "@/lib/api-client";
+import { useToast } from "@/hooks/use-toast";
+import type { ValidationError } from "@/types";
 
 export function useConfigEditor(instanceId: string) {
-  const [config, setConfig] = useState<string>('');
-  const [originalConfig, setOriginalConfig] = useState<string>('');
+  const [config, setConfig] = useState<string>("");
+  const [originalConfig, setOriginalConfig] = useState<string>("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [etag, setETag] = useState<string | undefined>();
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
-  const [validationErrors, setValidationErrors] = useState<ValidationError[]>([]);
+  const [validationErrors, setValidationErrors] = useState<ValidationError[]>(
+    []
+  );
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const { toast } = useToast();
   const fetchControllerRef = useRef<AbortController | null>(null);
@@ -35,25 +37,30 @@ export function useConfigEditor(instanceId: string) {
         setError(null);
 
         const response = await fetch(
-          `${import.meta.env.VITE_API_URL || 'http://localhost:3000/api'}/instances/${instanceId}/config${path ? `/${path}` : ''}`,
+          `${
+            import.meta.env.VITE_API_URL || "http://localhost:3000/api"
+          }/instances/${instanceId}/config${path ? `/${path}` : ""}`,
           {
             signal: fetchControllerRef.current.signal,
           }
         );
 
         // Extract ETag from response headers
-        const responseETag = response.headers.get('etag');
+        const responseETag = response.headers.get("etag");
         if (responseETag) {
           setETag(responseETag);
         }
 
         if (!response.ok) {
           const errorData = await response.json().catch(() => ({}));
-          throw new Error(errorData.error?.message || `Failed to fetch configuration (${response.status})`);
+          throw new Error(
+            errorData.error?.message ||
+              `Failed to fetch configuration (${response.status})`
+          );
         }
 
         const data = await response.json();
-        
+
         // Handle different response formats
         let configData;
         if (data.success && data.data) {
@@ -68,13 +75,7 @@ export function useConfigEditor(instanceId: string) {
         }
 
         const configString = JSON.stringify(configData, null, 2);
-        
-        console.log('📥 Received config from server:', {
-          size: configString.length,
-          etag: responseETag,
-          preview: configString.substring(0, 200) + '...'
-        });
-        
+
         setConfig(configString);
         setOriginalConfig(configString);
         setHasUnsavedChanges(false);
@@ -82,21 +83,22 @@ export function useConfigEditor(instanceId: string) {
 
         if (!silent) {
           toast({
-            title: 'Configuration Loaded',
-            description: 'Configuration has been synced from server',
+            title: "Configuration Loaded",
+            description: "Configuration has been synced from server",
           });
         }
       } catch (err: unknown) {
-        if (err instanceof Error && err.name === 'AbortError') {
+        if (err instanceof Error && err.name === "AbortError") {
           return; // Ignore aborted requests
         }
-        const message = err instanceof Error ? err.message : 'Failed to fetch configuration';
+        const message =
+          err instanceof Error ? err.message : "Failed to fetch configuration";
         setError(message);
         if (!silent) {
           toast({
-            title: 'Error',
+            title: "Error",
             description: message,
-            variant: 'destructive',
+            variant: "destructive",
           });
         }
       } finally {
@@ -108,7 +110,12 @@ export function useConfigEditor(instanceId: string) {
 
   // Update configuration
   const updateConfig = useCallback(
-    async (newConfig: string, path?: string, useETag = true, forceOverwrite = false) => {
+    async (
+      newConfig: string,
+      path?: string,
+      useETag = true,
+      forceOverwrite = false
+    ) => {
       try {
         setLoading(true);
 
@@ -117,31 +124,27 @@ export function useConfigEditor(instanceId: string) {
         try {
           configObj = JSON.parse(newConfig);
         } catch {
-          throw new Error('Invalid JSON configuration');
+          throw new Error("Invalid JSON configuration");
         }
 
         const configToSend = JSON.stringify(configObj);
-        console.log('📤 Sending config update:', {
-          configSize: configToSend.length,
-          hasETag: !!etag,
-          useETag,
-          preview: configToSend.substring(0, 500)
-        });
 
         const headers: HeadersInit = {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         };
 
         // Add ETag if available and not forcing overwrite
         if (etag && useETag && !forceOverwrite) {
-          headers['If-Match'] = etag;
+          headers["If-Match"] = etag;
         }
 
         // Use /load endpoint for full config updates (Caddy's recommended way)
         const response = await fetch(
-          `${import.meta.env.VITE_API_URL || 'http://localhost:3000/api'}/instances/${instanceId}/load`,
+          `${
+            import.meta.env.VITE_API_URL || "http://localhost:3000/api"
+          }/instances/${instanceId}/load`,
           {
-            method: 'POST',
+            method: "POST",
             headers,
             body: JSON.stringify(configObj),
           }
@@ -149,44 +152,43 @@ export function useConfigEditor(instanceId: string) {
 
         // Handle ETag conflict (412 Precondition Failed)
         if (response.status === 412) {
-          throw new Error('ETAG_CONFLICT');
+          throw new Error("ETAG_CONFLICT");
         }
 
         if (!response.ok) {
           const errorData = await response.json();
-          throw new Error(errorData.error?.message || 'Failed to update configuration');
+          throw new Error(
+            errorData.error?.message || "Failed to update configuration"
+          );
         }
-
-        console.log('✅ Config update response OK');
 
         // Update ETag from response
-        const newETag = response.headers.get('etag');
+        const newETag = response.headers.get("etag");
         if (newETag) {
           setETag(newETag);
-          console.log('📝 New ETag received:', newETag);
         }
 
-        // Refresh config to ensure sync (get the actual applied config)
-        console.log('🔄 Fetching updated config from server...');
+        // Refresh config to ensure sync
         await fetchConfig(path, true);
-        
+
         toast({
-          title: '✅ Configuration Applied Successfully',
-          description: 'Your changes have been applied to the Caddy instance',
+          title: "✅ Configuration Applied Successfully",
+          description: "Your changes have been applied to the Caddy instance",
           duration: 5000,
         });
-        
+
         setHasUnsavedChanges(false);
         setValidationErrors([]);
       } catch (err: unknown) {
-        const message = err instanceof Error ? err.message : 'Failed to update configuration';
+        const message =
+          err instanceof Error ? err.message : "Failed to update configuration";
 
         // Don't show toast for ETag conflicts - let the component handle it
-        if (message !== 'ETAG_CONFLICT') {
+        if (message !== "ETAG_CONFLICT") {
           toast({
-            title: '❌ Configuration Rejected',
+            title: "❌ Configuration Rejected",
             description: message,
-            variant: 'destructive',
+            variant: "destructive",
           });
         }
 
@@ -211,14 +213,14 @@ export function useConfigEditor(instanceId: string) {
         } catch {
           setValidationErrors([
             {
-              message: 'Invalid JSON syntax',
-              severity: 'error',
+              message: "Invalid JSON syntax",
+              severity: "error",
             },
           ]);
           toast({
-            title: 'Validation Failed',
-            description: 'Invalid JSON syntax',
-            variant: 'destructive',
+            title: "Validation Failed",
+            description: "Invalid JSON syntax",
+            variant: "destructive",
           });
           return false;
         }
@@ -228,41 +230,42 @@ export function useConfigEditor(instanceId: string) {
         try {
           const configStr = JSON.stringify(configObj);
           JSON.parse(configStr); // Double-check serialization
-          
+
           setValidationErrors([]);
           toast({
-            title: '✓ Configuration is Valid',
-            description: 'Your configuration has valid JSON syntax',
+            title: "✓ Configuration is Valid",
+            description: "Your configuration has valid JSON syntax",
             duration: 3000,
           });
           return true;
         } catch {
           const errors: ValidationError[] = [
             {
-              message: 'Invalid configuration structure',
-              severity: 'error',
+              message: "Invalid configuration structure",
+              severity: "error",
             },
           ];
           setValidationErrors(errors);
           toast({
-            title: 'Validation Failed',
-            description: 'Invalid configuration structure',
-            variant: 'destructive',
+            title: "Validation Failed",
+            description: "Invalid configuration structure",
+            variant: "destructive",
           });
           return false;
         }
       } catch (err) {
-        const message = err instanceof Error ? err.message : 'Validation failed';
+        const message =
+          err instanceof Error ? err.message : "Validation failed";
         setValidationErrors([
           {
             message,
-            severity: 'error',
+            severity: "error",
           },
         ]);
         toast({
-          title: 'Validation Failed',
+          title: "Validation Failed",
           description: message,
-          variant: 'destructive',
+          variant: "destructive",
         });
         return false;
       } finally {
@@ -273,19 +276,22 @@ export function useConfigEditor(instanceId: string) {
   );
 
   // Format configuration
-  const formatConfig = useCallback((configToFormat: string): string => {
-    try {
-      const parsed = JSON.parse(configToFormat);
-      return JSON.stringify(parsed, null, 2);
-    } catch {
-      toast({
-        title: 'Format Failed',
-        description: 'Invalid JSON - cannot format',
-        variant: 'destructive',
-      });
-      return configToFormat;
-    }
-  }, [toast]);
+  const formatConfig = useCallback(
+    (configToFormat: string): string => {
+      try {
+        const parsed = JSON.parse(configToFormat);
+        return JSON.stringify(parsed, null, 2);
+      } catch {
+        toast({
+          title: "Format Failed",
+          description: "Invalid JSON - cannot format",
+          variant: "destructive",
+        });
+        return configToFormat;
+      }
+    },
+    [toast]
+  );
 
   // Adapt Caddyfile to JSON
   const adaptCaddyfile = useCallback(
@@ -299,34 +305,41 @@ export function useConfigEditor(instanceId: string) {
           const responseData = response.data as Record<string, unknown>;
           let actualConfig: unknown = response.data;
           if (responseData.result) {
-            console.log('📦 Extracted config from "result" field');
             actualConfig = responseData.result;
           }
-          
-          if (responseData.warnings && Array.isArray(responseData.warnings) && responseData.warnings.length > 0) {
-            console.warn('⚠️ Caddyfile warnings:', responseData.warnings);
+
+          if (
+            responseData.warnings &&
+            Array.isArray(responseData.warnings) &&
+            responseData.warnings.length > 0
+          ) {
+            console.warn("⚠️ Caddyfile warnings:", responseData.warnings);
           }
 
           toast({
-            title: '✅ Caddyfile Adapted Successfully',
-            description: 'Your Caddyfile has been converted to JSON configuration',
+            title: "✅ Caddyfile Adapted Successfully",
+            description:
+              "Your Caddyfile has been converted to JSON configuration",
             duration: 3000,
           });
           return JSON.stringify(actualConfig, null, 2);
         } else {
-          throw new Error(response.error?.message || 'Failed to adapt Caddyfile');
+          throw new Error(
+            response.error?.message || "Failed to adapt Caddyfile"
+          );
         }
       } catch (err) {
-        const details = err instanceof Error && err.message.includes('Error: ') 
-          ? err.message 
-          : 'Invalid Caddyfile syntax. Please check your configuration.';
-        
+        const details =
+          err instanceof Error && err.message.includes("Error: ")
+            ? err.message
+            : "Invalid Caddyfile syntax. Please check your configuration.";
+
         toast({
-          title: '❌ Caddyfile Adaptation Failed',
+          title: "❌ Caddyfile Adaptation Failed",
           description: details,
-          variant: 'destructive',
+          variant: "destructive",
         });
-        console.error('Caddyfile adaptation error:', err);
+        console.error("Caddyfile adaptation error:", err);
         return null;
       } finally {
         setLoading(false);

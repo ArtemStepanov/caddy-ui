@@ -1,76 +1,22 @@
 ## Description
-<!-- Provide a brief description of the changes in this PR -->
+
+<!-- Brief description of your changes -->
 
 ## Type of Change
-<!-- Mark the relevant option with an "x" -->
 
-- [ ] 🐛 Bug fix (non-breaking change which fixes an issue)
-- [ ] ✨ New feature (non-breaking change which adds functionality)
-- [ ] 💥 Breaking change (fix or feature that would cause existing functionality to not work as expected)
-- [ ] 📝 Documentation update
-- [ ] 🎨 Style/UI update (changes that don't affect functionality)
-- [ ] ♻️ Refactoring (code change that neither fixes a bug nor adds a feature)
-- [ ] ⚡ Performance improvement
-- [ ] ✅ Test update
-- [ ] 🔧 Build/CI configuration change
+- [ ] 🐛 Bug fix
+- [ ] ✨ New feature
+- [ ] 💥 Breaking change
+- [ ] 📝 Documentation
+- [ ] ♻️ Refactoring
 
 ## Related Issues
-<!-- Link to related issues using #issue_number -->
 
 Closes #
 
-## Changes Made
-<!-- List the main changes made in this PR -->
-
-- 
-- 
-- 
-
 ## Testing
-<!-- Describe the tests you ran and how to reproduce them -->
 
-### Test Environment
-- [ ] Local development
-- [ ] Docker container
-- [ ] Production-like environment
-
-### Test Cases
-- [ ] Unit tests pass
-- [ ] Integration tests pass
+- [ ] Tests pass locally
 - [ ] Manual testing completed
 
-### How to Test
-1. 
-2. 
-3. 
-
 ## Screenshots (if applicable)
-<!-- Add screenshots to help explain your changes -->
-
-## Checklist
-<!-- Mark completed items with an "x" -->
-
-- [ ] My code follows the project's style guidelines
-- [ ] I have performed a self-review of my code
-- [ ] I have commented my code, particularly in hard-to-understand areas
-- [ ] I have made corresponding changes to the documentation
-- [ ] My changes generate no new warnings or errors
-- [ ] I have added tests that prove my fix is effective or that my feature works
-- [ ] New and existing unit tests pass locally with my changes
-- [ ] Any dependent changes have been merged and published
-
-### Backend Checklist (if applicable)
-- [ ] Go code is formatted (`gofmt`)
-- [ ] Linter passes (`golangci-lint run ./...`)
-- [ ] Tests pass (`go test ./...`)
-- [ ] No race conditions (`go test -race ./...`)
-
-### Frontend Checklist (if applicable)
-- [ ] TypeScript types are correct
-- [ ] ESLint passes (`npm run lint`)
-- [ ] Build succeeds (`npm run build`)
-- [ ] No console errors in development
-
-## Additional Notes
-<!-- Add any additional information that reviewers should know -->
-
