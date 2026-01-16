@@ -54,8 +54,8 @@ COPY --from=go-builder /app/caddy-orchestrator .
 # Copy frontend build
 COPY --from=frontend-builder /app/dist ./web
 
-# Copy default config
-COPY config/config.yaml ./config/config.yaml
+# Copy default config (using example as template)
+COPY config/config.yaml.example ./config/config.yaml
 
 # Create data directory
 RUN mkdir -p ./data ./templates

@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import type { UpstreamsData, MetricsResponse } from "@/types/api";
+import type { UpstreamsData } from "@/types/api";
 import type {
   CaddyConfig,
   CaddyUpstreamStatus,
@@ -263,7 +263,7 @@ function findReverseProxyHandlers(
 function groupUpstreamsToPools(
   upstreams: CaddyUpstreamStatus[],
   config: CaddyConfig | null,
-  metrics?: PrometheusMetrics
+  _metrics?: PrometheusMetrics
 ): ParsedUpstreamPool[] {
   const pools: ParsedUpstreamPool[] = [];
   const matchedUpstreamAddresses = new Set<string>();

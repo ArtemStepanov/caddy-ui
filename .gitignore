@@ -35,6 +35,8 @@ logs/
 # Environment
 .env
 .env.local
+.env.development
+.env.production
 
 # Configuration (use config.yaml.example as template)
 config/config.yaml
