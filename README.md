@@ -62,7 +62,7 @@ The application is designed as a **unified service** that runs in a single Docke
 ## Tech Stack
 
 ### Backend
-- **Go 1.21+** - High-performance backend
+- **Go 1.24+** - High-performance backend
 - **Gin** - HTTP web framework
 - **SQLite** - Embedded database for configuration storage
 - **Goroutines** - Concurrent operations on multiple instances
@@ -108,8 +108,8 @@ See [Single Container Deployment Guide](docs/SINGLE_CONTAINER_DEPLOYMENT.md) for
 For development with hot reload:
 
 #### Prerequisites
-- Go 1.21 or higher
-- Node.js 18 or higher
+- Go 1.24 or higher
+- Node.js 20 or higher
 
 #### Setup
 
