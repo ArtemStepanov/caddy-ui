@@ -6,7 +6,7 @@ Thank you for your interest in contributing! This guide will help you get starte
 
 ### Prerequisites
 
-- Go 1.24+
+- Go 1.25.6
 - Node.js 20+
 - Docker (optional)
 

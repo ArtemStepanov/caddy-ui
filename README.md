@@ -5,7 +5,7 @@ A modern, web-based management interface for multiple Caddy server instances. Bu
 [![CI Pipeline](https://github.com/ArtemStepanov/caddy-orchestrator/actions/workflows/ci.yml/badge.svg)](https://github.com/ArtemStepanov/caddy-orchestrator/actions/workflows/ci.yml)
 [![Security Scanning](https://github.com/ArtemStepanov/caddy-orchestrator/actions/workflows/security.yml/badge.svg)](https://github.com/ArtemStepanov/caddy-orchestrator/actions/workflows/security.yml)
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
-![Go Version](https://img.shields.io/badge/go-1.24+-00ADD8.svg)
+![Go Version](https://img.shields.io/badge/go-1.25.6+-00ADD8.svg)
 ![React](https://img.shields.io/badge/react-18.0+-61DAFB.svg)
 
 ## Features
@@ -64,7 +64,7 @@ The application is designed as a **unified service** that runs in a single Docke
 ## Tech Stack
 
 ### Backend
-- **Go 1.24+** - High-performance backend
+- **Go 1.25.6** - High-performance backend
 - **Gin** - HTTP web framework
 - **SQLite** - Embedded database for configuration storage
 - **Goroutines** - Concurrent operations on multiple instances
@@ -110,7 +110,7 @@ See [Single Container Deployment Guide](docs/SINGLE_CONTAINER_DEPLOYMENT.md) for
 For development with hot reload:
 
 #### Prerequisites
-- Go 1.24 or higher
+- Go 1.25.6 or higher
 - Node.js 20 or higher
 
 #### Setup
