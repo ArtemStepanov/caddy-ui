@@ -2,12 +2,12 @@ name: Security Scanning
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [main, develop]
   pull_request:
-    branches: [ main, develop ]
+    branches: [main, develop]
   schedule:
     # Run security scans weekly on Monday at 9 AM UTC
-    - cron: '0 9 * * 1'
+    - cron: "0 9 * * 1"
 
 jobs:
   gosec:
@@ -20,7 +20,7 @@ jobs:
       - name: Run Gosec Security Scanner
         uses: securego/gosec@master
         with:
-          args: '-no-fail -fmt sarif -out gosec-results.sarif ./...'
+          args: "-no-fail -fmt sarif -out gosec-results.sarif ./..."
 
       - name: Upload SARIF file
         uses: github/codeql-action/upload-sarif@v3
@@ -38,7 +38,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v6
         with:
-          go-version: '1.24.2'
+          go-version: "1.25.6"
 
       - name: Download dependencies
         run: go mod download
@@ -59,7 +59,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: "20"
 
       - name: Run npm audit
         run: npm audit --production
@@ -75,16 +75,16 @@ jobs:
       - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@master
         with:
-          scan-type: 'fs'
-          scan-ref: '.'
-          format: 'sarif'
-          output: 'trivy-results.sarif'
-          severity: 'CRITICAL,HIGH'
+          scan-type: "fs"
+          scan-ref: "."
+          format: "sarif"
+          output: "trivy-results.sarif"
+          severity: "CRITICAL,HIGH"
 
       - name: Upload Trivy results to GitHub Security tab
         uses: github/codeql-action/upload-sarif@v3
         with:
-          sarif_file: 'trivy-results.sarif'
+          sarif_file: "trivy-results.sarif"
         continue-on-error: true
 
   docker-scan:
@@ -107,15 +107,15 @@ jobs:
       - name: Run Trivy vulnerability scanner on Docker image
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: 'caddy-orchestrator:security-scan'
-          format: 'sarif'
-          output: 'trivy-docker-results.sarif'
-          severity: 'CRITICAL,HIGH'
+          image-ref: "caddy-orchestrator:security-scan"
+          format: "sarif"
+          output: "trivy-docker-results.sarif"
+          severity: "CRITICAL,HIGH"
 
       - name: Upload Trivy Docker results
         uses: github/codeql-action/upload-sarif@v3
         with:
-          sarif_file: 'trivy-docker-results.sarif'
+          sarif_file: "trivy-docker-results.sarif"
         continue-on-error: true
 
   codeql:
@@ -129,7 +129,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        language: [ 'go', 'javascript' ]
+        language: ["go", "javascript"]
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
