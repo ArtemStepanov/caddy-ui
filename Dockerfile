@@ -1,73 +1,62 @@
-# Build stage for Go backend
-FROM golang:1.25-alpine AS go-builder
+# Build frontend
+FROM node:25-alpine AS frontend-builder
 
-WORKDIR /app
+WORKDIR /app/web
+
+# Install dependencies
+COPY web/package*.json ./
+RUN npm ci
+
+# Build
+COPY web/ ./
+RUN npm run build
+
+# Build backend
+FROM golang:1.25-alpine AS backend-builder
 
 # Install build dependencies
 RUN apk add --no-cache gcc musl-dev sqlite-dev
 
-# Copy Go module files
+WORKDIR /app
+
+# Download dependencies
 COPY go.mod go.sum ./
 RUN go mod download
 
-# Copy source code
-COPY cmd/ ./cmd/
-COPY internal/ ./internal/
-COPY config/ ./config/
+# Build
+COPY cmd/ cmd/
+COPY internal/ internal/
+RUN CGO_ENABLED=1 GOOS=linux go build -ldflags="-s -w" -o caddy-orchestrator ./cmd/server
 
-# Build the application
-RUN CGO_ENABLED=1 GOOS=linux go build -o caddy-orchestrator ./cmd/server
+# Final image
+FROM alpine:3.19
 
-# Build stage for frontend
-FROM node:25-alpine AS frontend-builder
+# Install runtime dependencies
+RUN apk add --no-cache ca-certificates sqlite-libs tzdata
 
 WORKDIR /app
 
-# Copy package files
-COPY package*.json ./
-RUN npm ci
+# Copy binary
+COPY --from=backend-builder /app/caddy-orchestrator .
 
-# Copy frontend source
-COPY index.html ./
-COPY tsconfig*.json ./
-COPY vite.config.ts ./
-COPY postcss.config.js ./
-COPY tailwind.config.ts ./
-COPY components.json ./
-COPY src/ ./src/
-COPY public/ ./public/
-
-# Build frontend
-RUN npm run build
-
-# Runtime stage
-FROM alpine:latest
-
-# Install runtime dependencies
-RUN apk --no-cache add ca-certificates sqlite-libs
-
-WORKDIR /root/
-
-# Copy backend binary
-COPY --from=go-builder /app/caddy-orchestrator .
-
-# Copy frontend build
-COPY --from=frontend-builder /app/dist ./web
-
-# Copy default config (using example as template)
-COPY config/config.yaml.example ./config/config.yaml
+# Copy frontend
+COPY --from=frontend-builder /app/web/dist ./web/dist
 
 # Create data directory
-RUN mkdir -p ./data ./templates
+RUN mkdir -p /app/data
+
+# Environment variables
+ENV GIN_MODE=release
+ENV DB_PATH=/app/data/routes.db
+ENV CADDY_ADMIN_URL=http://localhost:2019
+ENV LISTEN_ADDR=:3000
 
 # Expose port
 EXPOSE 3000
 
-# Set environment variables
-ENV GIN_MODE=release
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+  CMD wget --no-verbose --tries=1 --spider http://localhost:3000/api/status || exit 1
 
-# Create volume for persistent data
-VOLUME ["/root/data"]
-
-# Run the application
+# Run
 CMD ["./caddy-orchestrator"]

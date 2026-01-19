@@ -1,50 +1,44 @@
-# Build artifacts
-node_modules
-dist
-*.log
-coverage.out
-coverage.html
+# Dependencies
+node_modules/
+vendor/
+
+# Build outputs
+dist/
+web/dist/
+bin/
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Test files
+*_test.go
 *.test
-caddy-orchestrator
 
-# Data and runtime files
-data
-*.db
-*.db-shm
-*.db-wal
-logs
-tmp
-
-# Development files
-.vscode
-.idea
-.DS_Store
-Thumbs.db
+# IDE
+.idea/
+.vscode/
 *.swp
 *.swo
-*~
 
 # Git
-.git
+.git/
 .gitignore
-.gitattributes
 
-# Environment
-.env
-.env.local
-.env.development
-.env.production
+# Docker
+Dockerfile*
+docker-compose*.yml
+.docker/
 
-# CI/CD
-.github
+# Database
+*.db
+*.db-journal
 
-# Documentation (not needed in image)
-docs
+# Misc
 *.md
-!README.md
-
-# Scripts (not needed in image)
-scripts
-
-# Don't ignore config directory - needed for build
-!config/
+*.log
+.env*
+.tasks/
+docs/
+scripts/

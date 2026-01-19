@@ -1,61 +1,23 @@
 services:
-  # Single container with both frontend and backend
-  caddy-orchestrator:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    image: caddy-orchestrator:latest
-    container_name: caddy-orchestrator
-    restart: always
+  orchestrator:
+    image: ghcr.io/artemstepanov/caddy-orchestrator-lite:latest
+    # Or build locally:
+    # build: .
     ports:
       - "3000:3000"
-    volumes:
-      # Persistent database storage
-      - caddy-orchestrator-data:/root/data
-      # Optional: Override default config
-      # - ./config/config.yaml:/root/config/config.yaml:ro
     environment:
-      # Required: Set a strong secret key
-      - JWT_SECRET=${JWT_SECRET:-change-this-in-production}
-      # Optional: Logging level
-      - LOG_LEVEL=${LOG_LEVEL:-info}
-      # Optional: CORS origins (comma-separated)
-      # - CORS_ORIGINS=https://orchestrator.yourdomain.com
+      - CADDY_ADMIN_URL=${CADDY_ADMIN_URL:-http://localhost:2019}
+      - DB_PATH=/app/data/routes.db
+      - GIN_MODE=release
+    volumes:
+      - ./data:/app/data
+    restart: unless-stopped
     healthcheck:
-      test:
-        [
-          "CMD",
-          "wget",
-          "--quiet",
-          "--tries=1",
-          "--spider",
-          "http://localhost:3000/api/health",
-        ]
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:3000/api/status"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 10s
-    networks:
-      - caddy-net
-    # Optional: Resource limits
-    deploy:
-      resources:
-        limits:
-          cpus: "1"
-          memory: 512M
-        reservations:
-          cpus: "0.25"
-          memory: 128M
 
-networks:
-  caddy-net:
-    driver: bridge
-
-volumes:
-  caddy-orchestrator-data:
-    driver: local
-    # Optional: Specify mount point
-    # driver_opts:
-    #   type: none
-    #   o: bind
-    #   device: /opt/caddy-orchestrator/data
+# For external Caddy, set CADDY_ADMIN_URL environment variable
+# Example: CADDY_ADMIN_URL=http://192.168.1.100:2019 docker compose -f docker-compose.prod.yml up -d

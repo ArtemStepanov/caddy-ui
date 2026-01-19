@@ -1,79 +1,51 @@
-.PHONY: help build run dev clean docker docker-up docker-down test lint
+.PHONY: all build run dev docker clean test
 
-help: ## Show this help message
-	@echo 'Usage: make [target]'
-	@echo ''
-	@echo 'Available targets:'
-	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+:.*?## / {printf "  %-15s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
+# Build all
+all: build
 
-build: ## Build the application
-	@echo "Building frontend..."
-	npm run build
-	@echo "Building backend..."
-	CGO_ENABLED=1 CC="zig cc" CXX="zig c++" go build -o caddy-orchestrator ./cmd/server
-	@echo "Build complete!"
+# Build backend
+build:
+	CGO_ENABLED=1 go build -o bin/caddy-orchestrator ./cmd/server
 
-run: build ## Build and run the application
-	./caddy-orchestrator
+# Build frontend
+frontend:
+	cd web && npm install && npm run build
 
-dev-backend: ## Run backend in development mode
-	go run cmd/server/main.go
+# Run locally (development)
+dev:
+	go run ./cmd/server
 
-dev-frontend: ## Run frontend in development mode
-	npm run dev
+# Run frontend dev server
+dev-frontend:
+	cd web && npm run dev
 
-dev: ## Run both frontend and backend (requires two terminals)
-	@echo "Run 'make dev-backend' in one terminal and 'make dev-frontend' in another"
+# Build Docker image
+docker:
+	docker build -t caddy-orchestrator-lite .
 
-clean: ## Clean build artifacts
-	rm -f caddy-orchestrator
-	rm -rf dist
-	rm -rf data/*.db
-	rm -rf logs
+# Run with Docker Compose
+docker-up:
+	docker compose up -d --build
 
-docker: ## Build Docker image
-	docker build -t caddy-orchestrator:latest .
-
-docker-up: ## Start services with Docker Compose
-	docker compose up -d
-
-docker-down: ## Stop services with Docker Compose
+# Stop Docker Compose
+docker-down:
 	docker compose down
 
-docker-logs: ## Show Docker logs
+# View logs
+logs:
 	docker compose logs -f
 
-test: ## Run tests
-	go test -v ./...
+# Run tests
+test:
+	CC="zig cc" CGO_ENABLED=1 go test ./...
 
-test-coverage: ## Run tests with coverage
-	go test -v -coverprofile=coverage.out ./...
-	go tool cover -html=coverage.out -o coverage.html
+# Clean build artifacts
+clean:
+	rm -rf bin/
+	rm -rf web/dist/
+	rm -rf web/node_modules/
 
-lint: ## Run linters
-	golangci-lint run ./...
-	npm run lint
-
-deps: ## Install dependencies
+# Install dependencies
+deps:
 	go mod download
-	npm install
-
-tidy: ## Tidy Go modules
-	go mod tidy
-
-format: ## Format code
-	go fmt ./...
-	npm run format
-
-install-tools: ## Install development tools
-	go install github.com/cosmtrek/air@latest
-	go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
-
-migrate: ## Create database migrations (if needed)
-	@echo "Database auto-migrates on startup"
-
-init-data: ## Initialize with sample data
-	@echo "Creating sample instance..."
-	curl -X POST http://localhost:3000/api/instances \
-		-H "Content-Type: application/json" \
-		-d '{"name":"Local Caddy","admin_url":"http://localhost:2019","auth_type":"none"}'
+	cd web && npm install
