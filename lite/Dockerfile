@@ -1,5 +1,5 @@
 # Build frontend
-FROM node:20-alpine AS frontend-builder
+FROM node:25-alpine AS frontend-builder
 
 WORKDIR /app/web
 
@@ -12,7 +12,7 @@ COPY web/ ./
 RUN npm run build
 
 # Build backend
-FROM golang:1.23-alpine AS backend-builder
+FROM golang:1.25-alpine AS backend-builder
 
 # Install build dependencies
 RUN apk add --no-cache gcc musl-dev sqlite-dev

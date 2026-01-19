@@ -3,13 +3,12 @@ package api
 import (
 	"github.com/gin-gonic/gin"
 
-	"github.com/ArtemStepanov/caddy-orchestrator/lite/internal/caddy"
 	"github.com/ArtemStepanov/caddy-orchestrator/lite/internal/storage"
 )
 
 // SetupRoutes configures all API routes
-func SetupRoutes(r *gin.Engine, store *storage.SQLiteStorage, caddyClient *caddy.Client) {
-	h := NewHandler(store, caddyClient)
+func SetupRoutes(r *gin.Engine, store *storage.SQLiteStorage, defaultCaddyURL string) {
+	h := NewHandler(store, defaultCaddyURL)
 
 	// Enable CORS
 	r.Use(corsMiddleware())

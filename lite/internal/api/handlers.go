@@ -14,16 +14,34 @@ import (
 
 // Handler contains all HTTP handlers
 type Handler struct {
-	store *storage.SQLiteStorage
-	caddy *caddy.Client
+	store           *storage.SQLiteStorage
+	defaultCaddyURL string // fallback URL from env
 }
 
 // NewHandler creates a new handler
-func NewHandler(store *storage.SQLiteStorage, caddyClient *caddy.Client) *Handler {
+func NewHandler(store *storage.SQLiteStorage, defaultCaddyURL string) *Handler {
 	return &Handler{
-		store: store,
-		caddy: caddyClient,
+		store:           store,
+		defaultCaddyURL: defaultCaddyURL,
 	}
+}
+
+// getCaddyClient returns a Caddy client using the URL from GlobalConfig (or default)
+func (h *Handler) getCaddyClient() *caddy.Client {
+	cfg, err := h.store.GetGlobalConfig()
+	if err != nil || cfg.CaddyAdminURL == "" {
+		return caddy.NewClient(h.defaultCaddyURL)
+	}
+	return caddy.NewClient(cfg.CaddyAdminURL)
+}
+
+// getCaddyURL returns the current Caddy URL from GlobalConfig (or default)
+func (h *Handler) getCaddyURL() string {
+	cfg, err := h.store.GetGlobalConfig()
+	if err != nil || cfg.CaddyAdminURL == "" {
+		return h.defaultCaddyURL
+	}
+	return cfg.CaddyAdminURL
 }
 
 // ListRoutes returns all routes
@@ -202,8 +220,11 @@ func (h *Handler) UpdateConfig(c *gin.Context) {
 
 // GetStatus returns Caddy health status
 func (h *Handler) GetStatus(c *gin.Context) {
+	caddyClient := h.getCaddyClient()
+	caddyURL := h.getCaddyURL()
+
 	start := time.Now()
-	err := h.caddy.Health()
+	err := caddyClient.Health()
 	latency := time.Since(start).Milliseconds()
 
 	if err != nil {
@@ -211,7 +232,7 @@ func (h *Handler) GetStatus(c *gin.Context) {
 			"status":    "offline",
 			"error":     err.Error(),
 			"latency":   latency,
-			"admin_url": h.caddy.GetAdminURL(),
+			"admin_url": caddyURL,
 		})
 		return
 	}
@@ -226,7 +247,7 @@ func (h *Handler) GetStatus(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"status":      "online",
 		"latency":     latency,
-		"admin_url":   h.caddy.GetAdminURL(),
+		"admin_url":   caddyURL,
 		"route_count": routeCount,
 	})
 }
@@ -290,6 +311,6 @@ func (h *Handler) syncToCaddy() error {
 	data, _ := json.MarshalIndent(caddyConfig, "", "  ")
 	_ = data // Could log this if needed
 
-	// Load into Caddy
-	return h.caddy.LoadConfig(caddyConfig)
+	// Load into Caddy using dynamic client
+	return h.getCaddyClient().LoadConfig(caddyConfig)
 }

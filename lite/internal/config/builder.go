@@ -9,7 +9,13 @@ import (
 
 // CaddyConfig represents the root Caddy configuration
 type CaddyConfig struct {
-	Apps *Apps `json:"apps,omitempty"`
+	Admin *AdminConfig `json:"admin,omitempty"`
+	Apps  *Apps        `json:"apps,omitempty"`
+}
+
+// AdminConfig is the admin endpoint configuration
+type AdminConfig struct {
+	Listen string `json:"listen,omitempty"`
 }
 
 // Apps contains Caddy applications
@@ -46,8 +52,15 @@ type Handler map[string]any
 
 // BuildCaddyConfig converts stored routes to Caddy JSON config
 func BuildCaddyConfig(routes []*storage.Route, global *storage.GlobalConfig) *CaddyConfig {
+	// Always preserve admin listener on 0.0.0.0:2019 so we can continue managing Caddy
+	config := &CaddyConfig{
+		Admin: &AdminConfig{
+			Listen: "0.0.0.0:2019",
+		},
+	}
+
 	if len(routes) == 0 {
-		return &CaddyConfig{}
+		return config
 	}
 
 	// Filter enabled routes only
@@ -59,7 +72,7 @@ func BuildCaddyConfig(routes []*storage.Route, global *storage.GlobalConfig) *Ca
 	}
 
 	if len(enabledRoutes) == 0 {
-		return &CaddyConfig{}
+		return config
 	}
 
 	// Sort routes by domain for consistent output
@@ -79,18 +92,18 @@ func BuildCaddyConfig(routes []*storage.Route, global *storage.GlobalConfig) *Ca
 		}
 	}
 
-	return &CaddyConfig{
-		Apps: &Apps{
-			HTTP: &HTTPApp{
-				Servers: map[string]*Server{
-					"srv0": {
-						Listen: []string{":443", ":80"},
-						Routes: caddyRoutes,
-					},
+	config.Apps = &Apps{
+		HTTP: &HTTPApp{
+			Servers: map[string]*Server{
+				"srv0": {
+					Listen: []string{":443", ":80"},
+					Routes: caddyRoutes,
 				},
 			},
 		},
 	}
+
+	return config
 }
 
 // buildRoute converts a single stored route to a Caddy route
@@ -113,6 +126,14 @@ func buildRoute(r *storage.Route, global *storage.GlobalConfig) *Route {
 				"gzip": map[string]any{},
 			},
 		})
+	}
+
+	// Add headers handler if configured
+	if r.Headers != nil {
+		h := buildHeadersHandler(r.Headers)
+		if h != nil {
+			handlers = append(handlers, h)
+		}
 	}
 
 	// Build handler based on type
@@ -254,5 +275,43 @@ func buildRedirectHandler(configJSON json.RawMessage) Handler {
 		"headers": map[string][]string{
 			"Location": {cfg.To},
 		},
+	}
+}
+
+func buildHeadersHandler(cfg *storage.HeaderConfig) Handler {
+	if cfg == nil {
+		return nil
+	}
+
+	// Check if empty
+	if len(cfg.Set) == 0 && len(cfg.Add) == 0 && len(cfg.Delete) == 0 {
+		return nil
+	}
+
+	response := make(map[string]any)
+
+	if len(cfg.Set) > 0 {
+		set := make(map[string][]string)
+		for k, v := range cfg.Set {
+			set[k] = []string{v}
+		}
+		response["set"] = set
+	}
+
+	if len(cfg.Add) > 0 {
+		add := make(map[string][]string)
+		for k, v := range cfg.Add {
+			add[k] = []string{v}
+		}
+		response["add"] = add
+	}
+
+	if len(cfg.Delete) > 0 {
+		response["delete"] = cfg.Delete
+	}
+
+	return Handler{
+		"handler":  "headers",
+		"response": response,
 	}
 }

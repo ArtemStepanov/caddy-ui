@@ -1,11 +1,18 @@
 const API_BASE = '/api';
 
+export interface HeaderConfig {
+  set?: Record<string, string>;
+  add?: Record<string, string>;
+  delete?: string[];
+}
+
 export interface Route {
   id: string;
   domain: string;
   path?: string;
   handler_type: string;
   config: any;
+  headers?: HeaderConfig;
   enabled: boolean;
   created_at: string;
   updated_at: string;
@@ -35,7 +42,7 @@ class ApiClient {
     });
 
     const data = await res.json();
-    
+
     if (!res.ok) {
       throw new Error(data.error || `HTTP ${res.status}`);
     }

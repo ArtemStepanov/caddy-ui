@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'preact/hooks';
 import { route as navigate } from 'preact-router';
 import { api } from '../lib/api';
+import { HeaderEditor, getDefaultHeaderConfig } from '../components/forms/HeaderEditor';
 
 interface RouteFormProps {
   id?: string;
@@ -22,6 +23,8 @@ export function RouteForm({ id }: RouteFormProps) {
   const [path, setPath] = useState('');
   const [handlerType, setHandlerType] = useState('reverse_proxy');
   const [config, setConfig] = useState<any>({ upstreams: [], websocket: false, headers: {}, load_balancing: 'round_robin' });
+  const [headers, setHeaders] = useState(getDefaultHeaderConfig());
+  const [showHeaders, setShowHeaders] = useState(false);
 
   useEffect(() => {
     if (isEdit) {
@@ -36,6 +39,9 @@ export function RouteForm({ id }: RouteFormProps) {
       setPath(route.path || '');
       setHandlerType(route.handler_type);
       setConfig(typeof route.config === 'string' ? JSON.parse(route.config) : route.config);
+      if (route.headers) {
+        setHeaders(route.headers);
+      }
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -54,6 +60,7 @@ export function RouteForm({ id }: RouteFormProps) {
         path: path || undefined,
         handler_type: handlerType,
         config,
+        headers,
       };
 
       if (isEdit) {
@@ -180,6 +187,24 @@ export function RouteForm({ id }: RouteFormProps) {
           
           {handlerType === 'redir' && (
             <RedirectConfig config={config} onChange={setConfig} />
+          )}
+        </div>
+
+        {/* Response Headers */}
+        <div class="card">
+          <button
+            type="button"
+            onClick={() => setShowHeaders(!showHeaders)}
+            class="w-full text-left flex items-center justify-between"
+          >
+            <h2 class="text-lg font-semibold">Response Headers (Optional)</h2>
+            <span class="text-slate-400">{showHeaders ? '▼' : '▶'}</span>
+          </button>
+          
+          {showHeaders && (
+            <div class="mt-4">
+              <HeaderEditor config={headers} onChange={setHeaders} />
+            </div>
           )}
         </div>
 

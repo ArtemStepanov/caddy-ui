@@ -12,6 +12,7 @@ type Route struct {
 	Path        string          `json:"path,omitempty"`
 	HandlerType string          `json:"handler_type"`
 	Config      json.RawMessage `json:"config"`
+	Headers     *HeaderConfig   `json:"headers,omitempty"`
 	Enabled     bool            `json:"enabled"`
 	CreatedAt   time.Time       `json:"created_at"`
 	UpdatedAt   time.Time       `json:"updated_at"`
