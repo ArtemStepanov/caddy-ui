@@ -1,0 +1,23 @@
+services:
+  orchestrator:
+    image: ghcr.io/artemstepanov/caddy-orchestrator-lite:latest
+    # Or build locally:
+    # build: .
+    ports:
+      - "3000:3000"
+    environment:
+      - CADDY_ADMIN_URL=${CADDY_ADMIN_URL:-http://localhost:2019}
+      - DB_PATH=/app/data/routes.db
+      - GIN_MODE=release
+    volumes:
+      - ./data:/app/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:3000/api/status"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+# For external Caddy, set CADDY_ADMIN_URL environment variable
+# Example: CADDY_ADMIN_URL=http://192.168.1.100:2019 docker compose -f docker-compose.prod.yml up -d
