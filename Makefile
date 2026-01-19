@@ -10,7 +10,7 @@ build: ## Build the application
 	@echo "Building frontend..."
 	npm run build
 	@echo "Building backend..."
-	CGO_ENABLED=1 go build -o caddy-orchestrator ./cmd/server
+	CGO_ENABLED=1 CC="zig cc" CXX="zig c++" go build -o caddy-orchestrator ./cmd/server
 	@echo "Build complete!"
 
 run: build ## Build and run the application
@@ -35,13 +35,13 @@ docker: ## Build Docker image
 	docker build -t caddy-orchestrator:latest .
 
 docker-up: ## Start services with Docker Compose
-	docker-compose up -d
+	docker compose up -d
 
 docker-down: ## Stop services with Docker Compose
-	docker-compose down
+	docker compose down
 
 docker-logs: ## Show Docker logs
-	docker-compose logs -f
+	docker compose logs -f
 
 test: ## Run tests
 	go test -v ./...
