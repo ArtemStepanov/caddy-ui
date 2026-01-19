@@ -8,6 +8,7 @@ export function Settings() {
   const [success, setSuccess] = useState(false);
   const [testing, setTesting] = useState(false);
   const [testResult, setTestResult] = useState<{ success: boolean; latency?: number; error?: string } | null>(null);
+  const [importing, setImporting] = useState(false);
 
   const [config, setConfig] = useState<GlobalConfig>({
     caddy_admin_url: 'http://localhost:2019',
@@ -57,6 +58,24 @@ export function Settings() {
       setTestResult({ success: false, error: err.message });
     } finally {
       setTesting(false);
+    }
+  }
+
+  async function handleImport() {
+    setImporting(true);
+    setError(null);
+    try {
+      const preview = await api.previewImport();
+      if (confirm(`Found ${preview.count} routes in Caddy.\n\nWARNING: This will DELETE all local routes and replace them with the configuration from Caddy.\n\nAre you sure you want to proceed?`)) {
+        const result = await api.importFromCaddy();
+        setSuccess(true);
+        setTimeout(() => setSuccess(false), 3000);
+        alert(`Successfully imported ${result.imported} routes.`);
+      }
+    } catch (err: any) {
+      setError("Import failed: " + err.message);
+    } finally {
+      setImporting(false);
     }
   }
 
@@ -148,6 +167,28 @@ export function Settings() {
               <li>• Automatically negotiates best format with browser</li>
             </ul>
           </div>
+        </div>
+
+        {/* Configuration Sync */}
+        <div class="card">
+          <h2 class="text-lg font-semibold mb-4">Configuration Import</h2>
+          
+          <div class="mb-4 text-sm text-slate-400">
+            Import configuration from the running Caddy instance. 
+            <div class="mt-2 p-3 bg-red-900/20 border border-red-900/50 rounded text-red-200">
+              <strong>Warning:</strong> This will overwrite all local routes with the ones found in Caddy.
+              Any routes in Caddy that are not fully supported by this UI will be preserved but may not be fully editable.
+            </div>
+          </div>
+
+          <button 
+            type="button" 
+            onClick={handleImport}
+            disabled={importing}
+            class="btn bg-slate-800 hover:bg-slate-700 border-slate-600 text-slate-200"
+          >
+            {importing ? 'Importing...' : 'Import from Caddy'}
+          </button>
         </div>
 
         {/* About */}

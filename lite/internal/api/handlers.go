@@ -314,3 +314,70 @@ func (h *Handler) syncToCaddy() error {
 	// Load into Caddy using dynamic client
 	return h.getCaddyClient().LoadConfig(caddyConfig)
 }
+
+// PreviewImport returns what would be imported from Caddy
+func (h *Handler) PreviewImport(c *gin.Context) {
+	raw, err := h.getCaddyClient().GetConfig("")
+	if err != nil {
+		c.JSON(http.StatusBadGateway, gin.H{"error": "Failed to connect to Caddy: " + err.Error()})
+		return
+	}
+
+	var caddyConfig config.CaddyConfig
+	if err := json.Unmarshal(raw, &caddyConfig); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to parse Caddy response: " + err.Error()})
+		return
+	}
+
+	routes, err := config.ParseCaddyConfig(&caddyConfig)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to parse Caddy config: " + err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"routes": routes,
+		"count":  len(routes),
+	})
+}
+
+// ImportFromCaddy pulls config from Caddy and overwrites local routes
+func (h *Handler) ImportFromCaddy(c *gin.Context) {
+	// 1. Get Caddy config
+	raw, err := h.getCaddyClient().GetConfig("")
+	if err != nil {
+		c.JSON(http.StatusBadGateway, gin.H{"error": "Failed to connect to Caddy: " + err.Error()})
+		return
+	}
+
+	// 2. Parse Caddy config
+	var caddyConfig config.CaddyConfig
+	if err := json.Unmarshal(raw, &caddyConfig); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to parse Caddy response: " + err.Error()})
+		return
+	}
+
+	routes, err := config.ParseCaddyConfig(&caddyConfig)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to parse Caddy config: " + err.Error()})
+		return
+	}
+
+	// 3. Overwrite local storage
+	if err := h.store.DeleteAllRoutes(); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to clear routes: " + err.Error()})
+		return
+	}
+
+	count := 0
+	for _, r := range routes {
+		if err := h.store.CreateRoute(r); err == nil {
+			count++
+		}
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"imported": count,
+		"message":  "Configuration imported successfully",
+	})
+}

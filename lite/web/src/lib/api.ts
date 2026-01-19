@@ -108,6 +108,14 @@ class ApiClient {
       body: JSON.stringify({ url }),
     });
   }
+
+  async previewImport(): Promise<{ routes: Route[]; count: number }> {
+    return this.request('/import-preview', { method: 'POST' });
+  }
+
+  async importFromCaddy(): Promise<{ imported: number; message: string }> {
+    return this.request('/import', { method: 'POST' });
+  }
 }
 
 export const api = new ApiClient();

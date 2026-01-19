@@ -3,6 +3,7 @@ package config
 import (
 	"encoding/json"
 	"sort"
+	"strings"
 
 	"github.com/ArtemStepanov/caddy-orchestrator/lite/internal/storage"
 )
@@ -108,9 +109,28 @@ func BuildCaddyConfig(routes []*storage.Route, global *storage.GlobalConfig) *Ca
 
 // buildRoute converts a single stored route to a Caddy route
 func buildRoute(r *storage.Route, global *storage.GlobalConfig) *Route {
-	match := Match{
-		Host: []string{r.Domain},
+	// If we have preserved raw Caddy route, use it as base
+	if len(r.RawCaddyRoute) > 0 {
+		return buildRouteMerged(r, global)
 	}
+
+	match := Match{}
+
+	// Handle domains (support comma-separated or wildcard)
+	if r.Domain != "*" && r.Domain != "" {
+		parts := strings.Split(r.Domain, ",")
+		var hosts []string
+		for _, p := range parts {
+			p = strings.TrimSpace(p)
+			if p != "" {
+				hosts = append(hosts, p)
+			}
+		}
+		if len(hosts) > 0 {
+			match.Host = hosts
+		}
+	}
+
 	if r.Path != "" {
 		match.Path = []string{r.Path}
 	}
@@ -153,8 +173,9 @@ func buildRoute(r *storage.Route, global *storage.GlobalConfig) *Route {
 		if h != nil {
 			handlers = append(handlers, h)
 		}
-	default:
-		return nil
+	case "unknown":
+		// For unknown type without RawCaddyRoute, we can't do much.
+		// Just skip adding a handler.
 	}
 
 	if len(handlers) == 0 {
@@ -166,6 +187,125 @@ func buildRoute(r *storage.Route, global *storage.GlobalConfig) *Route {
 		Handle:   handlers,
 		Terminal: true,
 	}
+}
+
+// buildRouteMerged merges user changes with preserved Caddy route
+func buildRouteMerged(r *storage.Route, global *storage.GlobalConfig) *Route {
+	var original Route
+	if err := json.Unmarshal(r.RawCaddyRoute, &original); err != nil {
+		// Fallback to normal build if unmarshal fails
+		return buildRoute(r, global)
+	}
+
+	// Update matchers from current state
+	original.Match = nil
+	if r.Domain != "*" && r.Domain != "" {
+		parts := strings.Split(r.Domain, ",")
+		var hosts []string
+		for _, p := range parts {
+			p = strings.TrimSpace(p)
+			if p != "" {
+				hosts = append(hosts, p)
+			}
+		}
+		if len(hosts) > 0 {
+			original.Match = append(original.Match, Match{Host: hosts})
+		}
+	} else if r.Path != "" {
+		// Global route with path matcher
+		// If domain is * but path exists
+		original.Match = append(original.Match, Match{})
+	} else {
+		// Global route matching everything, usually Caddy uses [{}] or empty match list implies match all?
+		// Actually if match is nil/empty, it matches everything.
+	}
+
+	// If we have paths, update the first matcher or add one
+	if r.Path != "" {
+		if len(original.Match) == 0 {
+			original.Match = append(original.Match, Match{})
+		}
+		original.Match[0].Path = []string{r.Path}
+	}
+
+	// Rebuild handlers
+	// Strategy:
+	// 1. Generate our managed handlers (headers, main handler)
+	// 2. Filter original handlers to keep only "unknown" ones
+	// 3. Reconstruct list: [encode (if global)] + [headers] + [unknown_before] + [main_handler] + [unknown_after]
+	//    Actually, simple appending of unknown handlers might break things.
+	//    Let's try: [encode] + [headers] + [unknowns] + [main_handler]
+	//    Or better: iterate original, replace known types with ours.
+
+	var newHandlers []Handler
+
+	// 1. Encode (Global)
+	if global != nil && global.EnableEncode {
+		newHandlers = append(newHandlers, Handler{
+			"handler": "encode",
+			"encodings": map[string]any{
+				"zstd": map[string]any{},
+				"gzip": map[string]any{},
+			},
+		})
+	}
+
+	// 2. Headers (Local)
+	if r.Headers != nil {
+		h := buildHeadersHandler(r.Headers)
+		if h != nil {
+			newHandlers = append(newHandlers, h)
+		}
+	}
+
+	// 3. Main Handler (Local)
+	var mainHandler Handler
+	switch r.HandlerType {
+	case "reverse_proxy":
+		mainHandler = buildReverseProxyHandler(r.Config)
+	case "file_server":
+		mainHandler = buildFileServerHandler(r.Config)
+	case "redir":
+		mainHandler = buildRedirectHandler(r.Config)
+	}
+
+	// 4. Merge with unknowns
+	// We iterate original handlers.
+	// If we find a handler that we "manage" (even if it's different from current type), we skip it.
+	// If we find an unknown handler, we add it.
+	// We inject our Main Handler at the first position where a "managed" handler was, or at end.
+
+	var unknownHandlers []Handler
+	managedTypes := map[string]bool{
+		"reverse_proxy":   true,
+		"file_server":     true,
+		"static_response": true, // could be redir or something else, but we treat it as managed if we are in redir mode
+		"headers":         true,
+		"encode":          true,
+	}
+
+	for _, h := range original.Handle {
+		hType, _ := h["handler"].(string)
+		if !managedTypes[hType] {
+			unknownHandlers = append(unknownHandlers, h)
+		}
+	}
+
+	// Now construct final list:
+	// [encode] + [headers] + [unknowns] + [mainHandler]
+	// This puts unknown middlewares before the final handler (reverse_proxy is terminal usually).
+	// If unknown handler is a terminal one (like `acme_server`), it might conflict if we also add reverse_proxy.
+	// But usually we only have one terminal handler.
+
+	newHandlers = append(newHandlers, unknownHandlers...)
+	if mainHandler != nil {
+		newHandlers = append(newHandlers, mainHandler)
+	}
+
+	original.Handle = newHandlers
+	original.Terminal = true
+
+	return &original
 }
 
 func buildReverseProxyHandler(configJSON json.RawMessage) Handler {

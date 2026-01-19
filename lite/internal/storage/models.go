@@ -16,6 +16,11 @@ type Route struct {
 	Enabled     bool            `json:"enabled"`
 	CreatedAt   time.Time       `json:"created_at"`
 	UpdatedAt   time.Time       `json:"updated_at"`
+
+	// RawCaddyRoute stores the original Caddy route JSON for preserving
+	// unsupported handlers during round-trip sync.
+	// It is not exposed in JSON responses by default (unless requested, but here we hide it).
+	RawCaddyRoute json.RawMessage `json:"-"`
 }
 
 // Handler-specific config structs

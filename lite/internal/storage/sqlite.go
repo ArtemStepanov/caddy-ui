@@ -58,7 +58,15 @@ func (s *SQLiteStorage) migrate() error {
 		CREATE INDEX IF NOT EXISTS idx_routes_domain ON routes(domain);
 		CREATE INDEX IF NOT EXISTS idx_routes_enabled ON routes(enabled);
 	`)
-	return err
+	if err != nil {
+		return err
+	}
+
+	// Migration: Add raw_caddy_route column if it doesn't exist
+	// We ignore the error because it returns error if column already exists
+	_, _ = s.db.Exec(`ALTER TABLE routes ADD COLUMN raw_caddy_route TEXT`)
+
+	return nil
 }
 
 // Route CRUD operations
@@ -72,10 +80,11 @@ func (s *SQLiteStorage) CreateRoute(route *Route) error {
 	route.UpdatedAt = time.Now()
 
 	_, err := s.db.Exec(
-		`INSERT INTO routes (id, domain, path, handler_type, config, enabled, created_at, updated_at)
-		 VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+		`INSERT INTO routes (id, domain, path, handler_type, config, enabled, created_at, updated_at, raw_caddy_route)
+		 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
 		route.ID, route.Domain, route.Path, route.HandlerType,
 		string(route.Config), boolToInt(route.Enabled), route.CreatedAt, route.UpdatedAt,
+		string(route.RawCaddyRoute),
 	)
 	return err
 }
@@ -83,7 +92,7 @@ func (s *SQLiteStorage) CreateRoute(route *Route) error {
 // GetRoute retrieves a route by ID
 func (s *SQLiteStorage) GetRoute(id string) (*Route, error) {
 	row := s.db.QueryRow(
-		`SELECT id, domain, path, handler_type, config, enabled, created_at, updated_at
+		`SELECT id, domain, path, handler_type, config, enabled, created_at, updated_at, COALESCE(raw_caddy_route, '')
 		 FROM routes WHERE id = ?`, id,
 	)
 	return s.scanRoute(row)
@@ -92,7 +101,7 @@ func (s *SQLiteStorage) GetRoute(id string) (*Route, error) {
 // ListRoutes returns all routes
 func (s *SQLiteStorage) ListRoutes() ([]*Route, error) {
 	rows, err := s.db.Query(
-		`SELECT id, domain, path, handler_type, config, enabled, created_at, updated_at
+		`SELECT id, domain, path, handler_type, config, enabled, created_at, updated_at, COALESCE(raw_caddy_route, '')
 		 FROM routes ORDER BY domain, path`,
 	)
 	if err != nil {
@@ -115,10 +124,10 @@ func (s *SQLiteStorage) ListRoutes() ([]*Route, error) {
 func (s *SQLiteStorage) UpdateRoute(route *Route) error {
 	route.UpdatedAt = time.Now()
 	_, err := s.db.Exec(
-		`UPDATE routes SET domain=?, path=?, handler_type=?, config=?, enabled=?, updated_at=?
+		`UPDATE routes SET domain=?, path=?, handler_type=?, config=?, enabled=?, updated_at=?, raw_caddy_route=?
 		 WHERE id=?`,
 		route.Domain, route.Path, route.HandlerType,
-		string(route.Config), boolToInt(route.Enabled), route.UpdatedAt, route.ID,
+		string(route.Config), boolToInt(route.Enabled), route.UpdatedAt, string(route.RawCaddyRoute), route.ID,
 	)
 	return err
 }
@@ -129,19 +138,30 @@ func (s *SQLiteStorage) DeleteRoute(id string) error {
 	return err
 }
 
+// DeleteAllRoutes deletes all routes (used for import)
+func (s *SQLiteStorage) DeleteAllRoutes() error {
+	_, err := s.db.Exec(`DELETE FROM routes`)
+	return err
+}
+
 func (s *SQLiteStorage) scanRoute(row *sql.Row) (*Route, error) {
 	var route Route
 	var config string
 	var enabled int
+	var rawCaddyRoute string
 	err := row.Scan(
 		&route.ID, &route.Domain, &route.Path, &route.HandlerType,
 		&config, &enabled, &route.CreatedAt, &route.UpdatedAt,
+		&rawCaddyRoute,
 	)
 	if err != nil {
 		return nil, err
 	}
 	route.Config = json.RawMessage(config)
 	route.Enabled = enabled == 1
+	if rawCaddyRoute != "" {
+		route.RawCaddyRoute = json.RawMessage(rawCaddyRoute)
+	}
 	return &route, nil
 }
 
@@ -149,15 +169,20 @@ func (s *SQLiteStorage) scanRouteRows(rows *sql.Rows) (*Route, error) {
 	var route Route
 	var config string
 	var enabled int
+	var rawCaddyRoute string
 	err := rows.Scan(
 		&route.ID, &route.Domain, &route.Path, &route.HandlerType,
 		&config, &enabled, &route.CreatedAt, &route.UpdatedAt,
+		&rawCaddyRoute,
 	)
 	if err != nil {
 		return nil, err
 	}
 	route.Config = json.RawMessage(config)
 	route.Enabled = enabled == 1
+	if rawCaddyRoute != "" {
+		route.RawCaddyRoute = json.RawMessage(rawCaddyRoute)
+	}
 	return &route, nil
 }
 

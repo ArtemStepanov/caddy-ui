@@ -37,7 +37,7 @@ logs:
 
 # Run tests
 test:
-	go test ./...
+	CC="zig cc" CGO_ENABLED=1 go test ./...
 
 # Clean build artifacts
 clean:
