@@ -235,6 +235,84 @@ func TestUpdateRoute_Success(t *testing.T) {
 	}
 }
 
+func TestUpdateRoute_PreservesEnabled(t *testing.T) {
+	router, store, cleanup := setupTestRouter(t)
+	defer cleanup()
+
+	// Create an enabled route
+	route := &storage.Route{
+		Domain:      "example.com",
+		HandlerType: "reverse_proxy",
+		Config:      json.RawMessage(`{"upstreams":["localhost:8080"]}`),
+		Enabled:     true,
+	}
+	store.CreateRoute(route)
+
+	// Update without "enabled" field
+	body := `{
+		"domain": "example.com",
+		"handler_type": "reverse_proxy",
+		"config": {"upstreams": ["localhost:9090"]}
+	}`
+
+	req := httptest.NewRequest("PUT", "/api/routes/"+route.ID, bytes.NewBufferString(body))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Errorf("Expected status %d, got %d. Body: %s", http.StatusOK, w.Code, w.Body.String())
+	}
+
+	// Verify update preserved enabled state
+	updated, _ := store.GetRoute(route.ID)
+	if !updated.Enabled {
+		t.Error("Expected route to remain enabled")
+	}
+
+	// Verify config was updated
+	if !bytes.Contains(updated.Config, []byte("9090")) {
+		t.Error("Expected config to be updated")
+	}
+}
+
+func TestUpdateRoute_PreservesRawCaddyRoute(t *testing.T) {
+	router, store, cleanup := setupTestRouter(t)
+	defer cleanup()
+
+	// Create a route with RawCaddyRoute
+	route := &storage.Route{
+		Domain:        "example.com",
+		HandlerType:   "reverse_proxy",
+		Config:        json.RawMessage(`{}`),
+		Enabled:       true,
+		RawCaddyRoute: json.RawMessage(`{"original": "data"}`),
+	}
+	store.CreateRoute(route)
+
+	// Update
+	body := `{
+		"domain": "example.com",
+		"handler_type": "reverse_proxy",
+		"config": {}
+	}`
+
+	req := httptest.NewRequest("PUT", "/api/routes/"+route.ID, bytes.NewBufferString(body))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Errorf("Expected status %d, got %d. Body: %s", http.StatusOK, w.Code, w.Body.String())
+	}
+
+	// Verify
+	updated, _ := store.GetRoute(route.ID)
+	if string(updated.RawCaddyRoute) != `{"original": "data"}` {
+		t.Errorf("Expected RawCaddyRoute to be preserved, got %s", updated.RawCaddyRoute)
+	}
+}
+
 func TestUpdateRoute_NotFound(t *testing.T) {
 	router, _, cleanup := setupTestRouter(t)
 	defer cleanup()

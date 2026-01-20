@@ -66,6 +66,9 @@ func (s *SQLiteStorage) migrate() error {
 	// We ignore the error because it returns error if column already exists
 	_, _ = s.db.Exec(`ALTER TABLE routes ADD COLUMN raw_caddy_route TEXT`)
 
+	// Migration: Add strip_path_prefix column if it doesn't exist
+	_, _ = s.db.Exec(`ALTER TABLE routes ADD COLUMN strip_path_prefix TEXT DEFAULT ''`)
+
 	return nil
 }
 
@@ -80,11 +83,11 @@ func (s *SQLiteStorage) CreateRoute(route *Route) error {
 	route.UpdatedAt = time.Now()
 
 	_, err := s.db.Exec(
-		`INSERT INTO routes (id, domain, path, handler_type, config, enabled, created_at, updated_at, raw_caddy_route)
-		 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+		`INSERT INTO routes (id, domain, path, handler_type, config, enabled, created_at, updated_at, raw_caddy_route, strip_path_prefix)
+		 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
 		route.ID, route.Domain, route.Path, route.HandlerType,
 		string(route.Config), boolToInt(route.Enabled), route.CreatedAt, route.UpdatedAt,
-		string(route.RawCaddyRoute),
+		string(route.RawCaddyRoute), route.StripPathPrefix,
 	)
 	return err
 }
@@ -92,7 +95,7 @@ func (s *SQLiteStorage) CreateRoute(route *Route) error {
 // GetRoute retrieves a route by ID
 func (s *SQLiteStorage) GetRoute(id string) (*Route, error) {
 	row := s.db.QueryRow(
-		`SELECT id, domain, path, handler_type, config, enabled, created_at, updated_at, COALESCE(raw_caddy_route, '')
+		`SELECT id, domain, path, handler_type, config, enabled, created_at, updated_at, COALESCE(raw_caddy_route, ''), COALESCE(strip_path_prefix, '')
 		 FROM routes WHERE id = ?`, id,
 	)
 	return s.scanRoute(row)
@@ -101,7 +104,7 @@ func (s *SQLiteStorage) GetRoute(id string) (*Route, error) {
 // ListRoutes returns all routes
 func (s *SQLiteStorage) ListRoutes() ([]*Route, error) {
 	rows, err := s.db.Query(
-		`SELECT id, domain, path, handler_type, config, enabled, created_at, updated_at, COALESCE(raw_caddy_route, '')
+		`SELECT id, domain, path, handler_type, config, enabled, created_at, updated_at, COALESCE(raw_caddy_route, ''), COALESCE(strip_path_prefix, '')
 		 FROM routes ORDER BY domain, path`,
 	)
 	if err != nil {
@@ -124,10 +127,10 @@ func (s *SQLiteStorage) ListRoutes() ([]*Route, error) {
 func (s *SQLiteStorage) UpdateRoute(route *Route) error {
 	route.UpdatedAt = time.Now()
 	_, err := s.db.Exec(
-		`UPDATE routes SET domain=?, path=?, handler_type=?, config=?, enabled=?, updated_at=?, raw_caddy_route=?
+		`UPDATE routes SET domain=?, path=?, handler_type=?, config=?, enabled=?, updated_at=?, raw_caddy_route=?, strip_path_prefix=?
 		 WHERE id=?`,
 		route.Domain, route.Path, route.HandlerType,
-		string(route.Config), boolToInt(route.Enabled), route.UpdatedAt, string(route.RawCaddyRoute), route.ID,
+		string(route.Config), boolToInt(route.Enabled), route.UpdatedAt, string(route.RawCaddyRoute), route.StripPathPrefix, route.ID,
 	)
 	return err
 }
@@ -149,10 +152,11 @@ func (s *SQLiteStorage) scanRoute(row *sql.Row) (*Route, error) {
 	var config string
 	var enabled int
 	var rawCaddyRoute string
+	var stripPathPrefix string
 	err := row.Scan(
 		&route.ID, &route.Domain, &route.Path, &route.HandlerType,
 		&config, &enabled, &route.CreatedAt, &route.UpdatedAt,
-		&rawCaddyRoute,
+		&rawCaddyRoute, &stripPathPrefix,
 	)
 	if err != nil {
 		return nil, err
@@ -162,6 +166,7 @@ func (s *SQLiteStorage) scanRoute(row *sql.Row) (*Route, error) {
 	if rawCaddyRoute != "" {
 		route.RawCaddyRoute = json.RawMessage(rawCaddyRoute)
 	}
+	route.StripPathPrefix = stripPathPrefix
 	return &route, nil
 }
 
@@ -170,10 +175,11 @@ func (s *SQLiteStorage) scanRouteRows(rows *sql.Rows) (*Route, error) {
 	var config string
 	var enabled int
 	var rawCaddyRoute string
+	var stripPathPrefix string
 	err := rows.Scan(
 		&route.ID, &route.Domain, &route.Path, &route.HandlerType,
 		&config, &enabled, &route.CreatedAt, &route.UpdatedAt,
-		&rawCaddyRoute,
+		&rawCaddyRoute, &stripPathPrefix,
 	)
 	if err != nil {
 		return nil, err
@@ -183,6 +189,7 @@ func (s *SQLiteStorage) scanRouteRows(rows *sql.Rows) (*Route, error) {
 	if rawCaddyRoute != "" {
 		route.RawCaddyRoute = json.RawMessage(rawCaddyRoute)
 	}
+	route.StripPathPrefix = stripPathPrefix
 	return &route, nil
 }
 

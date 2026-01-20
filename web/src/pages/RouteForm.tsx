@@ -21,6 +21,7 @@ export function RouteForm({ id }: RouteFormProps) {
 
   const [domain, setDomain] = useState('');
   const [path, setPath] = useState('');
+  const [stripPathPrefix, setStripPathPrefix] = useState('');
   const [handlerType, setHandlerType] = useState('reverse_proxy');
   const [config, setConfig] = useState<any>({ upstreams: [], websocket: false, headers: {}, load_balancing: 'round_robin' });
   const [headers, setHeaders] = useState(getDefaultHeaderConfig());
@@ -37,6 +38,7 @@ export function RouteForm({ id }: RouteFormProps) {
       const { route } = await api.getRoute(id!);
       setDomain(route.domain);
       setPath(route.path || '');
+      setStripPathPrefix(route.strip_path_prefix || '');
       setHandlerType(route.handler_type);
       setConfig(typeof route.config === 'string' ? JSON.parse(route.config) : route.config);
       if (route.headers) {
@@ -58,6 +60,7 @@ export function RouteForm({ id }: RouteFormProps) {
       const routeData = {
         domain,
         path: path || undefined,
+        strip_path_prefix: stripPathPrefix || undefined,
         handler_type: handlerType,
         config,
         headers,
@@ -144,10 +147,41 @@ export function RouteForm({ id }: RouteFormProps) {
                 class="input"
               />
               <p class="text-sm text-slate-500 mt-1">
-                Match specific paths (e.g., /api/*, /admin)
+                Match specific paths (e.g., /api/*, /admin). Use /* at the end to match all sub-paths.
               </p>
             </div>
           </div>
+
+          {/* Strip Path Prefix - only show when path is set */}
+          {path && (
+            <div class="mt-4">
+              <label class="label">Strip Path Prefix (Optional)</label>
+              <input
+                type="text"
+                value={stripPathPrefix}
+                onInput={(e) => setStripPathPrefix((e.target as HTMLInputElement).value)}
+                placeholder={path.replace(/^\/?/, '/').replace(/\*$/, '').replace(/\/$/, '') || '/api'}
+                class="input"
+              />
+              <p class="text-sm text-slate-500 mt-1">
+                Remove this prefix before forwarding to backend (e.g., /api/users becomes /users)
+              </p>
+              {stripPathPrefix && (
+                <div class="mt-2 p-2 bg-slate-800/50 rounded text-sm">
+                  <span class="text-slate-400">Example: </span>
+                  <code class="text-primary-400">
+                    {(path.startsWith('/') ? path : '/' + path).replace('*', 'endpoint')}
+                  </code>
+                  <span class="text-slate-400"> → </span>
+                  <code class="text-green-400">
+                    {(path.startsWith('/') ? path : '/' + path)
+                      .replace('*', 'endpoint')
+                      .replace(stripPathPrefix.startsWith('/') ? stripPathPrefix : '/' + stripPathPrefix, '') || '/'}
+                  </code>
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Handler Type Selection */}

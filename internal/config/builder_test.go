@@ -385,3 +385,111 @@ func TestBuildRedirectHandler_DefaultCode(t *testing.T) {
 		t.Errorf("Expected default status_code 302, got %v", h["status_code"])
 	}
 }
+
+func TestBuildCaddyConfig_WithStripPathPrefix(t *testing.T) {
+	routes := []*storage.Route{
+		{
+			Domain:          "example.com",
+			Path:            "/api/*",
+			HandlerType:     "reverse_proxy",
+			Config:          json.RawMessage(`{"upstreams":["localhost:8080"]}`),
+			StripPathPrefix: "/api",
+			Enabled:         true,
+		},
+	}
+
+	cfg := BuildCaddyConfig(routes, nil)
+
+	route := cfg.Apps.HTTP.Servers["srv0"].Routes[0]
+
+	// Should have rewrite handler before reverse_proxy handler
+	if len(route.Handle) < 2 {
+		t.Fatalf("Expected at least 2 handlers (rewrite + reverse_proxy), got %d", len(route.Handle))
+	}
+
+	rewriteHandler := route.Handle[0]
+	if rewriteHandler["handler"] != "rewrite" {
+		t.Errorf("Expected first handler to be rewrite, got %v", rewriteHandler["handler"])
+	}
+	if rewriteHandler["strip_path_prefix"] != "/api" {
+		t.Errorf("Expected strip_path_prefix to be /api, got %v", rewriteHandler["strip_path_prefix"])
+	}
+
+	proxyHandler := route.Handle[1]
+	if proxyHandler["handler"] != "reverse_proxy" {
+		t.Errorf("Expected second handler to be reverse_proxy, got %v", proxyHandler["handler"])
+	}
+}
+
+func TestBuildCaddyConfig_WithStripPathPrefixAndHeaders(t *testing.T) {
+	headerCfg := &storage.HeaderConfig{
+		Set: map[string]string{"X-Custom": "value"},
+	}
+
+	routes := []*storage.Route{
+		{
+			Domain:          "example.com",
+			Path:            "/api/*",
+			HandlerType:     "reverse_proxy",
+			Config:          json.RawMessage(`{"upstreams":["localhost:8080"]}`),
+			Headers:         headerCfg,
+			StripPathPrefix: "/api",
+			Enabled:         true,
+		},
+	}
+
+	cfg := BuildCaddyConfig(routes, nil)
+
+	route := cfg.Apps.HTTP.Servers["srv0"].Routes[0]
+
+	// Should have headers, rewrite, then reverse_proxy handlers
+	if len(route.Handle) < 3 {
+		t.Fatalf("Expected at least 3 handlers (headers + rewrite + reverse_proxy), got %d", len(route.Handle))
+	}
+
+	// Check handler order: headers -> rewrite -> reverse_proxy
+	if route.Handle[0]["handler"] != "headers" {
+		t.Errorf("Expected first handler to be headers, got %v", route.Handle[0]["handler"])
+	}
+	if route.Handle[1]["handler"] != "rewrite" {
+		t.Errorf("Expected second handler to be rewrite, got %v", route.Handle[1]["handler"])
+	}
+	if route.Handle[2]["handler"] != "reverse_proxy" {
+		t.Errorf("Expected third handler to be reverse_proxy, got %v", route.Handle[2]["handler"])
+	}
+}
+
+func TestBuildCaddyConfig_NormalizesPathAndStripPrefix(t *testing.T) {
+	// Test that paths without leading / are normalized
+	routes := []*storage.Route{
+		{
+			Domain:          "example.com",
+			Path:            "api/*", // Missing leading /
+			HandlerType:     "reverse_proxy",
+			Config:          json.RawMessage(`{"upstreams":["localhost:8080"]}`),
+			StripPathPrefix: "api", // Missing leading /
+			Enabled:         true,
+		},
+	}
+
+	cfg := BuildCaddyConfig(routes, nil)
+
+	route := cfg.Apps.HTTP.Servers["srv0"].Routes[0]
+
+	// Check path is normalized
+	if len(route.Match) == 0 || len(route.Match[0].Path) == 0 {
+		t.Fatal("Expected path matcher")
+	}
+	if route.Match[0].Path[0] != "/api/*" {
+		t.Errorf("Expected path to be normalized to /api/*, got %v", route.Match[0].Path[0])
+	}
+
+	// Check strip_path_prefix is normalized
+	rewriteHandler := route.Handle[0]
+	if rewriteHandler["handler"] != "rewrite" {
+		t.Fatalf("Expected rewrite handler, got %v", rewriteHandler["handler"])
+	}
+	if rewriteHandler["strip_path_prefix"] != "/api" {
+		t.Errorf("Expected strip_path_prefix to be normalized to /api, got %v", rewriteHandler["strip_path_prefix"])
+	}
+}

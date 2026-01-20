@@ -55,6 +55,11 @@ function RouteCard({ route, onToggle, onDelete }: {
             {route.path && (
               <span class="text-slate-400 text-sm font-mono">{route.path}</span>
             )}
+            {route.strip_path_prefix && (
+              <span class="bg-primary-600/30 text-primary-300 text-xs px-1.5 py-0.5 rounded" title={`Strips "${route.strip_path_prefix}" from path before forwarding`}>
+                strips {route.strip_path_prefix}
+              </span>
+            )}
           </div>
           
           <div class="flex items-center gap-2 text-sm text-slate-400 mb-2">

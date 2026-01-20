@@ -8,6 +8,18 @@ import (
 	"github.com/ArtemStepanov/caddy-orchestrator/lite/internal/storage"
 )
 
+// normalizePath ensures a path starts with / if not empty
+func normalizePath(path string) string {
+	if path == "" {
+		return ""
+	}
+	path = strings.TrimSpace(path)
+	if !strings.HasPrefix(path, "/") {
+		path = "/" + path
+	}
+	return path
+}
+
 // CaddyConfig represents the root Caddy configuration
 type CaddyConfig struct {
 	Admin *AdminConfig `json:"admin,omitempty"`
@@ -132,7 +144,7 @@ func buildRoute(r *storage.Route, global *storage.GlobalConfig) *Route {
 	}
 
 	if r.Path != "" {
-		match.Path = []string{r.Path}
+		match.Path = []string{normalizePath(r.Path)}
 	}
 
 	var handlers []Handler
@@ -154,6 +166,14 @@ func buildRoute(r *storage.Route, global *storage.GlobalConfig) *Route {
 		if h != nil {
 			handlers = append(handlers, h)
 		}
+	}
+
+	// Add rewrite handler for strip path prefix if configured
+	if r.StripPathPrefix != "" {
+		handlers = append(handlers, Handler{
+			"handler":           "rewrite",
+			"strip_path_prefix": normalizePath(r.StripPathPrefix),
+		})
 	}
 
 	// Build handler based on type
@@ -225,7 +245,7 @@ func buildRouteMerged(r *storage.Route, global *storage.GlobalConfig) *Route {
 		if len(original.Match) == 0 {
 			original.Match = append(original.Match, Match{})
 		}
-		original.Match[0].Path = []string{r.Path}
+		original.Match[0].Path = []string{normalizePath(r.Path)}
 	}
 
 	// Rebuild handlers
@@ -258,6 +278,14 @@ func buildRouteMerged(r *storage.Route, global *storage.GlobalConfig) *Route {
 		}
 	}
 
+	// 2.5. Rewrite for strip path prefix (Local)
+	if r.StripPathPrefix != "" {
+		newHandlers = append(newHandlers, Handler{
+			"handler":           "rewrite",
+			"strip_path_prefix": normalizePath(r.StripPathPrefix),
+		})
+	}
+
 	// 3. Main Handler (Local)
 	var mainHandler Handler
 	switch r.HandlerType {
@@ -282,6 +310,7 @@ func buildRouteMerged(r *storage.Route, global *storage.GlobalConfig) *Route {
 		"static_response": true, // could be redir or something else, but we treat it as managed if we are in redir mode
 		"headers":         true,
 		"encode":          true,
+		"rewrite":         true,
 	}
 
 	for _, h := range original.Handle {

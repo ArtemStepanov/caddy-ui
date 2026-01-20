@@ -125,6 +125,9 @@ func (h *Handler) UpdateRoute(c *gin.Context) {
 	// Preserve ID and timestamps
 	route.ID = existing.ID
 	route.CreatedAt = existing.CreatedAt
+	// Preserve state and raw config that isn't editable in the UI
+	route.Enabled = existing.Enabled
+	route.RawCaddyRoute = existing.RawCaddyRoute
 
 	if err := h.store.UpdateRoute(&route); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})

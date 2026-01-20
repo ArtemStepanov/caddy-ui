@@ -7,15 +7,16 @@ import (
 
 // Route represents a single route configuration
 type Route struct {
-	ID          string          `json:"id"`
-	Domain      string          `json:"domain"`
-	Path        string          `json:"path,omitempty"`
-	HandlerType string          `json:"handler_type"`
-	Config      json.RawMessage `json:"config"`
-	Headers     *HeaderConfig   `json:"headers,omitempty"`
-	Enabled     bool            `json:"enabled"`
-	CreatedAt   time.Time       `json:"created_at"`
-	UpdatedAt   time.Time       `json:"updated_at"`
+	ID              string          `json:"id"`
+	Domain          string          `json:"domain"`
+	Path            string          `json:"path,omitempty"`
+	HandlerType     string          `json:"handler_type"`
+	Config          json.RawMessage `json:"config"`
+	Headers         *HeaderConfig   `json:"headers,omitempty"`
+	StripPathPrefix string          `json:"strip_path_prefix,omitempty"`
+	Enabled         bool            `json:"enabled"`
+	CreatedAt       time.Time       `json:"created_at"`
+	UpdatedAt       time.Time       `json:"updated_at"`
 
 	// RawCaddyRoute stores the original Caddy route JSON for preserving
 	// unsupported handlers during round-trip sync.

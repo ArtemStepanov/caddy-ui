@@ -10,6 +10,7 @@ export interface Route {
   id: string;
   domain: string;
   path?: string;
+  strip_path_prefix?: string;
   handler_type: string;
   config: any;
   headers?: HeaderConfig;

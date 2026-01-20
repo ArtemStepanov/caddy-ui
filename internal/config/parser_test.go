@@ -462,3 +462,91 @@ func TestRoundTrip_Redirect(t *testing.T) {
 		t.Errorf("Expected to https://new.example.com, got %s", cfg.To)
 	}
 }
+
+func TestParseCaddyConfig_Rewrite(t *testing.T) {
+	cfg := &CaddyConfig{
+		Apps: &Apps{
+			HTTP: &HTTPApp{
+				Servers: map[string]*Server{
+					"srv0": {
+						Listen: []string{":443"},
+						Routes: []Route{
+							{
+								Match: []Match{
+									{Host: []string{"example.com"}, Path: []string{"/api/*"}},
+								},
+								Handle: []Handler{
+									{
+										"handler":           "rewrite",
+										"strip_path_prefix": "/api",
+									},
+									{
+										"handler": "reverse_proxy",
+										"upstreams": []any{
+											map[string]any{"dial": "localhost:8080"},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	routes, err := ParseCaddyConfig(cfg)
+	if err != nil {
+		t.Fatalf("Unexpected error: %v", err)
+	}
+
+	route := routes[0]
+	if route.StripPathPrefix != "/api" {
+		t.Errorf("Expected StripPathPrefix /api, got %s", route.StripPathPrefix)
+	}
+	if route.HandlerType != "reverse_proxy" {
+		t.Errorf("Expected handler_type reverse_proxy, got %s", route.HandlerType)
+	}
+}
+
+func TestRoundTrip_StripPathPrefix(t *testing.T) {
+	original := &storage.Route{
+		Domain:          "example.com",
+		Path:            "/api/*",
+		HandlerType:     "reverse_proxy",
+		Config:          json.RawMessage(`{"upstreams":["localhost:8080"]}`),
+		StripPathPrefix: "/api",
+		Enabled:         true,
+	}
+
+	// Build Caddy config
+	caddyConfig := BuildCaddyConfig([]*storage.Route{original}, nil)
+
+	// Simulate real round-trip through JSON
+	jsonBytes, err := json.Marshal(caddyConfig)
+	if err != nil {
+		t.Fatalf("Failed to marshal: %v", err)
+	}
+
+	var parsedCaddyConfig CaddyConfig
+	if err := json.Unmarshal(jsonBytes, &parsedCaddyConfig); err != nil {
+		t.Fatalf("Failed to unmarshal: %v", err)
+	}
+
+	// Parse the JSON-roundtripped config
+	routes, err := ParseCaddyConfig(&parsedCaddyConfig)
+	if err != nil {
+		t.Fatalf("Failed to parse: %v", err)
+	}
+
+	parsed := routes[0]
+	if parsed.StripPathPrefix != "/api" {
+		t.Errorf("Expected StripPathPrefix /api, got %s", parsed.StripPathPrefix)
+	}
+	if parsed.HandlerType != "reverse_proxy" {
+		t.Errorf("Expected handler_type reverse_proxy, got %s", parsed.HandlerType)
+	}
+	if parsed.Path != "/api/*" {
+		t.Errorf("Expected path /api/*, got %s", parsed.Path)
+	}
+}

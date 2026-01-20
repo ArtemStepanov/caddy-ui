@@ -127,6 +127,12 @@ func parseRoute(r Route) (*storage.Route, error) {
 				storageRoute.Headers = cfg
 			}
 
+		case "rewrite":
+			// Parse rewrite handler for strip_path_prefix
+			if prefix, ok := h["strip_path_prefix"].(string); ok {
+				storageRoute.StripPathPrefix = prefix
+			}
+
 		case "encode":
 			// We just ignore encode handler as it's global setting in our model usually,
 			// or implied. But if we want to support per-route encode, we'd need to add it to model.
