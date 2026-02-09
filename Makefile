@@ -1,4 +1,4 @@
-.PHONY: all build run dev docker clean test
+.PHONY: all build run dev docker clean test docker-up-build
 
 # Build all
 all: build
@@ -25,7 +25,11 @@ docker:
 
 # Run with Docker Compose
 docker-up:
-	docker compose up -d --build
+	docker compose up -d
+
+# Run with Docker Compose (local build)
+docker-up-build:
+	docker build -t ghcr.io/artemstepanov/caddy-orchestrator-lite:latest . && docker compose up -d
 
 # Stop Docker Compose
 docker-down:

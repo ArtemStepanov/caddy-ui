@@ -1,7 +1,8 @@
 services:
   # Caddy Orchestrator Lite
   orchestrator:
-    build: .
+    image: ghcr.io/artemstepanov/caddy-orchestrator-lite:latest
+    # build: .  # uncomment for local development
     ports:
       - "3000:3000"
     environment:
