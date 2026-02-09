@@ -41,12 +41,22 @@ func main() {
 	// Serve static files (frontend)
 	webDir := getEnv("WEB_DIR", "./web/dist")
 	if _, err := os.Stat(webDir); err == nil {
-		r.Static("/assets", filepath.Join(webDir, "assets"))
-		r.StaticFile("/", filepath.Join(webDir, "index.html"))
-		r.StaticFile("/favicon.svg", filepath.Join(webDir, "favicon.svg"))
-		r.NoRoute(func(c *gin.Context) {
-			c.File(filepath.Join(webDir, "index.html"))
+		// Assets with long-term caching (1 year)
+		assets := r.Group("/assets")
+		assets.Use(func(c *gin.Context) {
+			c.Header("Cache-Control", "public, max-age=31536000, immutable")
 		})
+		assets.Static("/", filepath.Join(webDir, "assets"))
+
+		// SPA entry point with no-cache (always validate)
+		serveIndex := func(c *gin.Context) {
+			c.Header("Cache-Control", "no-cache")
+			c.File(filepath.Join(webDir, "index.html"))
+		}
+
+		r.GET("/", serveIndex)
+		r.StaticFile("/favicon.svg", filepath.Join(webDir, "favicon.svg"))
+		r.NoRoute(serveIndex)
 	} else {
 		log.Printf("Warning: Web directory not found at %s", webDir)
 	}

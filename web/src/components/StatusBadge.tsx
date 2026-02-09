@@ -1,9 +1,21 @@
 interface StatusBadgeProps {
   status: 'online' | 'offline' | 'loading';
   latency?: number;
+  lastSyncedAt?: string;
+  lastSyncError?: string;
 }
 
-export function StatusBadge({ status, latency }: StatusBadgeProps) {
+function timeAgo(dateStr: string): string {
+  const seconds = Math.floor((Date.now() - new Date(dateStr).getTime()) / 1000);
+  if (seconds < 10) return 'just now';
+  if (seconds < 60) return `${seconds}s ago`;
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return `${minutes}m ago`;
+  const hours = Math.floor(minutes / 60);
+  return `${hours}h ago`;
+}
+
+export function StatusBadge({ status, latency, lastSyncedAt, lastSyncError }: StatusBadgeProps) {
   const colors: Record<string, string> = {
     online: 'bg-green-500',
     offline: 'bg-red-500',
@@ -23,6 +35,11 @@ export function StatusBadge({ status, latency }: StatusBadgeProps) {
       {latency !== undefined && status === 'online' && (
         <span class="text-xs text-slate-500">{latency}ms</span>
       )}
+      {lastSyncError ? (
+        <span class="text-xs text-red-400" title={lastSyncError}>Sync failed</span>
+      ) : lastSyncedAt ? (
+        <span class="text-xs text-slate-500">Synced {timeAgo(lastSyncedAt)}</span>
+      ) : null}
     </div>
   );
 }

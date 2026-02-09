@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'preact/hooks';
 import { api, Route } from '../lib/api';
+import { notifySyncResult } from '../lib/syncNotify';
 
 const HANDLER_ICONS: Record<string, string> = {
   reverse_proxy: '🔄',
@@ -149,8 +150,9 @@ export function Dashboard() {
     setSyncing(true);
     try {
       await api.sync();
+      notifySyncResult('success', 'Synced to Caddy successfully');
     } catch (err: any) {
-      setError(err.message);
+      notifySyncResult('error', 'Sync failed: ' + err.message);
     } finally {
       setSyncing(false);
     }

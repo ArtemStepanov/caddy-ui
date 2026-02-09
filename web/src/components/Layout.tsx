@@ -2,6 +2,7 @@ import { ComponentChildren } from 'preact';
 import { useState, useEffect } from 'preact/hooks';
 import { api, StatusResponse } from '../lib/api';
 import { StatusBadge } from './StatusBadge';
+import { Toast } from './Toast';
 
 interface LayoutProps {
   children: ComponentChildren;
@@ -42,11 +43,13 @@ export function Layout({ children }: LayoutProps) {
             </svg>
             Caddy Lite
           </a>
-          
+
           <div class="flex items-center gap-4">
-            <StatusBadge 
+            <StatusBadge
               status={status}
               latency={statusData?.latency}
+              lastSyncedAt={statusData?.last_synced_at}
+              lastSyncError={statusData?.last_sync_error}
             />
             <nav class="flex gap-4">
               <a href="/" class="text-slate-300 hover:text-white">Dashboard</a>
@@ -73,6 +76,8 @@ export function Layout({ children }: LayoutProps) {
       <footer class="bg-slate-800 border-t border-slate-700 py-4 text-center text-sm text-slate-500">
         Caddy Orchestrator Lite
       </footer>
+
+      <Toast />
     </div>
   );
 }

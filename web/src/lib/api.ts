@@ -1,3 +1,5 @@
+import { notifySyncResult } from './syncNotify';
+
 const API_BASE = '/api';
 
 export interface HeaderConfig {
@@ -30,6 +32,8 @@ export interface StatusResponse {
   error?: string;
   admin_url?: string;
   route_count?: number;
+  last_synced_at?: string;
+  last_sync_error?: string;
 }
 
 class ApiClient {
@@ -61,25 +65,37 @@ class ApiClient {
   }
 
   async createRoute(route: Partial<Route>): Promise<{ route: Route; warning?: string }> {
-    return this.request('/routes', {
+    const res = await this.request<{ route: Route; warning?: string }>('/routes', {
       method: 'POST',
       body: JSON.stringify(route),
     });
+    if (res.warning) notifySyncResult('error', res.warning);
+    else notifySyncResult('success', 'Route created and synced');
+    return res;
   }
 
   async updateRoute(id: string, route: Partial<Route>): Promise<{ route: Route; warning?: string }> {
-    return this.request(`/routes/${id}`, {
+    const res = await this.request<{ route: Route; warning?: string }>(`/routes/${id}`, {
       method: 'PUT',
       body: JSON.stringify(route),
     });
+    if (res.warning) notifySyncResult('error', res.warning);
+    else notifySyncResult('success', 'Route updated and synced');
+    return res;
   }
 
   async deleteRoute(id: string): Promise<{ message: string }> {
-    return this.request(`/routes/${id}`, { method: 'DELETE' });
+    const res = await this.request<{ message: string }>(`/routes/${id}`, { method: 'DELETE' });
+    if (res.message && res.message.includes('failed')) notifySyncResult('error', res.message);
+    else notifySyncResult('success', 'Route deleted and synced');
+    return res;
   }
 
   async toggleRoute(id: string): Promise<{ route: Route; warning?: string }> {
-    return this.request(`/routes/${id}/toggle`, { method: 'POST' });
+    const res = await this.request<{ route: Route; warning?: string }>(`/routes/${id}/toggle`, { method: 'POST' });
+    if (res.warning) notifySyncResult('error', res.warning);
+    else notifySyncResult('success', `Route ${res.route.enabled ? 'enabled' : 'disabled'} and synced`);
+    return res;
   }
 
   // Config

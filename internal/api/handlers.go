@@ -16,6 +16,8 @@ import (
 type Handler struct {
 	store           *storage.SQLiteStorage
 	defaultCaddyURL string // fallback URL from env
+	lastSyncedAt    time.Time
+	lastSyncError   string
 }
 
 // NewHandler creates a new handler
@@ -231,12 +233,17 @@ func (h *Handler) GetStatus(c *gin.Context) {
 	latency := time.Since(start).Milliseconds()
 
 	if err != nil {
-		c.JSON(http.StatusOK, gin.H{
+		resp := gin.H{
 			"status":    "offline",
 			"error":     err.Error(),
 			"latency":   latency,
 			"admin_url": caddyURL,
-		})
+		}
+		if !h.lastSyncedAt.IsZero() {
+			resp["last_synced_at"] = h.lastSyncedAt.Format(time.RFC3339)
+			resp["last_sync_error"] = h.lastSyncError
+		}
+		c.JSON(http.StatusOK, resp)
 		return
 	}
 
@@ -247,12 +254,17 @@ func (h *Handler) GetStatus(c *gin.Context) {
 		routeCount = len(routes)
 	}
 
-	c.JSON(http.StatusOK, gin.H{
+	resp := gin.H{
 		"status":      "online",
 		"latency":     latency,
 		"admin_url":   caddyURL,
 		"route_count": routeCount,
-	})
+	}
+	if !h.lastSyncedAt.IsZero() {
+		resp["last_synced_at"] = h.lastSyncedAt.Format(time.RFC3339)
+		resp["last_sync_error"] = h.lastSyncError
+	}
+	c.JSON(http.StatusOK, resp)
 }
 
 // SyncToCaddy manually triggers sync to Caddy
@@ -299,11 +311,15 @@ func (h *Handler) TestConnection(c *gin.Context) {
 func (h *Handler) syncToCaddy() error {
 	routes, err := h.store.ListRoutes()
 	if err != nil {
+		h.lastSyncedAt = time.Now()
+		h.lastSyncError = err.Error()
 		return err
 	}
 
 	globalCfg, err := h.store.GetGlobalConfig()
 	if err != nil {
+		h.lastSyncedAt = time.Now()
+		h.lastSyncError = err.Error()
 		return err
 	}
 
@@ -315,7 +331,14 @@ func (h *Handler) syncToCaddy() error {
 	_ = data // Could log this if needed
 
 	// Load into Caddy using dynamic client
-	return h.getCaddyClient().LoadConfig(caddyConfig)
+	err = h.getCaddyClient().LoadConfig(caddyConfig)
+	h.lastSyncedAt = time.Now()
+	if err != nil {
+		h.lastSyncError = err.Error()
+	} else {
+		h.lastSyncError = ""
+	}
+	return err
 }
 
 // PreviewImport returns what would be imported from Caddy
