@@ -1,535 +1,351 @@
 package storage
 
 import (
+	"encoding/json"
 	"os"
+	"path/filepath"
 	"testing"
-	"time"
-
-	"github.com/google/uuid"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
+// setupTestDB creates a temporary SQLite database for testing
 func setupTestDB(t *testing.T) (*SQLiteStorage, func()) {
-	tmpFile, err := os.CreateTemp("", "test-*.db")
-	require.NoError(t, err)
-	tmpFile.Close()
+	t.Helper()
 
-	db, err := NewSQLiteStorage(tmpFile.Name())
-	require.NoError(t, err)
-
-	cleanup := func() {
-		db.Close()
-		os.Remove(tmpFile.Name())
+	tmpDir, err := os.MkdirTemp("", "sqlite_test")
+	if err != nil {
+		t.Fatalf("Failed to create temp dir: %v", err)
 	}
 
-	return db, cleanup
+	dbPath := filepath.Join(tmpDir, "test.db")
+	storage, err := NewSQLiteStorage(dbPath)
+	if err != nil {
+		os.RemoveAll(tmpDir)
+		t.Fatalf("Failed to create storage: %v", err)
+	}
+
+	cleanup := func() {
+		storage.Close()
+		os.RemoveAll(tmpDir)
+	}
+
+	return storage, cleanup
 }
 
 func TestNewSQLiteStorage(t *testing.T) {
-	tmpFile, err := os.CreateTemp("", "test-*.db")
-	require.NoError(t, err)
-	tmpFile.Close()
-	defer os.Remove(tmpFile.Name())
-
-	db, err := NewSQLiteStorage(tmpFile.Name())
-	require.NoError(t, err)
-	require.NotNil(t, db)
-	defer db.Close()
-
-	// Verify tables were created
-	var count int
-	err = db.db.QueryRow("SELECT COUNT(*) FROM sqlite_master WHERE type='table'").Scan(&count)
-	require.NoError(t, err)
-	assert.Equal(t, 4, count) // 4 tables: instances, templates, audit_logs, config_backups
-}
-
-func TestNewSQLiteStorage_InvalidPath(t *testing.T) {
-	db, err := NewSQLiteStorage("/invalid/path/test.db")
-	assert.Error(t, err)
-	assert.Nil(t, db)
-}
-
-func TestCreateInstance(t *testing.T) {
-	db, cleanup := setupTestDB(t)
+	storage, cleanup := setupTestDB(t)
 	defer cleanup()
 
-	instance := &CaddyInstance{
-		ID:       uuid.New().String(),
-		Name:     "Test Instance",
-		AdminURL: "http://localhost:2019",
-		AuthType: "none",
-		Status:   "unknown",
+	if storage == nil {
+		t.Error("Expected non-nil storage")
+	}
+}
+
+func TestCreateRoute(t *testing.T) {
+	storage, cleanup := setupTestDB(t)
+	defer cleanup()
+
+	route := &Route{
+		Domain:      "example.com",
+		HandlerType: "reverse_proxy",
+		Config:      json.RawMessage(`{"upstreams":["localhost:8080"]}`),
+		Enabled:     true,
 	}
 
-	err := db.CreateInstance(instance)
-	require.NoError(t, err)
-
-	// Verify timestamps were set
-	assert.False(t, instance.CreatedAt.IsZero())
-	assert.False(t, instance.UpdatedAt.IsZero())
-}
-
-func TestCreateInstance_WithCredentials(t *testing.T) {
-	db, cleanup := setupTestDB(t)
-	defer cleanup()
-
-	instance := &CaddyInstance{
-		ID:       uuid.New().String(),
-		Name:     "Test Instance",
-		AdminURL: "http://localhost:2019",
-		AuthType: "bearer",
-		Credentials: map[string]string{
-			"token": "test-token-123",
-		},
-		Status: "unknown",
+	err := storage.CreateRoute(route)
+	if err != nil {
+		t.Fatalf("Failed to create route: %v", err)
 	}
 
-	err := db.CreateInstance(instance)
-	require.NoError(t, err)
-
-	// Retrieve and verify credentials
-	retrieved, err := db.GetInstance(instance.ID)
-	require.NoError(t, err)
-	assert.Equal(t, "test-token-123", retrieved.Credentials["token"])
-}
-
-func TestGetInstance(t *testing.T) {
-	db, cleanup := setupTestDB(t)
-	defer cleanup()
-
-	instance := &CaddyInstance{
-		ID:       uuid.New().String(),
-		Name:     "Test Instance",
-		AdminURL: "http://localhost:2019",
-		AuthType: "none",
-		Status:   "unknown",
+	if route.ID == "" {
+		t.Error("Expected route ID to be set")
 	}
 
-	err := db.CreateInstance(instance)
-	require.NoError(t, err)
-
-	retrieved, err := db.GetInstance(instance.ID)
-	require.NoError(t, err)
-	assert.Equal(t, instance.Name, retrieved.Name)
-	assert.Equal(t, instance.AdminURL, retrieved.AdminURL)
-	assert.Equal(t, instance.AuthType, retrieved.AuthType)
-}
-
-func TestGetInstance_NotFound(t *testing.T) {
-	db, cleanup := setupTestDB(t)
-	defer cleanup()
-
-	_, err := db.GetInstance("non-existent-id")
-	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "instance not found")
-}
-
-func TestListInstances(t *testing.T) {
-	db, cleanup := setupTestDB(t)
-	defer cleanup()
-
-	// Create multiple instances
-	instances := []*CaddyInstance{
-		{
-			ID:       uuid.New().String(),
-			Name:     "Instance A",
-			AdminURL: "http://localhost:2019",
-			AuthType: "none",
-			Status:   "unknown",
-		},
-		{
-			ID:       uuid.New().String(),
-			Name:     "Instance B",
-			AdminURL: "http://localhost:2020",
-			AuthType: "bearer",
-			Credentials: map[string]string{
-				"token": "token-b",
-			},
-			Status: "unknown",
-		},
-		{
-			ID:       uuid.New().String(),
-			Name:     "Instance C",
-			AdminURL: "http://localhost:2021",
-			AuthType: "none",
-			Status:   "unknown",
-		},
+	if route.CreatedAt.IsZero() {
+		t.Error("Expected CreatedAt to be set")
 	}
 
-	for _, inst := range instances {
-		err := db.CreateInstance(inst)
-		require.NoError(t, err)
+	if route.UpdatedAt.IsZero() {
+		t.Error("Expected UpdatedAt to be set")
 	}
-
-	// List all instances
-	list, err := db.ListInstances()
-	require.NoError(t, err)
-	assert.Len(t, list, 3)
-
-	// Verify they're ordered by name
-	assert.Equal(t, "Instance A", list[0].Name)
-	assert.Equal(t, "Instance B", list[1].Name)
-	assert.Equal(t, "Instance C", list[2].Name)
 }
 
-func TestListInstances_Empty(t *testing.T) {
-	db, cleanup := setupTestDB(t)
+func TestGetRoute(t *testing.T) {
+	storage, cleanup := setupTestDB(t)
 	defer cleanup()
 
-	list, err := db.ListInstances()
-	require.NoError(t, err)
-	assert.Empty(t, list)
+	// Create a route first
+	route := &Route{
+		Domain:      "example.com",
+		Path:        "/api",
+		HandlerType: "reverse_proxy",
+		Config:      json.RawMessage(`{"upstreams":["localhost:8080"]}`),
+		Enabled:     true,
+	}
+	storage.CreateRoute(route)
+
+	t.Run("existing route", func(t *testing.T) {
+		found, err := storage.GetRoute(route.ID)
+		if err != nil {
+			t.Fatalf("Failed to get route: %v", err)
+		}
+
+		if found.ID != route.ID {
+			t.Errorf("Expected ID %s, got %s", route.ID, found.ID)
+		}
+		if found.Domain != "example.com" {
+			t.Errorf("Expected domain example.com, got %s", found.Domain)
+		}
+		if found.Path != "/api" {
+			t.Errorf("Expected path /api, got %s", found.Path)
+		}
+		if found.HandlerType != "reverse_proxy" {
+			t.Errorf("Expected handler_type reverse_proxy, got %s", found.HandlerType)
+		}
+		if !found.Enabled {
+			t.Error("Expected route to be enabled")
+		}
+	})
+
+	t.Run("non-existing route", func(t *testing.T) {
+		_, err := storage.GetRoute("non-existing-id")
+		if err == nil {
+			t.Error("Expected error for non-existing route")
+		}
+	})
 }
 
-func TestUpdateInstance(t *testing.T) {
-	db, cleanup := setupTestDB(t)
+func TestListRoutes(t *testing.T) {
+	storage, cleanup := setupTestDB(t)
 	defer cleanup()
 
-	instance := &CaddyInstance{
-		ID:       uuid.New().String(),
-		Name:     "Test Instance",
-		AdminURL: "http://localhost:2019",
-		AuthType: "none",
-		Status:   "unknown",
+	t.Run("empty list", func(t *testing.T) {
+		routes, err := storage.ListRoutes()
+		if err != nil {
+			t.Fatalf("Failed to list routes: %v", err)
+		}
+		if len(routes) != 0 {
+			t.Errorf("Expected 0 routes, got %d", len(routes))
+		}
+	})
+
+	t.Run("with routes", func(t *testing.T) {
+		route1 := &Route{
+			Domain:      "a.example.com",
+			HandlerType: "reverse_proxy",
+			Config:      json.RawMessage(`{}`),
+		}
+		route2 := &Route{
+			Domain:      "b.example.com",
+			HandlerType: "file_server",
+			Config:      json.RawMessage(`{}`),
+		}
+		storage.CreateRoute(route1)
+		storage.CreateRoute(route2)
+
+		routes, err := storage.ListRoutes()
+		if err != nil {
+			t.Fatalf("Failed to list routes: %v", err)
+		}
+		if len(routes) != 2 {
+			t.Errorf("Expected 2 routes, got %d", len(routes))
+		}
+
+		// Routes should be ordered by domain
+		if routes[0].Domain != "a.example.com" {
+			t.Errorf("Expected first route to be a.example.com, got %s", routes[0].Domain)
+		}
+	})
+}
+
+func TestUpdateRoute(t *testing.T) {
+	storage, cleanup := setupTestDB(t)
+	defer cleanup()
+
+	route := &Route{
+		Domain:      "example.com",
+		HandlerType: "reverse_proxy",
+		Config:      json.RawMessage(`{"upstreams":["localhost:8080"]}`),
+		Enabled:     true,
 	}
+	storage.CreateRoute(route)
 
-	err := db.CreateInstance(instance)
-	require.NoError(t, err)
+	// Update the route
+	route.Domain = "updated.example.com"
+	route.Path = "/new-path"
+	route.Enabled = false
 
-	// Update instance
-	instance.Name = "Updated Instance"
-	instance.Status = "online"
-	instance.LastSeen = time.Now()
-
-	err = db.UpdateInstance(instance)
-	require.NoError(t, err)
+	err := storage.UpdateRoute(route)
+	if err != nil {
+		t.Fatalf("Failed to update route: %v", err)
+	}
 
 	// Verify update
-	retrieved, err := db.GetInstance(instance.ID)
-	require.NoError(t, err)
-	assert.Equal(t, "Updated Instance", retrieved.Name)
-	assert.Equal(t, "online", retrieved.Status)
-	assert.False(t, retrieved.LastSeen.IsZero())
+	updated, _ := storage.GetRoute(route.ID)
+	if updated.Domain != "updated.example.com" {
+		t.Errorf("Expected domain updated.example.com, got %s", updated.Domain)
+	}
+	if updated.Path != "/new-path" {
+		t.Errorf("Expected path /new-path, got %s", updated.Path)
+	}
+	if updated.Enabled {
+		t.Error("Expected route to be disabled")
+	}
 }
 
-func TestUpdateInstance_NotFound(t *testing.T) {
-	db, cleanup := setupTestDB(t)
+func TestDeleteRoute(t *testing.T) {
+	storage, cleanup := setupTestDB(t)
 	defer cleanup()
 
-	instance := &CaddyInstance{
-		ID:       "non-existent",
-		Name:     "Test",
-		AdminURL: "http://localhost:2019",
-		AuthType: "none",
-		Status:   "unknown",
+	route := &Route{
+		Domain:      "example.com",
+		HandlerType: "reverse_proxy",
+		Config:      json.RawMessage(`{}`),
 	}
+	storage.CreateRoute(route)
 
-	err := db.UpdateInstance(instance)
-	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "instance not found")
-}
-
-func TestDeleteInstance(t *testing.T) {
-	db, cleanup := setupTestDB(t)
-	defer cleanup()
-
-	instance := &CaddyInstance{
-		ID:       uuid.New().String(),
-		Name:     "Test Instance",
-		AdminURL: "http://localhost:2019",
-		AuthType: "none",
-		Status:   "unknown",
+	err := storage.DeleteRoute(route.ID)
+	if err != nil {
+		t.Fatalf("Failed to delete route: %v", err)
 	}
-
-	err := db.CreateInstance(instance)
-	require.NoError(t, err)
-
-	// Delete instance
-	err = db.DeleteInstance(instance.ID)
-	require.NoError(t, err)
 
 	// Verify deletion
-	_, err = db.GetInstance(instance.ID)
-	assert.Error(t, err)
+	_, err = storage.GetRoute(route.ID)
+	if err == nil {
+		t.Error("Expected error when getting deleted route")
+	}
 }
 
-func TestDeleteInstance_NotFound(t *testing.T) {
-	db, cleanup := setupTestDB(t)
+func TestDeleteAllRoutes(t *testing.T) {
+	storage, cleanup := setupTestDB(t)
 	defer cleanup()
 
-	err := db.DeleteInstance("non-existent")
-	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "instance not found")
+	// Create multiple routes
+	for i := 0; i < 3; i++ {
+		route := &Route{
+			Domain:      "example.com",
+			HandlerType: "reverse_proxy",
+			Config:      json.RawMessage(`{}`),
+		}
+		storage.CreateRoute(route)
+	}
+
+	routes, _ := storage.ListRoutes()
+	if len(routes) != 3 {
+		t.Fatalf("Expected 3 routes, got %d", len(routes))
+	}
+
+	err := storage.DeleteAllRoutes()
+	if err != nil {
+		t.Fatalf("Failed to delete all routes: %v", err)
+	}
+
+	routes, _ = storage.ListRoutes()
+	if len(routes) != 0 {
+		t.Errorf("Expected 0 routes after deletion, got %d", len(routes))
+	}
 }
 
-func TestCreateTemplate(t *testing.T) {
-	db, cleanup := setupTestDB(t)
+func TestGlobalConfig_Defaults(t *testing.T) {
+	storage, cleanup := setupTestDB(t)
 	defer cleanup()
 
-	template := &ConfigTemplate{
-		ID:          uuid.New().String(),
-		Name:        "Test Template",
-		Description: "A test template",
-		Category:    "reverse-proxy",
-		Template: map[string]any{
-			"apps": map[string]any{
-				"http": map[string]any{
-					"servers": map[string]any{},
-				},
-			},
-		},
-		Variables: []TemplateVariable{
-			{
-				Name:        "port",
-				Type:        "number",
-				Required:    true,
-				Description: "Port number",
-			},
-		},
+	cfg, err := storage.GetGlobalConfig()
+	if err != nil {
+		t.Fatalf("Failed to get global config: %v", err)
 	}
 
-	err := db.CreateTemplate(template)
-	require.NoError(t, err)
-	assert.False(t, template.CreatedAt.IsZero())
-	assert.False(t, template.UpdatedAt.IsZero())
+	if cfg.CaddyAdminURL != "http://localhost:2019" {
+		t.Errorf("Expected default CaddyAdminURL, got %s", cfg.CaddyAdminURL)
+	}
+	if !cfg.EnableEncode {
+		t.Error("Expected EnableEncode to be true by default")
+	}
 }
 
-func TestGetTemplate(t *testing.T) {
-	db, cleanup := setupTestDB(t)
+func TestGlobalConfig_SetAndGet(t *testing.T) {
+	storage, cleanup := setupTestDB(t)
 	defer cleanup()
 
-	template := &ConfigTemplate{
-		ID:          uuid.New().String(),
-		Name:        "Test Template",
-		Description: "A test template",
-		Category:    "reverse-proxy",
-		Template: map[string]any{
-			"test": "value",
-		},
-		Variables: []TemplateVariable{
-			{
-				Name:     "port",
-				Type:     "number",
-				Required: true,
-			},
-		},
+	cfg := &GlobalConfig{
+		CaddyAdminURL: "http://custom:2019",
+		EnableEncode:  false,
 	}
 
-	err := db.CreateTemplate(template)
-	require.NoError(t, err)
+	err := storage.SetGlobalConfig(cfg)
+	if err != nil {
+		t.Fatalf("Failed to set global config: %v", err)
+	}
 
-	retrieved, err := db.GetTemplate(template.ID)
-	require.NoError(t, err)
-	assert.Equal(t, template.Name, retrieved.Name)
-	assert.Equal(t, template.Description, retrieved.Description)
-	assert.Equal(t, template.Category, retrieved.Category)
-	assert.Equal(t, "value", retrieved.Template["test"])
-	assert.Len(t, retrieved.Variables, 1)
+	retrieved, err := storage.GetGlobalConfig()
+	if err != nil {
+		t.Fatalf("Failed to get global config: %v", err)
+	}
+
+	if retrieved.CaddyAdminURL != "http://custom:2019" {
+		t.Errorf("Expected CaddyAdminURL http://custom:2019, got %s", retrieved.CaddyAdminURL)
+	}
+	if retrieved.EnableEncode {
+		t.Error("Expected EnableEncode to be false")
+	}
 }
 
-func TestGetTemplate_NotFound(t *testing.T) {
-	db, cleanup := setupTestDB(t)
+func TestRouteWithRawCaddyRoute(t *testing.T) {
+	storage, cleanup := setupTestDB(t)
 	defer cleanup()
 
-	_, err := db.GetTemplate("non-existent")
-	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "template not found")
+	rawRoute := json.RawMessage(`{"match":[{"host":["example.com"]}],"handle":[{"handler":"custom"}]}`)
+
+	route := &Route{
+		Domain:        "example.com",
+		HandlerType:   "unknown",
+		Config:        json.RawMessage(`{}`),
+		RawCaddyRoute: rawRoute,
+	}
+
+	err := storage.CreateRoute(route)
+	if err != nil {
+		t.Fatalf("Failed to create route with raw caddy route: %v", err)
+	}
+
+	retrieved, err := storage.GetRoute(route.ID)
+	if err != nil {
+		t.Fatalf("Failed to get route: %v", err)
+	}
+
+	if string(retrieved.RawCaddyRoute) != string(rawRoute) {
+		t.Errorf("RawCaddyRoute mismatch:\nExpected: %s\nGot: %s", rawRoute, retrieved.RawCaddyRoute)
+	}
 }
 
-func TestListTemplates(t *testing.T) {
-	db, cleanup := setupTestDB(t)
+func TestRouteWithHeaders(t *testing.T) {
+	storage, cleanup := setupTestDB(t)
 	defer cleanup()
 
-	templates := []*ConfigTemplate{
-		{
-			ID:          uuid.New().String(),
-			Name:        "Template A",
-			Description: "Description A",
-			Category:    "reverse-proxy",
-			Template:    map[string]any{"test": "a"},
-			Variables:   []TemplateVariable{},
-		},
-		{
-			ID:          uuid.New().String(),
-			Name:        "Template B",
-			Description: "Description B",
-			Category:    "file-server",
-			Template:    map[string]any{"test": "b"},
-			Variables:   []TemplateVariable{},
-		},
+	// Note: Headers are stored in the JSON config, not as a separate field in SQLite
+	// This test verifies the struct works correctly with the Config field
+	config := ReverseProxyConfig{
+		Upstreams: []string{"localhost:8080"},
+		Headers:   map[string]string{"X-Custom": "value"},
+	}
+	configJSON, _ := json.Marshal(config)
+
+	route := &Route{
+		Domain:      "example.com",
+		HandlerType: "reverse_proxy",
+		Config:      configJSON,
 	}
 
-	for _, tmpl := range templates {
-		err := db.CreateTemplate(tmpl)
-		require.NoError(t, err)
+	err := storage.CreateRoute(route)
+	if err != nil {
+		t.Fatalf("Failed to create route: %v", err)
 	}
 
-	list, err := db.ListTemplates()
-	require.NoError(t, err)
-	assert.Len(t, list, 2)
-}
+	retrieved, _ := storage.GetRoute(route.ID)
 
-func TestCreateAuditLog(t *testing.T) {
-	db, cleanup := setupTestDB(t)
-	defer cleanup()
+	var retrievedConfig ReverseProxyConfig
+	json.Unmarshal(retrieved.Config, &retrievedConfig)
 
-	log := &AuditLog{
-		ID:         uuid.New().String(),
-		Timestamp:  time.Now(),
-		UserID:     "test-user",
-		InstanceID: "test-instance",
-		Action:     "config_update",
-		Changes: map[string]any{
-			"field": "value",
-		},
-		Status: "success",
+	if retrievedConfig.Headers["X-Custom"] != "value" {
+		t.Errorf("Expected header X-Custom=value, got %s", retrievedConfig.Headers["X-Custom"])
 	}
-
-	err := db.CreateAuditLog(log)
-	require.NoError(t, err)
-}
-
-func TestListAuditLogs(t *testing.T) {
-	db, cleanup := setupTestDB(t)
-	defer cleanup()
-
-	// Create multiple logs
-	logs := []*AuditLog{
-		{
-			ID:         uuid.New().String(),
-			Timestamp:  time.Now().Add(-2 * time.Hour),
-			UserID:     "user1",
-			InstanceID: "instance1",
-			Action:     "create",
-			Changes:    map[string]any{"test": "1"},
-			Status:     "success",
-		},
-		{
-			ID:         uuid.New().String(),
-			Timestamp:  time.Now().Add(-1 * time.Hour),
-			UserID:     "user1",
-			InstanceID: "instance2",
-			Action:     "update",
-			Changes:    map[string]any{"test": "2"},
-			Status:     "success",
-		},
-		{
-			ID:         uuid.New().String(),
-			Timestamp:  time.Now(),
-			UserID:     "user2",
-			InstanceID: "instance1",
-			Action:     "delete",
-			Changes:    map[string]any{"test": "3"},
-			Status:     "error",
-			Error:      "something failed",
-		},
-	}
-
-	for _, log := range logs {
-		err := db.CreateAuditLog(log)
-		require.NoError(t, err)
-	}
-
-	// List all logs
-	allLogs, err := db.ListAuditLogs("", 100)
-	require.NoError(t, err)
-	assert.Len(t, allLogs, 3)
-	// Should be ordered by timestamp DESC
-	assert.Equal(t, "delete", allLogs[0].Action)
-
-	// List logs for specific instance
-	instanceLogs, err := db.ListAuditLogs("instance1", 100)
-	require.NoError(t, err)
-	assert.Len(t, instanceLogs, 2)
-
-	// Test limit
-	limitedLogs, err := db.ListAuditLogs("", 2)
-	require.NoError(t, err)
-	assert.Len(t, limitedLogs, 2)
-}
-
-func TestCreateConfigBackup(t *testing.T) {
-	db, cleanup := setupTestDB(t)
-	defer cleanup()
-
-	backup := &ConfigBackup{
-		ID:         uuid.New().String(),
-		InstanceID: "test-instance",
-		Config: map[string]any{
-			"apps": map[string]any{
-				"http": "config",
-			},
-		},
-		ETag:      "test-etag",
-		CreatedBy: "test-user",
-	}
-
-	err := db.CreateConfigBackup(backup)
-	require.NoError(t, err)
-	assert.False(t, backup.CreatedAt.IsZero())
-}
-
-func TestGetConfigBackups(t *testing.T) {
-	db, cleanup := setupTestDB(t)
-	defer cleanup()
-
-	instanceID := "test-instance"
-
-	// Create multiple backups
-	backups := []*ConfigBackup{
-		{
-			ID:         uuid.New().String(),
-			InstanceID: instanceID,
-			Config:     map[string]any{"version": 1},
-			ETag:       "etag1",
-			CreatedBy:  "user1",
-		},
-		{
-			ID:         uuid.New().String(),
-			InstanceID: instanceID,
-			Config:     map[string]any{"version": 2},
-			ETag:       "etag2",
-			CreatedBy:  "user1",
-		},
-		{
-			ID:         uuid.New().String(),
-			InstanceID: "other-instance",
-			Config:     map[string]any{"version": 3},
-			ETag:       "etag3",
-			CreatedBy:  "user2",
-		},
-	}
-
-	for _, backup := range backups {
-		// Add small delay to ensure different timestamps
-		time.Sleep(10 * time.Millisecond)
-		err := db.CreateConfigBackup(backup)
-		require.NoError(t, err)
-	}
-
-	// Get backups for specific instance
-	retrieved, err := db.GetConfigBackups(instanceID, 10)
-	require.NoError(t, err)
-	assert.Len(t, retrieved, 2)
-	// Should be ordered by created_at DESC
-	assert.Equal(t, float64(2), retrieved[0].Config["version"])
-	assert.Equal(t, float64(1), retrieved[1].Config["version"])
-
-	// Test limit
-	limited, err := db.GetConfigBackups(instanceID, 1)
-	require.NoError(t, err)
-	assert.Len(t, limited, 1)
-}
-
-func TestClose(t *testing.T) {
-	db, cleanup := setupTestDB(t)
-	defer cleanup()
-
-	err := db.Close()
-	assert.NoError(t, err)
-
-	// Try to use closed database
-	_, err = db.ListInstances()
-	assert.Error(t, err)
 }

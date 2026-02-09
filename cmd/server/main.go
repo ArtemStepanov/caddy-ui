@@ -1,122 +1,75 @@
 package main
 
 import (
-	"context"
-	"fmt"
 	"log"
-	"net/http"
 	"os"
-	"os/signal"
-	"syscall"
-	"time"
+	"path/filepath"
 
-	"github.com/ArtemStepanov/caddy-orchestrator/config"
-	"github.com/ArtemStepanov/caddy-orchestrator/internal/api"
-	"github.com/ArtemStepanov/caddy-orchestrator/internal/caddy"
-	"github.com/ArtemStepanov/caddy-orchestrator/internal/storage"
-	"github.com/ArtemStepanov/caddy-orchestrator/internal/templates"
 	"github.com/gin-gonic/gin"
+
+	"github.com/ArtemStepanov/caddy-orchestrator/lite/internal/api"
+	"github.com/ArtemStepanov/caddy-orchestrator/lite/internal/storage"
 )
 
 func main() {
-	// Load configuration
-	cfg, err := config.LoadConfig("./config/config.yaml")
-	if err != nil {
-		log.Printf("Warning: Failed to load config file, using defaults: %v", err)
-		cfg, _ = config.LoadConfig("") // Use defaults
-	}
+	// Get configuration from environment
+	dbPath := getEnv("DB_PATH", "./data/routes.db")
+	caddyURL := getEnv("CADDY_ADMIN_URL", "http://localhost:2019")
+	listenAddr := getEnv("LISTEN_ADDR", ":3000")
 
-	// Set logging level
-	if cfg.Logging.Level == "debug" {
-		gin.SetMode(gin.DebugMode)
-	} else {
-		gin.SetMode(gin.ReleaseMode)
-	}
-
-	log.Printf("Starting Caddy Orchestrator...")
-	log.Printf("Server: %s:%d", cfg.Server.Host, cfg.Server.Port)
-	log.Printf("Database: %s", cfg.Storage.Path)
-
-	// Ensure data directory exists
-	if err := os.MkdirAll("./data", 0755); err != nil {
-		log.Fatalf("Failed to create data directory: %v", err)
-	}
+	log.Printf("Starting Caddy Orchestrator Lite")
+	log.Printf("  Database: %s", dbPath)
+	log.Printf("  Default Caddy Admin URL: %s", caddyURL)
+	log.Printf("  Listen Address: %s", listenAddr)
 
 	// Initialize storage
-	db, err := storage.NewSQLiteStorage(cfg.Storage.Path)
+	store, err := storage.NewSQLiteStorage(dbPath)
 	if err != nil {
 		log.Fatalf("Failed to initialize storage: %v", err)
 	}
-	defer db.Close()
+	defer store.Close()
 
-	log.Println("Database initialized successfully")
-
-	// Initialize Caddy manager
-	caddyManager := caddy.NewManager(db)
-
-	// Start health checks
-	caddyManager.StartHealthChecks(cfg.Caddy.HealthCheckInterval)
-	log.Printf("Health checks started (interval: %v)", cfg.Caddy.HealthCheckInterval)
-
-	// Initialize template manager
-	templateManager := templates.NewManager(db)
-
-	// Load built-in templates
-	if cfg.Templates.BuiltinEnabled {
-		if err := templateManager.InitializeBuiltinTemplates(); err != nil {
-			log.Printf("Warning: Failed to initialize built-in templates: %v", err)
-		} else {
-			log.Println("Built-in templates loaded successfully")
-		}
+	// Initialize Gin router
+	if os.Getenv("GIN_MODE") == "" {
+		gin.SetMode(gin.ReleaseMode)
 	}
+	r := gin.Default()
 
-	// Create Gin router
-	router := gin.New()
+	// Setup API routes (pass URL string, not client - handlers use dynamic URL from GlobalConfig)
+	api.SetupRoutes(r, store, caddyURL)
 
-	// Setup routes
-	configPath := "./config/config.yaml"
-	api.SetupRoutes(router, caddyManager, templateManager, cfg, configPath, cfg.Security.CORSOrigins)
-
-	// Serve static files from web directory
-	if _, err := os.Stat("./web"); err == nil {
-		router.Static("/assets", "./web/assets")
-		router.StaticFile("/", "./web/index.html")
-		router.NoRoute(func(c *gin.Context) {
-			c.File("./web/index.html")
+	// Serve static files (frontend)
+	webDir := getEnv("WEB_DIR", "./web/dist")
+	if _, err := os.Stat(webDir); err == nil {
+		// Assets with long-term caching (1 year)
+		assets := r.Group("/assets")
+		assets.Use(func(c *gin.Context) {
+			c.Header("Cache-Control", "public, max-age=31536000, immutable")
 		})
-		log.Println("Serving static files from ./web")
-	}
+		assets.Static("/", filepath.Join(webDir, "assets"))
 
-	// Create HTTP server
-	server := &http.Server{
-		Addr:         fmt.Sprintf("%s:%d", cfg.Server.Host, cfg.Server.Port),
-		Handler:      router,
-		ReadTimeout:  cfg.Server.ReadTimeout,
-		WriteTimeout: cfg.Server.WriteTimeout,
-	}
-
-	// Start server in a goroutine
-	go func() {
-		log.Printf("Server listening on %s:%d", cfg.Server.Host, cfg.Server.Port)
-		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			log.Fatalf("Failed to start server: %v", err)
+		// SPA entry point with no-cache (always validate)
+		serveIndex := func(c *gin.Context) {
+			c.Header("Cache-Control", "no-cache")
+			c.File(filepath.Join(webDir, "index.html"))
 		}
-	}()
 
-	// Wait for interrupt signal
-	quit := make(chan os.Signal, 1)
-	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
-	<-quit
-
-	log.Println("Shutting down server...")
-
-	// Graceful shutdown with timeout
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-	defer cancel()
-
-	if err := server.Shutdown(ctx); err != nil {
-		log.Printf("Server forced to shutdown: %v", err)
+		r.GET("/", serveIndex)
+		r.StaticFile("/favicon.svg", filepath.Join(webDir, "favicon.svg"))
+		r.NoRoute(serveIndex)
+	} else {
+		log.Printf("Warning: Web directory not found at %s", webDir)
 	}
 
-	log.Println("Server exited")
+	log.Printf("Server starting on %s", listenAddr)
+	if err := r.Run(listenAddr); err != nil {
+		log.Fatalf("Failed to start server: %v", err)
+	}
+}
+
+func getEnv(key, defaultValue string) string {
+	if value := os.Getenv(key); value != "" {
+		return value
+	}
+	return defaultValue
 }

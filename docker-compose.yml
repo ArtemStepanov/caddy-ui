@@ -1,55 +1,42 @@
 services:
-  caddy-orchestrator:
+  # Caddy Orchestrator Lite
+  orchestrator:
     build: .
-    container_name: caddy-orchestrator
     ports:
       - "3000:3000"
-    volumes:
-      - ./data:/root/data
-      - ./config/config.yaml:/root/config/config.yaml
     environment:
-      - JWT_SECRET=${JWT_SECRET:-dev-secret-key-change-in-production}
-      - LOG_LEVEL=${LOG_LEVEL:-info}
-      - GIN_MODE=release
-    networks:
-      - caddy-net
+      #- CADDY_ADMIN_URL=http://caddy:2019
+      - DB_PATH=/app/data/routes.db
+    volumes:
+      - orchestrator-data:/app/data
+    depends_on:
+      - caddy
     restart: unless-stopped
-    healthcheck:
-      test:
-        [
-          "CMD",
-          "wget",
-          "--quiet",
-          "--tries=1",
-          "--spider",
-          "http://localhost:3000/api/health",
-        ]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 10s
 
-  # Example Caddy instance for testing
-  caddy-test:
+  # Test Caddy instance
+  caddy:
     image: caddy:2-alpine
-    container_name: caddy-test
     ports:
-      - "8080:80"
-      - "8443:443"
+      - "80:80"
+      - "443:443"
       - "2019:2019"
     volumes:
-      - ./Caddyfile:/etc/caddy/Caddyfile:ro
-      - caddy_data:/data
-      - caddy_config:/config
-    networks:
-      - caddy-net
-    restart: unless-stopped
+      - caddy-data:/data
+      - caddy-config:/config
     command: caddy run --config /etc/caddy/Caddyfile --adapter caddyfile
+    configs:
+      - source: caddyfile
+        target: /etc/caddy/Caddyfile
+    restart: unless-stopped
 
-networks:
-  caddy-net:
-    driver: bridge
+configs:
+  caddyfile:
+    content: |
+      {
+        admin 0.0.0.0:2019
+      }
 
 volumes:
-  caddy_data:
-  caddy_config:
+  orchestrator-data:
+  caddy-data:
+  caddy-config:
