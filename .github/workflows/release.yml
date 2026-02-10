@@ -30,7 +30,7 @@ jobs:
       - id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ghcr.io/artemstepanov/caddy-orchestrator-lite
+          images: ghcr.io/artemstepanov/caddy-admin-ui
           tags: |
             type=ref,event=branch
             type=sha,format=short

@@ -5,7 +5,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/ArtemStepanov/caddy-orchestrator/lite/internal/storage"
+	"github.com/ArtemStepanov/caddy-admin-ui/internal/storage"
 )
 
 // normalizePath ensures a path starts with / if not empty

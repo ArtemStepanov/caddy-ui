@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"strings"
 
-	"github.com/ArtemStepanov/caddy-orchestrator/lite/internal/storage"
+	"github.com/ArtemStepanov/caddy-admin-ui/internal/storage"
 	"github.com/google/uuid"
 )
 

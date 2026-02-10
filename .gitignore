@@ -1,5 +1,5 @@
 # Binaries
-caddy-orchestrator
+caddy-admin-ui
 *.exe
 *.dll
 *.so

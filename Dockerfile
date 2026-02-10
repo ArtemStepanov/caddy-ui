@@ -26,7 +26,7 @@ RUN go mod download
 # Build
 COPY cmd/ cmd/
 COPY internal/ internal/
-RUN CGO_ENABLED=1 GOOS=linux go build -ldflags="-s -w" -o caddy-orchestrator ./cmd/server
+RUN CGO_ENABLED=1 GOOS=linux go build -ldflags="-s -w" -o caddy-admin-ui ./cmd/server
 
 # Final image
 FROM alpine:3.19
@@ -37,7 +37,7 @@ RUN apk add --no-cache ca-certificates sqlite-libs tzdata
 WORKDIR /app
 
 # Copy binary
-COPY --from=backend-builder /app/caddy-orchestrator .
+COPY --from=backend-builder /app/caddy-admin-ui .
 
 # Copy frontend
 COPY --from=frontend-builder /app/web/dist ./web/dist
@@ -59,4 +59,4 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
   CMD wget --no-verbose --tries=1 --spider http://localhost:3000/api/status || exit 1
 
 # Run
-CMD ["./caddy-orchestrator"]
+CMD ["./caddy-admin-ui"]

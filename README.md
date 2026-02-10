@@ -1,4 +1,4 @@
-# Caddy Orchestrator Lite
+# Caddy Admin UI
 
 A lightweight web UI for managing [Caddy](https://caddyserver.com/) routes without editing the Caddyfile. Create, update, and delete reverse proxies, file servers, and redirects — synced to Caddy's Admin API in real time.
 
@@ -17,8 +17,8 @@ A lightweight web UI for managing [Caddy](https://caddyserver.com/) routes witho
 ### Docker Compose
 
 ```bash
-git clone https://github.com/ArtemStepanov/caddy-orchestrator.git
-cd caddy-orchestrator
+git clone https://github.com/ArtemStepanov/caddy-admin-ui.git
+cd caddy-admin-ui
 docker compose up -d --build
 # UI at http://localhost:3000
 ```
@@ -31,6 +31,7 @@ Use the production compose file to connect to a Caddy server running elsewhere:
 
 ```bash
 CADDY_ADMIN_URL=http://your-caddy:2019 docker compose -f docker-compose.prod.yml up -d
+
 ```
 
 Or run the container directly:
@@ -39,8 +40,8 @@ Or run the container directly:
 docker run -d \
   -p 3000:3000 \
   -e CADDY_ADMIN_URL=http://your-caddy:2019 \
-  -v caddy-orchestrator-data:/app/data \
-  ghcr.io/artemstepanov/caddy-orchestrator-lite
+  -v caddy-admin-ui-data:/app/data \
+  ghcr.io/artemstepanov/caddy-admin-ui
 ```
 
 ### Configuration

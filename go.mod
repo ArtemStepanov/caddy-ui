@@ -1,4 +1,4 @@
-module github.com/ArtemStepanov/caddy-orchestrator/lite
+module github.com/ArtemStepanov/caddy-admin-ui
 
 go 1.25.6
 

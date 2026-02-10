@@ -1,7 +1,7 @@
 services:
-  # Caddy Orchestrator Lite
+  # Caddy Admin UI
   orchestrator:
-    image: ghcr.io/artemstepanov/caddy-orchestrator-lite:latest
+    image: ghcr.io/artemstepanov/caddy-admin-ui:latest
     # build: .  # uncomment for local development
     ports:
       - "3000:3000"

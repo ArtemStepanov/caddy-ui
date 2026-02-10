@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"testing"
 
-	"github.com/ArtemStepanov/caddy-orchestrator/lite/internal/storage"
+	"github.com/ArtemStepanov/caddy-admin-ui/internal/storage"
 )
 
 func TestParseCaddyConfig_Empty(t *testing.T) {

@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Caddy Orchestrator Lite is a web UI for managing Caddy server routes without manually editing the Caddyfile. It provides CRUD operations for reverse proxies, file servers, and redirects, with real-time sync to Caddy's Admin API.
+Caddy Admin UI is a web UI for managing Caddy server routes without manually editing the Caddyfile. It provides CRUD operations for reverse proxies, file servers, and redirects, with real-time sync to Caddy's Admin API.
 
 ## Build & Development Commands
 
