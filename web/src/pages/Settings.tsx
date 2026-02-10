@@ -197,7 +197,7 @@ export function Settings() {
           
           <div class="space-y-2 text-sm text-slate-400">
             <div>
-              <span class="text-slate-300">Caddy Orchestrator Lite</span>
+              <span class="text-slate-300">Caddy Admin UI</span>
             </div>
             <div>
               A simple web UI for managing Caddy server routes.

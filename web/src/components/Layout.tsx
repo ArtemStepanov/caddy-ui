@@ -74,7 +74,7 @@ export function Layout({ children }: LayoutProps) {
 
       {/* Footer */}
       <footer class="bg-slate-800 border-t border-slate-700 py-4 text-center text-sm text-slate-500">
-        Caddy Orchestrator Lite
+        Caddy Admin UI
       </footer>
 
       <Toast />

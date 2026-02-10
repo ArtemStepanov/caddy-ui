@@ -5,7 +5,7 @@ all: build
 
 # Build backend
 build:
-	CC="zig cc" CGO_ENABLED=1 go build -o bin/caddy-orchestrator ./cmd/server
+	CC="zig cc" CGO_ENABLED=1 go build -o bin/caddy-admin-ui ./cmd/server
 
 # Build frontend
 frontend:
@@ -21,7 +21,7 @@ dev-frontend:
 
 # Build Docker image
 docker:
-	docker build -t caddy-orchestrator-lite .
+	docker build -t caddy-admin-ui .
 
 # Run with Docker Compose
 docker-up:
@@ -29,7 +29,7 @@ docker-up:
 
 # Run with Docker Compose (local build)
 docker-up-build:
-	docker build -t ghcr.io/artemstepanov/caddy-orchestrator-lite:latest . && docker compose up -d
+	docker build -t ghcr.io/artemstepanov/caddy-admin-ui:latest . && docker compose up -d
 
 # Stop Docker Compose
 docker-down:

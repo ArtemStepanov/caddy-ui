@@ -1,6 +1,6 @@
 services:
   orchestrator:
-    image: ghcr.io/artemstepanov/caddy-orchestrator-lite:latest
+    image: ghcr.io/artemstepanov/caddy-admin-ui:latest
     # Or build locally:
     # build: .
     ports:

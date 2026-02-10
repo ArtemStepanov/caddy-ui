@@ -102,12 +102,12 @@ jobs:
         with:
           context: .
           load: true
-          tags: caddy-orchestrator:security-scan
+          tags: caddy-admin-ui:security-scan
 
       - name: Run Trivy vulnerability scanner on Docker image
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: "caddy-orchestrator:security-scan"
+          image-ref: "caddy-admin-ui:security-scan"
           format: "sarif"
           output: "trivy-docker-results.sarif"
           severity: "CRITICAL,HIGH"

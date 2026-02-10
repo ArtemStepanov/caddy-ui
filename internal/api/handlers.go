@@ -7,9 +7,9 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/ArtemStepanov/caddy-orchestrator/lite/internal/caddy"
-	"github.com/ArtemStepanov/caddy-orchestrator/lite/internal/config"
-	"github.com/ArtemStepanov/caddy-orchestrator/lite/internal/storage"
+	"github.com/ArtemStepanov/caddy-admin-ui/internal/caddy"
+	"github.com/ArtemStepanov/caddy-admin-ui/internal/config"
+	"github.com/ArtemStepanov/caddy-admin-ui/internal/storage"
 )
 
 // Handler contains all HTTP handlers

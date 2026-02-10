@@ -11,7 +11,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/ArtemStepanov/caddy-orchestrator/lite/internal/storage"
+	"github.com/ArtemStepanov/caddy-admin-ui/internal/storage"
 )
 
 func init() {

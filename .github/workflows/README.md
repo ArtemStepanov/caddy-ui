@@ -113,7 +113,7 @@ npm run build
 **Docker**:
 ```bash
 # Build
-docker build -t caddy-orchestrator:local .
+docker build -t caddy-admin-ui:local .
 ```
 
 ## Status Badges
@@ -121,8 +121,8 @@ docker build -t caddy-orchestrator:local .
 Add these badges to your README.md:
 
 ```markdown
-[![CI Pipeline](https://github.com/ArtemStepanov/caddy-orchestrator/actions/workflows/ci.yml/badge.svg)](https://github.com/ArtemStepanov/caddy-orchestrator/actions/workflows/ci.yml)
-[![Security Scanning](https://github.com/ArtemStepanov/caddy-orchestrator/actions/workflows/security.yml/badge.svg)](https://github.com/ArtemStepanov/caddy-orchestrator/actions/workflows/security.yml)
+[![CI Pipeline](https://github.com/ArtemStepanov/caddy-admin-ui/actions/workflows/ci.yml/badge.svg)](https://github.com/ArtemStepanov/caddy-admin-ui/actions/workflows/ci.yml)
+[![Security Scanning](https://github.com/ArtemStepanov/caddy-admin-ui/actions/workflows/security.yml/badge.svg)](https://github.com/ArtemStepanov/caddy-admin-ui/actions/workflows/security.yml)
 ```
 
 ## Required Secrets
