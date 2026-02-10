@@ -29,7 +29,7 @@ COPY internal/ internal/
 RUN CGO_ENABLED=1 GOOS=linux go build -ldflags="-s -w" -o caddy-admin-ui ./cmd/server
 
 # Final image
-FROM alpine:3.19
+FROM alpine:3.23
 
 # Install runtime dependencies
 RUN apk add --no-cache ca-certificates sqlite-libs tzdata
