@@ -2,6 +2,8 @@
 
 A lightweight web UI for managing [Caddy](https://caddyserver.com/) routes without editing the Caddyfile. Create, update, and delete reverse proxies, file servers, and redirects — synced to Caddy's Admin API in real time.
 
+> **Alpha Software** — This project is under active development. Expect breaking changes, incomplete features, and rough edges. Use with caution in production environments.
+
 ## Features
 
 - **Reverse Proxy** — forward requests to backend services
